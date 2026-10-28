@@ -204,6 +204,21 @@ footer .road{margin-bottom:12px}
   #list,#shList{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
 }
 .lcard{width:min(420px,100%)}
+
+/* Courier-inspired sign-in tracking */
+.login-tracking{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:22px;background:rgba(3,22,14,.76);backdrop-filter:blur(14px)}
+.tracking-card{width:min(420px,100%);padding:30px;border:1px solid rgba(15,179,90,.3);border-radius:28px;background:var(--card,var(--fld));color:var(--ink);box-shadow:0 24px 100px rgba(0,0,0,.3);overflow:hidden}
+.tracking-label{font-size:11px;font-weight:800;letter-spacing:2px;color:var(--g);margin-bottom:12px}.tracking-card h2{font-size:24px;margin:0 0 8px}.tracking-note{font-size:13px;color:var(--mut);margin:0 0 22px;line-height:1.6}
+.tracking-route{position:relative;height:84px;overflow:hidden;margin:0 0 22px;border-radius:16px;background:rgba(15,179,90,.07)}
+.tracking-route:after{content:"";position:absolute;left:0;right:0;bottom:15px;height:2px;background:repeating-linear-gradient(90deg,var(--g) 0 12px,transparent 12px 25px);opacity:.4;animation:tracking-road 1.1s linear infinite}
+.tracking-truck{position:absolute;bottom:18px;left:calc(50% - 60px);width:120px;height:50px;animation:tracking-bounce .65s ease-in-out infinite}
+.tracking-parcel{position:absolute;top:17px;right:22px;font-size:19px;opacity:.6;animation:tracking-package 2.6s linear infinite}
+.tracking-steps{list-style:none;padding:0;margin:0;display:grid;gap:0}.tracking-steps li{position:relative;display:flex;gap:13px;align-items:center;min-height:49px;color:var(--mut);font-size:14px}.tracking-steps li:not(:last-child):before{content:"";position:absolute;left:12px;top:36px;height:23px;width:1px;background:var(--bd)}
+.tracking-dot{width:25px;height:25px;flex:none;border:1px solid var(--bd);border-radius:50%;display:grid;place-items:center;font-size:11px;background:var(--fld);z-index:1}.tracking-steps .active{color:var(--ink);font-weight:700}.tracking-steps .active .tracking-dot{border-color:var(--g);background:var(--g);color:white;box-shadow:0 0 0 5px rgba(15,179,90,.12);animation:tracking-pulse 1.5s ease-in-out infinite}.tracking-steps .complete .tracking-dot{color:var(--g);border-color:var(--g)}
+.tracking-status{font-size:12px;color:var(--mut);border-top:1px solid var(--bd);padding-top:16px;margin:16px 0 0;min-height:35px}
+@keyframes tracking-road{to{transform:translateX(-25px)}}@keyframes tracking-bounce{50%{transform:translateY(-2px)}}@keyframes tracking-pulse{50%{box-shadow:0 0 0 8px rgba(15,179,90,.04)}}@keyframes tracking-package{0%{transform:translateX(70px);opacity:0}30%,70%{opacity:.6}100%{transform:translateX(-300px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.tracking-route:after,.tracking-truck,.tracking-parcel,.tracking-steps .active .tracking-dot{animation:none}.login-tracking{backdrop-filter:none}}
+
 </style>
 </head>
 <body>
@@ -226,6 +241,17 @@ footer .road{margin-bottom:12px}
   <div class="road"><svg><use href="#tr"/></svg><svg><use href="#tr"/></svg></div>
  </div>
 </section>
+
+
+<div id="loginTracking" class="login-tracking hide" role="status" aria-live="polite" aria-atomic="true">
+ <div class="tracking-card">
+  <div class="tracking-label">STEADFAST · ACCESS EXPRESS</div>
+  <h2 data-i="trackingTitle"></h2><p class="tracking-note" data-i="trackingNote"></p>
+  <div class="tracking-route" aria-hidden="true"><span class="tracking-parcel">📦</span><svg class="tracking-truck" viewBox="0 0 120 50"><use href="#tr"/></svg></div>
+  <ol class="tracking-steps" id="trackingSteps"><li><span class="tracking-dot">1</span><span data-i="trackingReceived"></span></li><li><span class="tracking-dot">2</span><span data-i="trackingDispatch"></span></li><li><span class="tracking-dot">3</span><span data-i="trackingChecking"></span></li><li><span class="tracking-dot">4</span><span data-i="trackingDelivered"></span></li></ol>
+  <p class="tracking-status" id="trackingStatus"></p>
+ </div>
+</div>
 
 <div id="app" class="hide">
 <nav><div class="wrap nav">
@@ -332,6 +358,8 @@ shTitle:"শিট",shSub:"প্রতিটি টিমের রেফার
 lgCo:"STEADFAST COURIER LTD.",lgTitle:"UPDATE HUB",lgSub:"এজেন্টদের জন্য অভ্যন্তরীণ নোটিশ, FAQ ও শিট",lgPol:"অ্যাক্সেস নীতি",lg1:"অনুমোদিত স্টেডফাস্ট Google Workspace অ্যাকাউন্ট দিয়ে লগইন করুন",lg2:"শুধু স্টেডফাস্ট কর্মীদের ইমেইল ঢুকতে পারবে। এডিটর অ্যাডমিন অনুমোদিত",lg3:"লাইভ নোটিশ, FAQ ও শিট, সবসময় আপডেট",lgEmail:"অফিসের ইমেইল",lgBtn:"Google দিয়ে চালিয়ে যান",lgDemo:"শুধু ডেমো: একটি অ্যাকাউন্ট বাছুন",lgEd:"এডিটর",lgVw:"ভিউয়ার",lgOut:"বাইরের ইমেইল",lgDeny:"প্রবেশ নিষেধ। শুধু স্টেডফাস্ট কর্মীদের ইমেইল অ্যাক্সেসের জন্য আবেদন করতে পারবে।",lgNote:"এন্টারপ্রাইজ মোড · শুধুমাত্র সিএস টিমের অফিসিয়াল ব্যবহারের জন্য",lgTag:"নোটিশ, সার্ভিস ও শিট, সব এক জায়গায়",lgFoot:"স্টেডফাস্ট কুরিয়ার কর্মীদের জন্য সুরক্ষিত অভ্যন্তরীণ সিস্টেম।",signout:"সাইন আউট",edPill:"এডিটর",mLang:"ভাষা",mTheme:"লাইট / ডার্ক মোড",catNew:"+ নতুন ক্যাটাগরি",catPh:"নতুন ক্যাটাগরির নাম"}};
 Object.assign(T.en,{"lgBtn": "Sign in / Request access", "lgDeny": "Access denied. Contact an admin.", "lgNote": "Any email can request access. Admin approval required.", "lg1": "Sign in with your email and password", "lg2": "Any email can request access. An admin approves each account.", "showPassword": "Show password", "forgotPassword": "Forgot password?", "changePassword": "Change password", "currentPassword": "Current password", "newPassword": "New password", "confirmPassword": "Confirm new password", "badCredentials": "Incorrect email or password.", "loginRate": "Too many attempts. Try again in 15 minutes.", "resetSent": "If this account exists, your reset request has been sent to the admin. After the admin resets it, sign in with sfcnotice123.", "passwordMismatch": "The new passwords do not match.", "badCurrentPassword": "Current password is incorrect.", "passwordLength": "Use 8 to 128 characters.", "passwordChanged": "Password changed. Other sessions have been signed out.", "resetPassword": "Reset password", "resetConfirm": "Reset this account’s password to sfcnotice123 and sign out its sessions?", "passwordReset": "Password reset to sfcnotice123.", "resetRequested": "Password reset requested"});
 Object.assign(T.bn,{"lgBtn": "সাইন ইন / অ্যাক্সেসের আবেদন", "lgDeny": "অ্যাক্সেস নেই। অ্যাডমিনের সাথে যোগাযোগ করুন।", "lgNote": "যেকোনো ইমেইল দিয়ে আবেদন করা যাবে। অ্যাডমিনের অনুমোদন প্রয়োজন।", "lg1": "Sign in with your email and password", "lg2": "Any email can request access. An admin approves each account.", "showPassword": "পাসওয়ার্ড দেখুন", "forgotPassword": "পাসওয়ার্ড ভুলে গেছেন?", "changePassword": "পাসওয়ার্ড পরিবর্তন", "currentPassword": "বর্তমান পাসওয়ার্ড", "newPassword": "নতুন পাসওয়ার্ড", "confirmPassword": "নতুন পাসওয়ার্ড নিশ্চিত করুন", "badCredentials": "ইমেইল অথবা পাসওয়ার্ড ভুল।", "loginRate": "অনেকবার চেষ্টা করেছেন। ১৫ মিনিট পরে চেষ্টা করুন।", "resetSent": "অ্যাকাউন্টটি থাকলে অ্যাডমিনের কাছে রিসেটের আবেদন পাঠানো হয়েছে। অ্যাডমিন রিসেট করার পরে sfcnotice123 দিয়ে সাইন ইন করুন।", "passwordMismatch": "নতুন পাসওয়ার্ড দুটি মিলছে না।", "badCurrentPassword": "বর্তমান পাসওয়ার্ড ভুল।", "passwordLength": "Use 8 to 128 characters.", "passwordChanged": "পাসওয়ার্ড পরিবর্তন হয়েছে।", "resetPassword": "পাসওয়ার্ড রিসেট", "resetConfirm": "Reset this account’s password to sfcnotice123 and sign out its sessions?", "passwordReset": "Password reset to sfcnotice123.", "resetRequested": "পাসওয়ার্ড রিসেটের আবেদন রয়েছে"});
+Object.assign(T.en,{"trackingTitle": "Your access is on its way", "trackingNote": "A courier-style journey while we sign you in.", "trackingReceived": "Sign-in details received", "trackingDispatch": "Dispatched to the access hub", "trackingChecking": "Checking account & admin approval", "trackingDelivered": "Access delivered · logging in", "trackingWait": "Please wait while the server responds…", "trackingWelcome": "All clear. Opening your notice panel…"});
+Object.assign(T.bn,{"trackingTitle": "আপনার অ্যাক্সেস পৌঁছে যাচ্ছে", "trackingNote": "সাইন ইনের অপেক্ষায় একটি কুরিয়ার যাত্রা।", "trackingReceived": "সাইন ইনের তথ্য গ্রহণ করা হয়েছে", "trackingDispatch": "অ্যাক্সেস হাবে পাঠানো হচ্ছে", "trackingChecking": "অ্যাকাউন্ট ও অনুমোদন যাচাই চলছে", "trackingDelivered": "অ্যাক্সেস পৌঁছে গেছে · লগইন হচ্ছে", "trackingWait": "সার্ভারের উত্তরের জন্য অপেক্ষা করুন…", "trackingWelcome": "সব ঠিক আছে। আপনার নোটিশ প্যানেল খুলছে…"});
 var lang="en",role="viewer",me="",edName="",section="notice",view="notices",grp="cs",cat="all",sheetCat="IB",rid=null,editId=null,faqId=null,shId=null,adView="req",uEditEmail=null,curU=null,errKey="lgDeny";
 var CK=["Payment","Delivery","Return","Service update","Pickup","Complaint"],SC=["IB","IR","QA"];
 var users=[
@@ -550,13 +578,35 @@ function copyTxt(x){try{navigator.clipboard.writeText(x).then(function(){toast(t
 function stamp(){return {by:edName,at:nowIso()}}
 
 /* login */
+var loginTrackingBusy=false,loginTrackingTimers=[],loginTrackingFocus=null;
+function trackingStage(n){
+  [].forEach.call($("trackingSteps").children,function(li,i){li.className=i<n?"complete":i===n?"active":"";li.querySelector(".tracking-dot").textContent=i<n?"✓":String(i+1)});
+  $("trackingStatus").textContent=t(n===3?"trackingWelcome":"trackingWait");
+}
+function startLoginTracking(){
+  loginTrackingBusy=true;loginTrackingFocus=document.activeElement;
+  $("lgErr").className="lerr hide";$("login").setAttribute("aria-busy","true");
+  ["lgGo","lgEmail","lgPassword","lgShow","forgotPassword"].forEach(function(id){$(id).disabled=true});
+  $("loginTracking").classList.remove("hide");trackingStage(0);
+  loginTrackingTimers=[setTimeout(function(){trackingStage(1)},850),setTimeout(function(){trackingStage(2)},1900)];
+}
+function finishLoginTracking(){loginTrackingTimers.forEach(clearTimeout);loginTrackingTimers=[];trackingStage(3);return new Promise(function(resolve){setTimeout(resolve,650)})}
+function stopLoginTracking(){
+  loginTrackingTimers.forEach(clearTimeout);loginTrackingTimers=[];loginTrackingBusy=false;
+  $("loginTracking").classList.add("hide");$("login").removeAttribute("aria-busy");
+  ["lgGo","lgEmail","lgPassword","lgShow","forgotPassword"].forEach(function(id){$(id).disabled=false});
+  if(!$("login").classList.contains("hide")&&loginTrackingFocus)loginTrackingFocus.focus();
+}
 function showLg(k,ok){errKey=k;var e=$("lgErr");e.textContent=t(k);e.className="lerr"+(ok?" ok":"")}
 function signIn(email){
   email=(email||"").trim().toLowerCase();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showLg("lgDeny");return}
   if(LIVE){
-    $("lgGo").disabled=true;
-    api("login",{email:email,password:$("lgPassword").value}).then(function(d){enter(d,email)}).catch(function(e){failLogin(e,email)}).then(function(){$("lgGo").disabled=false})
+    if(loginTrackingBusy)return;
+    var password=$("lgPassword").value;
+    if(!password){showLg("badCredentials");$("lgPassword").focus();return}
+    startLoginTracking();
+    api("login",{email:email,password:password}).then(function(d){return finishLoginTracking().then(function(){enter(d,email)})}).catch(function(e){failLogin(e,email)}).then(stopLoginTracking,stopLoginTracking)
     return}
   var u=findU(email);
   if(!u){
@@ -792,4 +842,5 @@ ui();
 </script>
 </body>
 </html>
+
 
