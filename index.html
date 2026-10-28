@@ -311,9 +311,9 @@ footer .road{margin-bottom:12px}
 <div class="cal hide" id="cal"></div>
 <div class="toast" id="toast"></div>
 <script>
-var CFG={API_URL:"https://script.google.com/macros/s/AKfycbyl2jwCxcs2R0WRKGlFnPLCINeVD0vQxkyQAES7YXK9e4pVlM6bGzcP02T5CgFB6znSbg/exec",CLIENT_ID:"444206143237-77hn1lg7dcu10pk85hpnuhsgbcagutav.apps.googleusercontent.com"};
-var LIVE=/^https:\/\/script\.google\.com\//.test(CFG.API_URL)&&/\.apps\.googleusercontent\.com$/.test(CFG.CLIENT_ID);
-var tok="",pending=0,police=null,policeOpen=false,faqCat="all";
+var CFG={API_URL:"https://script.google.com/macros/s/AKfycbyl2jwCxcs2R0WRKGlFnPLCINeVD0vQxkyQAES7YXK9e4pVlM6bGzcP02T5CgFB6znSbg/exec",CLIENT_ID:"PASTE_GOOGLE_CLIENT_ID_HERE"};
+var LIVE=/^https:\/\/script\.google\.com\//.test(CFG.API_URL);
+var pending=0,police=null,policeOpen=false,faqCat="all";
 var T={
 en:{lgExp:"Session expired. Please sign in again.",lgFail:"Could not connect. Check your internet and try again.",saveFail:"Could not save. Reloaded the latest data.",polOpen:"Open lookup",polBack:"Back",polPh:"Search area, police station or hub",polCount:"Showing {n} of {m}",polNone:"No match found.",ann:"Announced by",appr:"Approved by",addedBy:"Added by",subL:"Notices come from the Google Sheet. You can mark expired and review reports.",gCs:"CS Official Notice",gQa:"QA Follow-up",sAdmin:"Admin",adTitle:"Admin panel",adSub:"Approve people and choose what each person can see.",adNew:"+ Add user",adReq:"Requests",adUsr:"Users",adNoReq:"No pending requests.",adNoUsr:"No users yet.",adReqAt:"Requested",adApprove:"Approve",adReject:"Reject",adManage:"Manage",uAdd:"Add user",uManage:"Manage access",uApprove:"Approve access",uEmail:"Email",uRole:"Role",uStatus:"Status",roleViewer:"Viewer",roleEditor:"Editor",roleAdmin:"Admin",stActive:"Active",stBlocked:"Blocked",pAll:"Select all",uNote:"Editors and admins can see everything.",uDel:"Remove user",uBad:"Enter a valid email",uDup:"This email already exists",uSelf:"You can’t block or demote yourself",uConf:"Remove this user?",noAcc:"You have no access yet. Ask an admin.",lgPend:"Your request was sent. Please wait for admin approval.",fullAcc:"Full access",today:"Today",calClear:"Clear",adminPill:"Admin",noneLbl:"No access",tkEdit:"Edit",tkTitle:"Edit scrolling announcements",tkHint:"One message per line. Emojis are welcome.",tkEmpty:"Add an announcement",nb:"Notice",nbTip:"Notice panel only for internal use!",dFrom:"From",dTo:"To",dClear:"Clear dates",dPick:"Select date",upd:"Updated by",rpt:"Report as outdated",reported:"Reported",exp:"Expired",restore:"Restore",mark:"Mark expired",dismiss:"Dismiss",tabN:"Notices",tabR:"Reports",noRep:"No reports. All notices look current.",already:"You already reported this",rTitle:"Report outdated notice",rSub:"Let editors know this notice is backdated or expired.",rNote:"Note (optional)",rSendL:"Send report",rDone:"Report sent",title:"Notices",sub:"Latest updates for agents. View and copy only.",subE:"Latest updates for agents. You can add and edit.",new:"+ New notice",ph:"Search by keyword, e.g. payment, EBL, 25.10.2026",all:"All",copy:"Copy",edit:"Edit",del:"Delete",urg:"Urgent",none:"No notices found.",copied:"Copied",saved:"Saved",need:"Please fill in all required fields",conf:"Delete this notice?",lt:"Title",lc:"Category",lu:"Priority",lb:"Details",save:"Save",cancel:"Cancel",nt:"New notice",et:"Edit notice",nrm:"Normal",
 cat:{"Payment":"Payment","Delivery":"Delivery","Return":"Return","Service update":"Service update","Pickup":"Pickup","Complaint":"Complaint"},
@@ -547,6 +547,10 @@ function showLg(k,ok){errKey=k;var e=$("lgErr");e.textContent=t(k);e.className="
 function signIn(email){
   email=(email||"").trim().toLowerCase();
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showLg("lgDeny");return}
+  if(LIVE){
+    $("lgGo").disabled=true;
+    api("load",{email:email}).then(function(d){enter(d,email)}).catch(function(e){failLogin(e,email)}).then(function(){$("lgGo").disabled=false})
+    return}
   var u=findU(email);
   if(!u){
     if(/@steadfast\.com\.bd$/.test(email)){users.push({email:email,role:"viewer",status:"pending",req:nowIso(),perms:{n:0,f:0,s:0,ids:[]}});showLg("lgPend",1)}
@@ -558,7 +562,7 @@ function signIn(email){
   section="notice";view="notices";cat="all";
   $("lgErr").className="lerr hide";$("login").className="login hide";$("app").className="";ui();window.scrollTo(0,0);
 }
-function signOut(){if(LIVE){tok="";try{sessionStorage.removeItem("tok")}catch(e){}try{google.accounts.id.disableAutoSelect()}catch(e){}}me="";role="viewer";curU=null;$("menu").classList.add("hide");$("app").className="hide";$("login").className="login";$("lgEmail").value="";$("lgErr").className="lerr hide"}
+function signOut(){if(LIVE){try{sessionStorage.removeItem("email")}catch(e){}}me="";role="viewer";curU=null;$("menu").classList.add("hide");$("app").className="hide";$("login").className="login";$("lgEmail").value="";$("lgErr").className="lerr hide"}
 $("lgGo").onclick=function(){signIn($("lgEmail").value)};
 $("lgEmail").onkeydown=function(e){if(e.key==="Enter")signIn(this.value)};
 $("out").onclick=signOut;
@@ -730,44 +734,38 @@ $("uSave").onclick=function(){
   $("udlg").close();render();toast(t("saved"));
 };
 
-/* ---------- LIVE (Google Sheet + Google sign-in) ---------- */
+/* ---------- LIVE (Google Sheet, plain email sign-in) ---------- */
 function api(action,data){
-  var body=Object.assign({action:action,token:tok},data||{});
+  var body=Object.assign({action:action,email:me},data||{});
   return fetch(CFG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})
     .then(function(r){return r.json()})
     .then(function(d){if(d&&d.error){var e=new Error(d.error);e.code=d.code;throw e}return d})}
 function sync(a,data){if(!LIVE)return;pending++;
-  api(a,data).catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending")return failLogin(e);toast(t("saveFail"));refresh(true)}).then(function(){pending--})}
+  api(a,data).catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending"){me="";return failLogin(e)}toast(t("saveFail"));refresh(true)}).then(function(){pending--})}
 function applyData(d){
   notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;
   if(d.users)users=d.users;
   notices.forEach(function(n){if(n.cat&&CK.indexOf(n.cat)<0)CK.push(n.cat)});
   sheets.forEach(function(s){if(s.cat&&SC.indexOf(s.cat)<0)SC.push(s.cat)});
   tkKey=""}
-function enter(d){
-  applyData(d);var u=d.user;me=u.email;role=u.role;curU=u;edName=u.name||nameOf(me);
+function enter(d,email){
+  applyData(d);var u=d.user;me=email;role=u.role;curU=u;edName=u.name||nameOf(me);
+  try{sessionStorage.setItem("email",me)}catch(e){}
   section="notice";view="notices";grp="cs";cat="all";faqCat="all";policeOpen=false;
   $("lgErr").className="lerr hide";$("login").className="login hide";$("app").className="";ui();window.scrollTo(0,0)}
-function failLogin(e){
-  tok="";try{sessionStorage.removeItem("tok")}catch(x){}try{google.accounts.id.disableAutoSelect()}catch(x){}
+function failLogin(e,email){
+  me="";try{sessionStorage.removeItem("email")}catch(x){}
   var k=e&&e.code==="pending"?"lgPend":e&&e.code==="denied"?"lgDeny":e&&e.code==="auth"?"lgExp":"lgFail";
+  if(email)$("lgEmail").value=email;
   showLg(k,k==="lgPend");$("app").className="hide";$("login").className="login"}
-function boot(){api("load").then(enter).catch(failLogin)}
+function boot(email){me=email;api("load").then(function(d){enter(d,email)}).catch(function(e){failLogin(e,email)})}
 function refresh(force){
-  if(!LIVE||!tok||(pending>0&&!force)||document.querySelector("dialog[open]"))return;
+  if(!LIVE||!me||(pending>0&&!force)||document.querySelector("dialog[open]"))return;
   api("load").then(function(d){applyData(d);if(d.user){role=d.user.role;curU=d.user;edName=d.user.name||edName}render()})
-    .catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e)})}
-function gsiInit(){
-  google.accounts.id.initialize({client_id:CFG.CLIENT_ID,callback:onCred,auto_select:true,cancel_on_tap_outside:false});
-  google.accounts.id.renderButton($("gbtn"),{theme:"outline",size:"large",width:300,text:"continue_with",shape:"pill"})}
-function onCred(r){tok=r.credential;try{sessionStorage.setItem("tok",tok)}catch(e){}boot()}
-function startLive(){
-  gsiInit();var s=null;try{s=sessionStorage.getItem("tok")}catch(e){}
-  if(s){tok=s;boot()}else{try{google.accounts.id.prompt()}catch(e){}}}
+    .catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,me)})}
 if(LIVE){
-  $("lgEmail").className="hide";$("lgGo").className="gbtn hide";$("gbtn").className="gwrap";
-  if(window.google&&google.accounts&&google.accounts.id)startLive();
-  else{var sc=document.createElement("script");sc.src="https://accounts.google.com/gsi/client";sc.async=true;sc.onload=startLive;document.head.appendChild(sc)}
+  var savedEmail=null;try{savedEmail=sessionStorage.getItem("email")}catch(e){}
+  if(savedEmail)boot(savedEmail);
   setInterval(function(){if(!document.hidden)refresh(false)},60000);
   document.addEventListener("visibilitychange",function(){if(!document.hidden)refresh(false)});
 }
