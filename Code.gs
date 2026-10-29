@@ -488,7 +488,30 @@ function saveNotice_(req, user) {
       r.date_key = parseDate_(r.date, r.year, r.month);
       if (noticeId_(nt.tab, r, seen) === id) hit = r;
     });
-    if (!hit) fail_('conflict', 'Notice no longer exists');
+    if (!hit) {
+      // Recover the edited row using the original snapshot when its legacy/generated ID changed.
+      if (s_(req.revision).trim()) {
+        for (var ri = 0; ri < data.rows.length; ri++) {
+          var rr = data.rows[ri];
+          if (!s_(rr.notice).trim()) continue;
+          rr.date_key = parseDate_(rr.date, rr.year, rr.month);
+          if (digest_(JSON.stringify(rr)) === s_(req.revision).trim()) { hit = rr; break; }
+        }
+      }
+      if (!hit && s_(req.originalTitle).trim()) {
+        var originalTitle = s_(req.originalTitle).trim(), originalBody = s_(req.originalBody).trim(), originalDate = s_(req.originalDate).trim();
+        var candidates = data.rows.filter(function (rr) {
+          if (!s_(rr.notice).trim()) return false;
+          var rd = parseDate_(rr.date, rr.year, rr.month);
+          var parts = splitNotice_(rr.notice);
+          var rt = s_(rr.title).trim() || parts.title;
+          var rb = (data.cols.body !== undefined && s_(rr.body)) ? s_(rr.body) : parts.body;
+          return rt === originalTitle && (!originalDate || rd === originalDate) && (!originalBody || s_(rb).trim() === originalBody);
+        });
+        if (candidates.length === 1) hit = candidates[0];
+      }
+      if (!hit) fail_('notfound', 'The notice could not be located. Refresh the page and reopen it.');
+    }
     var stableSeen = {};
     data.rows.forEach(function (r) {
       if (!s_(r.notice).trim()) return;
