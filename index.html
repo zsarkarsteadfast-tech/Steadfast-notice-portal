@@ -98,6 +98,9 @@ html[lang="bn"] h1,html[lang="bn"] h2,html[lang="bn"] h3{letter-spacing:0;line-h
 .seg button{padding:7px 16px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--mut)}
 .seg button.al{color:var(--red);font-weight:700}
 #tabs{margin-bottom:16px}
+/* UI polish */
+.login-tools{display:flex;align-items:center;gap:8px}.login-tools .ic{border:1px solid var(--bd);background:var(--glass);color:var(--ink);border-radius:13px;width:38px;height:38px;cursor:pointer;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.login-options{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}.login-check{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--mut);cursor:pointer}.login-check input{width:16px;height:16px;accent-color:var(--g)}
 /* cards */
 .card{padding:18px 22px;border-radius:26px;margin-bottom:14px}
 .meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin-bottom:8px}
@@ -129,6 +132,19 @@ html[lang="bn"] .stamp{letter-spacing:0}
 .fq .ans{padding:0 22px 16px}.fq .ans p{margin:0;color:var(--mut);white-space:pre-wrap}
 .sh{display:flex;gap:14px}.sh h3{font-size:19px;margin:0 0 4px}
 .shi{flex:none;width:46px;height:46px;border-radius:15px;background:var(--chip);color:var(--dk);display:grid;place-items:center}
+/* notice layout and readable text */
+#list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));align-items:start;gap:14px}
+#list .card{margin:0;min-width:0;height:fit-content}
+.card p{color:var(--tx);font-weight:500;line-height:1.7}
+.card .notice-body{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow:hidden;overflow-wrap:anywhere}
+.card .notice-body.expanded{display:block;overflow:visible}
+.read-more{margin-top:9px;padding:0;border:0;background:transparent;color:var(--g2);font:inherit;font-size:13px;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .read-more{color:var(--dk)}}
+:root[data-theme="dark"] .read-more{color:var(--dk)}
+nav{position:sticky;top:0;z-index:40;background:var(--glass);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-bottom:1px solid var(--bd);padding-top:env(safe-area-inset-top,0px)}
+.menu{background:rgba(255,255,255,.48)!important;-webkit-backdrop-filter:blur(28px) saturate(150%)!important;backdrop-filter:blur(28px) saturate(150%)!important;border:1px solid var(--edge)}
+:root[data-theme="dark"] .menu{background:rgba(16,28,22,.52)!important}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .menu{background:rgba(16,28,22,.52)!important}}
 /* dialogs */
 dialog{border:1px solid var(--edge);border-radius:28px;padding:0;width:min(480px,calc(100% - 32px));background:var(--dlg);color:var(--ink);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px);box-shadow:0 24px 70px rgba(0,0,0,.28)}
 dialog::backdrop{background:rgba(8,30,18,.45)}
@@ -160,9 +176,10 @@ html[lang="bn"] .dlg h2{letter-spacing:0}
 @keyframes drive{from{transform:translateX(-140px)}to{transform:translateX(105vw)}}
 .lcard .road{margin:20px -28px 0}
 footer{margin-top:36px;text-align:center;font-size:13px;color:var(--mut);padding-bottom:30px}
-footer .road{margin-bottom:12px}
+footer .road{display:none;margin-bottom:12px}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(8px);background:rgba(12,26,18,.92);color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:.2s;z-index:80}
 .toast.show{opacity:1;transform:translateX(-50%)}
+.loading-bar{height:3px;width:100%;overflow:hidden;background:var(--bd);border-radius:99px}.loading-bar:after{content:"";display:block;width:32%;height:100%;background:var(--g);border-radius:99px;animation:loadline 1.2s ease-in-out infinite}@keyframes loadline{0%{transform:translateX(-110%)}100%{transform:translateX(330%)}}
 @media(max-width:560px){.card h3{font-size:20px}.card{padding:16px 18px}.brand .lk{height:25px}.brand .lw{height:13px}.nbadge{font-size:11.5px;padding:2px 7px 2px 8px}.ex{width:14px;height:14px;font-size:10px}.sects button{font-size:13.5px;gap:6px}.head svg.t{width:56px;height:23px}.nav{padding-left:14px}}
 @media(prefers-reduced-motion:reduce){.road svg{animation:none;left:30%}.tag.urgt,.ltag{animation:none}.tk-track{animation:none}.tk-view{overflow-x:auto}}
 @media(max-width:560px){.head svg.t{display:none}.head .btn{padding:9px 16px;font-size:13.5px}}
@@ -226,14 +243,14 @@ footer .road{margin-bottom:12px}
 <symbol id="tr" viewBox="0 0 120 50"><rect x="1" y="5" width="80" height="31" rx="5" fill="#0fb35a"/><path d="M1 24h80v12H1z" fill="#0a8a45" opacity=".55"/><text x="41" y="21" text-anchor="middle" font-size="9.5" font-weight="700" fill="#fff" font-family="Arial,sans-serif">STEADFAST</text><path d="M85 13h19l13 13v10H85z" fill="#26282b"/><path d="M90 17h12l8 8H90z" fill="#bfe9d0"/><rect x="0" y="36" width="118" height="4" rx="2" fill="#26282b"/><g fill="#26282b"><circle cx="20" cy="41" r="7"/><circle cx="42" cy="41" r="7"/><circle cx="98" cy="41" r="7"/></g><g fill="#eaffdc"><circle cx="20" cy="41" r="2.6"/><circle cx="42" cy="41" r="2.6"/><circle cx="98" cy="41" r="2.6"/></g></symbol>
 </defs></svg>
 <section id="login" class="login">
- <div class="lt"><div class="seg"><button data-l="bn">বাংলা</button><button data-l="en">EN</button></div></div>
+ <div class="lt"><div class="login-tools"><div class="seg"><button data-l="bn">বাংলা</button><button data-l="en">EN</button></div><button class="ic" id="loginTheme" data-th-login aria-label="Toggle light and dark mode" title="Light / dark mode">◐</button></div></div>
  <div class="lcard">
   <div class="lglogo"><img class="lk" data-img="k" alt=""><img class="lw" data-img="w" alt="steadfast"></div>
   <p class="ltag" data-i="lgTag"></p>
   <div id="gbtn" class="gwrap hide"></div>
   <input id="lgEmail" type="email" aria-label="Email" placeholder="name@example.com" autocomplete="username">
   <input id="lgPassword" type="password" aria-label="Password" placeholder="Password" autocomplete="current-password">
-  <label style="display:flex;gap:8px;align-items:center;margin:0 0 14px"><input type="checkbox" id="lgShow"><span data-i="showPassword"></span></label>
+  <div class="login-options"><label class="login-check"><input type="checkbox" id="lgRemember"><span data-i="rememberMe">Remember me</span></label><label class="login-check"><input type="checkbox" id="lgShow"><span data-i="showPassword"></span></label></div>
   <button class="gbtn" id="lgGo"><span data-i="lgBtn"></span></button>
   <button class="btn line" id="forgotPassword" style="width:100%;margin-top:12px" data-i="forgotPassword"></button>
   <div class="lerr hide" id="lgErr" role="alert"></div>
@@ -357,8 +374,8 @@ cat:{"Payment":"পেমেন্ট","Delivery":"ডেলিভারি","Re
 sNotice:"নোটিশ",sFaq:"FAQ",sSheets:"শিট",faqTitle:"সচরাচর জিজ্ঞাসা (FAQ)",faqSub:"সাধারণ প্রশ্নের দ্রুত উত্তর।",faqNew:"+ নতুন FAQ",faqPh:"প্রশ্ন খুঁজুন",faqNone:"কোনো প্রশ্ন পাওয়া যায়নি।",fqT:"প্রশ্ন",fqA:"উত্তর",faqEt:"FAQ এডিট",faqNt:"নতুন FAQ",faqConf:"এই FAQ মুছে ফেলবেন?",
 shTitle:"শিট",shSub:"প্রতিটি টিমের রেফারেন্স শিট।",shNew:"+ শিট যোগ",shOpen:"শিট খুলুন",shNone:"এখানে এখনো কোনো শিট নেই।",shN:"শিটের নাম",shU:"Google Sheet লিংক",shD:"সংক্ষিপ্ত বিবরণ",shEt:"শিট এডিট",shNt:"শিট যোগ",shConf:"এই শিট মুছে ফেলবেন?",copyLink:"লিংক কপি",badUrl:"https:// দিয়ে শুরু হওয়া সঠিক লিংক দিন",
 lgCo:"STEADFAST COURIER LTD.",lgTitle:"UPDATE HUB",lgSub:"এজেন্টদের জন্য অভ্যন্তরীণ নোটিশ, FAQ ও শিট",lgPol:"অ্যাক্সেস নীতি",lg1:"অনুমোদিত স্টেডফাস্ট Google Workspace অ্যাকাউন্ট দিয়ে লগইন করুন",lg2:"শুধু স্টেডফাস্ট কর্মীদের ইমেইল ঢুকতে পারবে। এডিটর অ্যাডমিন অনুমোদিত",lg3:"লাইভ নোটিশ, FAQ ও শিট, সবসময় আপডেট",lgEmail:"অফিসের ইমেইল",lgBtn:"Google দিয়ে চালিয়ে যান",lgDemo:"শুধু ডেমো: একটি অ্যাকাউন্ট বাছুন",lgEd:"এডিটর",lgVw:"ভিউয়ার",lgOut:"বাইরের ইমেইল",lgDeny:"প্রবেশ নিষেধ। শুধু স্টেডফাস্ট কর্মীদের ইমেইল অ্যাক্সেসের জন্য আবেদন করতে পারবে।",lgNote:"এন্টারপ্রাইজ মোড · শুধুমাত্র সিএস টিমের অফিসিয়াল ব্যবহারের জন্য",lgTag:"নোটিশ, সার্ভিস ও শিট, সব এক জায়গায়",lgFoot:"স্টেডফাস্ট কুরিয়ার কর্মীদের জন্য সুরক্ষিত অভ্যন্তরীণ সিস্টেম।",signout:"সাইন আউট",edPill:"এডিটর",mLang:"ভাষা",mTheme:"লাইট / ডার্ক মোড",catNew:"+ নতুন ক্যাটাগরি",catPh:"নতুন ক্যাটাগরির নাম"}};
-Object.assign(T.en,{"lgBtn": "Sign in / Request access", "lgDeny": "Access denied. Contact an admin.", "lgNote": "Any email can request access. Admin approval required.", "lg1": "Sign in with your email and password", "lg2": "Any email can request access. An admin approves each account.", "showPassword": "Show password", "forgotPassword": "Forgot password?", "changePassword": "Change password", "currentPassword": "Current password", "newPassword": "New password", "confirmPassword": "Confirm new password", "badCredentials": "Incorrect email or password.", "loginRate": "Too many attempts. Try again in 15 minutes.", "resetSent": "If this account exists, your reset request has been sent to the admin. After the admin resets it, sign in with sfcnotice123.", "passwordMismatch": "The new passwords do not match.", "badCurrentPassword": "Current password is incorrect.", "passwordLength": "Use 8 to 128 characters.", "passwordChanged": "Password changed. Other sessions have been signed out.", "resetPassword": "Reset password", "resetConfirm": "Reset this account’s password to sfcnotice123 and sign out its sessions?", "passwordReset": "Password reset to sfcnotice123.", "resetRequested": "Password reset requested"});
-Object.assign(T.bn,{"lgBtn": "সাইন ইন / অ্যাক্সেসের আবেদন", "lgDeny": "অ্যাক্সেস নেই। অ্যাডমিনের সাথে যোগাযোগ করুন।", "lgNote": "যেকোনো ইমেইল দিয়ে আবেদন করা যাবে। অ্যাডমিনের অনুমোদন প্রয়োজন।", "lg1": "Sign in with your email and password", "lg2": "Any email can request access. An admin approves each account.", "showPassword": "পাসওয়ার্ড দেখুন", "forgotPassword": "পাসওয়ার্ড ভুলে গেছেন?", "changePassword": "পাসওয়ার্ড পরিবর্তন", "currentPassword": "বর্তমান পাসওয়ার্ড", "newPassword": "নতুন পাসওয়ার্ড", "confirmPassword": "নতুন পাসওয়ার্ড নিশ্চিত করুন", "badCredentials": "ইমেইল অথবা পাসওয়ার্ড ভুল।", "loginRate": "অনেকবার চেষ্টা করেছেন। ১৫ মিনিট পরে চেষ্টা করুন।", "resetSent": "অ্যাকাউন্টটি থাকলে অ্যাডমিনের কাছে রিসেটের আবেদন পাঠানো হয়েছে। অ্যাডমিন রিসেট করার পরে sfcnotice123 দিয়ে সাইন ইন করুন।", "passwordMismatch": "নতুন পাসওয়ার্ড দুটি মিলছে না।", "badCurrentPassword": "বর্তমান পাসওয়ার্ড ভুল।", "passwordLength": "Use 8 to 128 characters.", "passwordChanged": "পাসওয়ার্ড পরিবর্তন হয়েছে।", "resetPassword": "পাসওয়ার্ড রিসেট", "resetConfirm": "Reset this account’s password to sfcnotice123 and sign out its sessions?", "passwordReset": "Password reset to sfcnotice123.", "resetRequested": "পাসওয়ার্ড রিসেটের আবেদন রয়েছে"});
+Object.assign(T.en,{"rememberMe":"Remember me","readFull":"Read full notice","readLess":"Show less","saved":"Changes saved","lgBtn": "Sign in / Request access", "lgDeny": "Access denied. Contact an admin.", "lgNote": "Any email can request access. Admin approval required.", "lg1": "Sign in with your email and password", "lg2": "Any email can request access. An admin approves each account.", "showPassword": "Show password", "forgotPassword": "Forgot password?", "changePassword": "Change password", "currentPassword": "Current password", "newPassword": "New password", "confirmPassword": "Confirm new password", "badCredentials": "Incorrect email or password.", "loginRate": "Too many attempts. Try again in 15 minutes.", "resetSent": "If this account exists, your reset request has been sent to the admin. After the admin resets it, sign in with sfcnotice123.", "passwordMismatch": "The new passwords do not match.", "badCurrentPassword": "Current password is incorrect.", "passwordLength": "Use 8 to 128 characters.", "passwordChanged": "Password changed. Other sessions have been signed out.", "resetPassword": "Reset password", "resetConfirm": "Reset this account’s password to sfcnotice123 and sign out its sessions?", "passwordReset": "Password reset to sfcnotice123.", "resetRequested": "Password reset requested"});
+Object.assign(T.bn,{"rememberMe":"আমাকে মনে রাখুন","readFull":"সম্পূর্ণ নোটিশ পড়ুন","readLess":"সংক্ষিপ্ত করুন","saved":"পরিবর্তন সংরক্ষিত হয়েছে","lgBtn": "সাইন ইন / অ্যাক্সেসের আবেদন", "lgDeny": "অ্যাক্সেস নেই। অ্যাডমিনের সাথে যোগাযোগ করুন।", "lgNote": "যেকোনো ইমেইল দিয়ে আবেদন করা যাবে। অ্যাডমিনের অনুমোদন প্রয়োজন।", "lg1": "Sign in with your email and password", "lg2": "Any email can request access. An admin approves each account.", "showPassword": "পাসওয়ার্ড দেখুন", "forgotPassword": "পাসওয়ার্ড ভুলে গেছেন?", "changePassword": "পাসওয়ার্ড পরিবর্তন", "currentPassword": "বর্তমান পাসওয়ার্ড", "newPassword": "নতুন পাসওয়ার্ড", "confirmPassword": "নতুন পাসওয়ার্ড নিশ্চিত করুন", "badCredentials": "ইমেইল অথবা পাসওয়ার্ড ভুল।", "loginRate": "অনেকবার চেষ্টা করেছেন। ১৫ মিনিট পরে চেষ্টা করুন।", "resetSent": "অ্যাকাউন্টটি থাকলে অ্যাডমিনের কাছে রিসেটের আবেদন পাঠানো হয়েছে। অ্যাডমিন রিসেট করার পরে sfcnotice123 দিয়ে সাইন ইন করুন।", "passwordMismatch": "নতুন পাসওয়ার্ড দুটি মিলছে না।", "badCurrentPassword": "বর্তমান পাসওয়ার্ড ভুল।", "passwordLength": "Use 8 to 128 characters.", "passwordChanged": "পাসওয়ার্ড পরিবর্তন হয়েছে।", "resetPassword": "পাসওয়ার্ড রিসেট", "resetConfirm": "Reset this account’s password to sfcnotice123 and sign out its sessions?", "passwordReset": "Password reset to sfcnotice123.", "resetRequested": "পাসওয়ার্ড রিসেটের আবেদন রয়েছে"});
 Object.assign(T.en,{"trackingTitle": "Your access is on its way", "trackingNote": "A courier-style journey while we sign you in.", "trackingReceived": "Sign-in details received", "trackingDispatch": "Dispatched to the access hub", "trackingChecking": "Checking account & admin approval", "trackingDelivered": "Access delivered · logging in", "trackingWait": "Please wait while the server responds…", "trackingWelcome": "All clear. Opening your notice panel…"});
 Object.assign(T.bn,{"trackingTitle": "আপনার অ্যাক্সেস পৌঁছে যাচ্ছে", "trackingNote": "সাইন ইনের অপেক্ষায় একটি কুরিয়ার যাত্রা।", "trackingReceived": "সাইন ইনের তথ্য গ্রহণ করা হয়েছে", "trackingDispatch": "অ্যাক্সেস হাবে পাঠানো হচ্ছে", "trackingChecking": "অ্যাকাউন্ট ও অনুমোদন যাচাই চলছে", "trackingDelivered": "অ্যাক্সেস পৌঁছে গেছে · লগইন হচ্ছে", "trackingWait": "সার্ভারের উত্তরের জন্য অপেক্ষা করুন…", "trackingWelcome": "সব ঠিক আছে। আপনার নোটিশ প্যানেল খুলছে…"});
 Object.assign(T.en,{"manageNotices": "Manage notices", "noticeGroup": "Notice group", "noticeDate": "Notice date", "noticeExpires": "Expiry date (optional)", "noticeConflict": "This notice has changed. Close the editor, refresh and try again."});
@@ -497,7 +514,7 @@ function listHtml(){
     var a=ib("copy",n.id,IC.copy,t("copy"));
     if(!isEd()&&!n.expired)a+=ib("report",n.id,IC.flag,mine?t("reported"):t("rpt"),mine);
     if(isEd())a+='<span class="sp"></span><button class="btn sm" data-a="exp" data-id="'+n.id+'">'+(n.expired?t("restore"):t("mark"))+'</button>'+((!LIVE||isAdmin())?'<button class="btn sm" data-a="edit" data-id="'+n.id+'">'+t("edit")+'</button>':'')+(LIVE?'':'<button class="btn sm danger" data-a="del" data-id="'+n.id+'">'+t("del")+'</button>');
-    return '<article class="card'+(n.expired?' exp':'')+(red?' rep':'')+'"><div class="meta">'+tags+'<span>'+fmt(n.date)+'</span>'+right+'</div><h3>'+esc(L(n.title))+'</h3><p>'+esc(L(n.body))+'</p>'+updHtml(n)+'<div class="acts">'+a+'</div></article>';
+    return '<article class="card'+(n.expired?' exp':'')+(red?' rep':'')+'"><div class="meta">'+tags+'<span>'+fmt(n.date)+'</span>'+right+'</div><h3>'+esc(L(n.title))+'</h3><p class="notice-body" id="body-'+n.id+'">'+esc(L(n.body))+'</p>'+(String(L(n.body)).length>260?'<button type="button" class="read-more" data-a="read" data-id="'+n.id+'">'+t("readFull")+'</button>':'')+updHtml(n)+'<div class="acts">'+a+'</div></article>';
   }).join("");
 }
 function repHtml(){
@@ -541,7 +558,7 @@ function faqChips(){
   $("faqChips").className=cs.length?"chips":"chips hide";
   $("faqChips").innerHTML=["all"].concat(cs).map(function(c){var n=c==="all"?faqs.length:faqs.filter(function(f){return f.cat===c}).length;return '<button class="chip'+(c===faqCat?' on':'')+'" data-c="'+esc(c)+'">'+(c==="all"?t("all"):esc(c))+' ('+dg(n)+')</button>'}).join("")}
 function renderFaq(){
-  var ed=isEd()&&!LIVE;
+  var ed=isEd();
   $("faqNew").className=ed?"btn":"btn hide";faqChips();
   var q=$("faqQ").value.trim().toLowerCase();
   var rows=faqs.filter(function(f){if(faqCat!=="all"&&f.cat!==faqCat)return false;if(!q)return true;var h=(allTxt(f.q)+" "+allTxt(f.a)+" "+(f.cat||"")).toLowerCase();return q.split(/\s+/).every(function(w){return h.indexOf(w)>-1})});
@@ -634,8 +651,9 @@ document.addEventListener("click",function(e){
   if(!e.target.closest("#menuWrap"))$("menu").classList.add("hide");
   if(!e.target.closest("#cal"))$("cal").classList.add("hide");
   var l=e.target.closest("[data-l]");if(l){lang=l.dataset.l;ui();return}
-  if(e.target.closest("[data-th]")){var r=document.documentElement,d=r.dataset.theme==="dark"||(!r.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches);r.dataset.theme=d?"light":"dark"}
+  if(e.target.closest("[data-th]")||e.target.closest("[data-th-login]")){var r=document.documentElement,d=r.dataset.theme==="dark"||(!r.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches);r.dataset.theme=d?"light":"dark";try{localStorage.setItem("noticeTheme",r.dataset.theme)}catch(x){}}
 });
+try{var savedTheme=localStorage.getItem("noticeTheme");if(savedTheme==="light"||savedTheme==="dark")document.documentElement.dataset.theme=savedTheme}catch(e){}
 $("sects").onclick=function(e){var b=e.target.closest("[data-s]");if(b){section=b.dataset.s;render()}};
 
 /* notices */
@@ -675,6 +693,7 @@ $("save").onclick=function(){
 $("list").onclick=function(e){
   var b=e.target.closest("[data-a]");if(!b)return;var a=b.dataset.a,id=+b.dataset.id;
   var n=notices.filter(function(x){return x.id===id})[0];if(!n)return;
+  if(a==="read"){var p=$("body-"+id);if(!p)return;var expanded=p.classList.toggle("expanded");b.textContent=t(expanded?"readLess":"readFull");return;}
   function clr(){reports=reports.filter(function(r){return r.nid!==id})}
   if(a==="copy"){copyTxt(L(n.title)+"\n\n"+L(n.body));return}
   if(a==="report"){if(repsOf(id).some(function(r){return r.by===me})){toast(t("already"));return}rid=id;$("rNote").value="";$("rdlg").showModal();return}
@@ -700,7 +719,7 @@ $("fCancel").onclick=function(){$("fdlg").close()};
 $("fSave").onclick=function(){
   var q=$("faqT").value.trim(),a=$("faqA").value.trim();if(!q||!a){toast(t("need"));return}
   if(faqId){faqs.forEach(function(f){if(f.id===faqId){f.q=q;f.a=a;f.upd=stamp()}})}else{faqs.unshift({id:Date.now(),q:q,a:a,upd:stamp()})}
-  $("fdlg").close();render();toast(t("saved"));
+  $("fdlg").close();if(LIVE){var changed=faqId?faqs.filter(function(f){return f.id===faqId})[0]:faqs[0];if(changed)sync("saveFaq",{faq:changed})}render();toast(t("saved"));
 };
 $("faqList").onclick=function(e){
   var b=e.target.closest("[data-a]");if(!b||!isEd())return;var id=+b.dataset.id,f=faqs.filter(function(x){return x.id===id})[0];if(!f)return;
@@ -820,7 +839,7 @@ function applyData(d){
   tkKey=""}
 function enter(d,email){
   if(d.token)authToken=d.token;$("lgPassword").value="";applyData(d);var u=d.user;me=email;role=u.role;curU=u;edName=u.name||nameOf(me);
-  try{localStorage.setItem("email",me);localStorage.setItem("authToken",authToken)}catch(e){}
+  try{if($("lgRemember").checked){localStorage.setItem("rememberMe","1");localStorage.setItem("email",me);localStorage.setItem("authToken",authToken);sessionStorage.removeItem("email");sessionStorage.removeItem("authToken")}else{localStorage.removeItem("rememberMe");localStorage.removeItem("email");localStorage.removeItem("authToken");sessionStorage.setItem("email",me);sessionStorage.setItem("authToken",authToken)}}catch(e){}
   section="notice";view="notices";grp="cs";cat="all";faqCat="all";policeOpen=false;
   $("lgErr").className="lerr hide";$("login").className="login hide";$("app").className="";ui();window.scrollTo(0,0)}
 function failLogin(e,email){authToken="";
@@ -834,7 +853,7 @@ function refresh(force){
   api("load").then(function(d){applyData(d);if(d.user){role=d.user.role;curU=d.user;edName=d.user.name||edName}render()})
     .catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,me)})}
 if(LIVE){
-  var savedEmail=null;try{savedEmail=localStorage.getItem("email")||sessionStorage.getItem("email");authToken=localStorage.getItem("authToken")||sessionStorage.getItem("authToken")||""}catch(e){}
+  var savedEmail=null;try{$("lgRemember").checked=localStorage.getItem("rememberMe")==="1";savedEmail=localStorage.getItem("email")||sessionStorage.getItem("email");authToken=localStorage.getItem("authToken")||sessionStorage.getItem("authToken")||"";if(savedEmail&&!$("lgEmail").value)$("lgEmail").value=savedEmail}catch(e){}
   if(savedEmail&&authToken)boot(savedEmail);
   setInterval(function(){if(!document.hidden)refresh(false)},60000);
   document.addEventListener("visibilitychange",function(){if(!document.hidden)refresh(false)});
