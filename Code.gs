@@ -512,15 +512,12 @@ function saveNotice_(req, user) {
       }
       if (!hit) fail_('notfound', 'The notice could not be located. Refresh the page and reopen it.');
     }
-    var stableSeen = {};
-    data.rows.forEach(function (r) {
-      if (!s_(r.notice).trim()) return;
-      r.date_key = parseDate_(r.date, r.year, r.month);
-      var stableId = noticeId_(nt.tab, r, stableSeen);
-      src.getRange(r._row, data.cols.notice_id + 1).setValue(stableId);
-    });
-    data = readTab_(src);
-    hit = data.rows.filter(function (r) { return Number(r.notice_id) === id; })[0] || hit;
+    // Persist the selected notice's stable ID only. Do not rewrite IDs across the entire sheet.
+    // Bulk ID rewrites can cause stale-ID conflicts when legacy rows have generated IDs.
+    if (data.cols.notice_id !== undefined && !(Number(hit.notice_id) > 0)) {
+      src.getRange(hit._row, data.cols.notice_id + 1).setValue(id);
+      hit.notice_id = id;
+    }
   }
   var dest = tab_(target.tab), destData = target.tab === nt.tab ? data : readTab_(dest);
   var fields = {
