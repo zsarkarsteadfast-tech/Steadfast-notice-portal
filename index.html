@@ -268,6 +268,14 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 .history-meta{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .history-details{color:var(--mut);font-size:13px;line-height:1.55;overflow-wrap:anywhere}
 
+
+#save.is-saving{opacity:.88;cursor:wait}.save-spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;vertical-align:-3px;animation:saveSpin .7s linear infinite;margin-right:7px}@keyframes saveSpin{to{transform:rotate(360deg)}}
+#saveSuccessOverlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(3,24,13,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:opacity .25s}#saveSuccessOverlay.show{opacity:1;pointer-events:auto}
+.save-success-card{width:min(520px,100%);padding:34px 28px 28px;border:1px solid rgba(255,255,255,.8);border-radius:32px;text-align:center;background:var(--dlg);color:var(--ink);box-shadow:0 28px 100px rgba(0,0,0,.35);transform:translateY(18px) scale(.94);transition:transform .35s cubic-bezier(.2,.8,.4,1)}#saveSuccessOverlay.show .save-success-card{transform:translateY(0) scale(1)}
+.save-success-mark{width:104px;height:104px;margin:0 auto 18px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#19d777,#079447);box-shadow:0 0 0 12px rgba(15,179,90,.12),0 12px 34px rgba(15,179,90,.38);animation:successPop .55s cubic-bezier(.2,1.6,.4,1) both}.save-success-mark svg{width:58px;height:58px;stroke:#fff;stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:70;stroke-dashoffset:70;animation:successDraw .55s .2s ease-out forwards}
+.save-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}.save-confetti i{position:absolute;top:-24px;width:10px;height:18px;border-radius:3px;animation:confettiFall 2.3s ease-in forwards}.save-confetti i:nth-child(6n+1){background:#17c964;left:8%;animation-delay:.05s}.save-confetti i:nth-child(6n+2){background:#ffd166;left:22%;animation-delay:.2s}.save-confetti i:nth-child(6n+3){background:#55c7ff;left:38%;animation-delay:.1s}.save-confetti i:nth-child(6n+4){background:#f78da7;left:61%;animation-delay:.25s}.save-confetti i:nth-child(6n+5){background:#a78bfa;left:78%;animation-delay:.15s}.save-confetti i:nth-child(6n){background:#17c964;left:92%;animation-delay:.3s}
+.save-success-card h2{font-size:clamp(25px,5vw,34px);line-height:1.2;margin:0 0 8px;letter-spacing:-.5px}.save-success-card .success-sub{color:var(--mut);margin:0 0 22px}.save-success-meta{padding:16px;border-radius:18px;background:var(--soft);text-align:left;overflow-wrap:anywhere;margin-bottom:22px}.save-success-meta strong{display:block;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}.save-success-meta span{font-weight:650}
+@keyframes successPop{0%{transform:scale(.3) rotate(-18deg);opacity:0}75%{transform:scale(1.12) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}@keyframes successDraw{to{stroke-dashoffset:0}}@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(110vh) rotate(640deg);opacity:0}}@media(prefers-reduced-motion:reduce){.save-spinner,.save-success-mark,.save-success-mark svg,.save-confetti i{animation:none!important}#saveSuccessOverlay,.save-success-card{transition:none}}
 </style>
 </head>
 <body>
@@ -706,6 +714,22 @@ function openEd(n){
   $("fT").value=n?L(n.title):"";$("fB").value=n?L(n.body):"";$("fC").value=n?n.cat:"Payment";$("fU").value=n&&n.urgent?"1":"0";
   $("dlg").showModal();
 }
+function historyTimeLabel(value){
+  var m=String(value||"").match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if(!m)return String(value||"");
+  var months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var day=Number(m[3]),month=months[Number(m[2])-1]||m[2],hour=Number(m[4]),minute=m[5],ampm=hour>=12?"p.m.":"a.m.",h=hour%12||12;
+  return day+" "+month+" at "+h+":"+minute+" "+ampm;
+}
+function showSaveSuccess(event,isEdit){
+  var overlay=$("saveSuccessOverlay");
+  if(!overlay){overlay=document.createElement("div");overlay.id="saveSuccessOverlay";overlay.innerHTML='<div class="save-confetti" aria-hidden="true">'+Array.from({length:24},function(){return "<i></i>"}).join("")+'</div><div class="save-success-card" role="status" aria-live="polite"><div class="save-success-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M13 33l13 13 26-28"></path></svg></div><h2 id="saveSuccessTitle">Notice saved successfully!</h2><p class="success-sub" id="saveSuccessSub">Your changes are live.</p><div class="save-success-meta"><strong>Edited by</strong><span id="saveSuccessEmail"></span><br><strong style="margin-top:10px">Date & time</strong><span id="saveSuccessTime"></span></div><button class="btn" id="saveSuccessClose" type="button">Continue</button></div>';document.body.appendChild(overlay);$("saveSuccessClose").onclick=function(){overlay.classList.remove("show")};overlay.onclick=function(e){if(e.target===overlay)overlay.classList.remove("show")}}
+  $("saveSuccessTitle").textContent=isEdit?"Notice updated successfully!":"Notice published successfully!";
+  $("saveSuccessSub").textContent=isEdit?"Your changes have been saved and are live.":"The new notice is now live.";
+  $("saveSuccessEmail").textContent=event.email||me;
+  $("saveSuccessTime").textContent=historyTimeLabel(event.at)||historyTimeLabel(new Date().toISOString().slice(0,16));
+  overlay.classList.remove("show");void overlay.offsetWidth;overlay.classList.add("show");
+}
 $("nGroups").onclick=function(e){var b=e.target.closest("[data-g]");if(b){grp=b.dataset.g;cat="all";render()}};
 function goHome(){
   section="notice";view="notices";grp="cs";cat="all";faqCat="all";policeOpen=false;
@@ -728,9 +752,17 @@ $("save").onclick=function(){
   var c=pickCat(CK,$("fC").value,"fCn");if(!c){toast(t("need"));return}
   if(LIVE){
     if(!isAdmin())return;var existing=editId?notices.filter(function(n){return n.id===editId})[0]:null;if(editId&&!existing)return;
-    var payload={id:existing?existing.id:0,tab:existing?existing.tab:($("fGroup").value==="qa"?"QA Follow-up":"SFC Notice"),title:a,body:b,cat:c,urgent:+$("fU").value,src:$("fGroup").value,date:$("fDate").value,ann:$("fAnn").value.trim(),appr:$("fAppr").value.trim(),expires:$("fExpires").value,expired:$("fExpired").checked};
-    $("save").disabled=true;$("cancel").disabled=true;$("noticeSaveError").textContent="";
-    api(editId?"saveNotice":"createNotice",payload).then(function(d){applyData(d);$("dlg").close();grp=payload.src;cat="all";render();if(section==="admin")renderAdmin();toast(t("saved"))}).catch(function(e){$("noticeSaveError").textContent=e.code==="conflict"?t("noticeConflict"):t("saveFail")}).then(function(){$("save").disabled=false;$("cancel").disabled=false});return;
+    var payload={id:existing?existing.id:0,revision:existing?existing.revision:"",originalTitle:existing?existing.title:"",originalBody:existing?existing.body:"",originalDate:existing?existing.date:"",tab:existing?existing.tab:($("fGroup").value==="qa"?"QA Follow-up":"SFC Notice"),title:a,body:b,cat:c,urgent:+$("fU").value,src:$("fGroup").value,date:$("fDate").value,ann:$("fAnn").value.trim(),appr:$("fAppr").value.trim(),expires:$("fExpires").value,expired:$("fExpired").checked};
+    var saveBtn=$("save"),cancelBtn=$("cancel"),oldSaveText=saveBtn.textContent;
+    saveBtn.disabled=true;cancelBtn.disabled=true;saveBtn.classList.add("is-saving");saveBtn.innerHTML='<span class="save-spinner" aria-hidden="true"></span> Saving…';$("noticeSaveError").textContent="";
+    api(editId?"saveNotice":"createNotice",payload).then(function(d){
+      applyData(d);$("dlg").close();grp=payload.src;cat="all";render();if(section==="admin")renderAdmin();
+      var event=editHistory.filter(function(h){return h.email&&h.email.toLowerCase()===me.toLowerCase()&&(h.action==="EDIT_NOTICE"||h.action==="CREATE_NOTICE")})[0];
+      showSaveSuccess(event||{email:me,at:new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0")+"-"+String(new Date().getDate()).padStart(2,"0")+"T"+String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0")},!!editId);
+    }).catch(function(e){
+      $("noticeSaveError").textContent=e.code==="auth"?"Your session expired. Please sign in again.":"The notice could not be saved. Please try again.";
+      if(e.code==="auth"){me="";failLogin(e)}
+    }).then(function(){saveBtn.disabled=false;cancelBtn.disabled=false;saveBtn.classList.remove("is-saving");saveBtn.textContent=oldSaveText});return;
   }
   var d={title:a,body:b,cat:c,urgent:+$("fU").value,upd:stamp(),src:grp};
   if(editId){notices.forEach(function(n){if(n.id===editId)Object.assign(n,d)})}
@@ -835,7 +867,7 @@ function renderAdmin(){
     if(!editHistory.length){$("adList").innerHTML='<div class="empty">'+t("histEmpty")+'</div>';return}
     $("adList").innerHTML=editHistory.map(function(h){
       var actionKey={CREATE_NOTICE:"histCreate",DELETE_NOTICE:"histDelete",EDIT_NOTICE:"histEdit",MARK_EXPIRED:"histExpired",RESTORE_NOTICE:"histRestore",EDIT_FAQ:"histFaq"}[h.action]||h.action||"Update";
-      var when=String(h.at||"").replace("T","  ");
+      var when=historyTimeLabel(h.at);
       return '<article class="card"><div class="ur"><span class="av2">↻</span><div><h3>'+esc(L(h.title)||"History")+'</h3><p>'+esc(t(actionKey))+' · '+esc(h.tab||h.target_type||"")+'</p></div></div><div class="history-meta"><span class="tag">'+t("histBy")+': '+esc(h.email||"")+'</span><span class="tag">'+t("histAt")+': '+esc(when)+'</span></div>'+(h.details?'<p class="history-details">'+esc(h.details)+'</p>':'')+'</article>';
     }).join("");return;
   }
