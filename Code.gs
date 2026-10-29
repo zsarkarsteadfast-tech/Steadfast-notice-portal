@@ -258,8 +258,14 @@ function police_() {
   var sh = ss_().getSheetByName(POLICE_TAB);
   if (!sh) return [];
   return readTab_(sh).rows.map(function (r) {
-    return {hub: s_(r.hub).replace(/\s+/g, ' ').trim(), ps: s_(r.police_station).replace(/\s+/g, ' ').trim(), area: s_(r.area).replace(/\s+/g, ' ').trim()};
-  }).filter(function (x) { return x.hub || x.ps; });
+    var name = s_(r.name || r.police_station).replace(/\s+/g, ' ').trim();
+    var hub = s_(r.hub).replace(/\s+/g, ' ').trim();
+    var type = s_(r.type).replace(/\s+/g, ' ').trim();
+    var status = s_(r.status).replace(/\s+/g, ' ').trim();
+    var id = s_(r.id || r.record_id).trim();
+    var area = s_(r.area).replace(/\s+/g, ' ').trim();
+    return {id: id, name: name, ps: name, hub: hub, type: type, status: status, area: area};
+  }).filter(function (x) { return x.hub || x.name || x.area; });
 }
 
 /* ------------------------------ users, links, reports, ticker ------------------------------ */
