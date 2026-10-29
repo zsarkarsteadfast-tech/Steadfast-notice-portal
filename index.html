@@ -170,7 +170,7 @@ html[lang="bn"] .dlg h2{letter-spacing:0}
 .lglogo{display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:10px}
 .lglogo .lk{height:46px;width:auto}.lglogo .lw{height:24px;width:auto;margin-top:8px}
 .ltag{margin:0 0 24px;font-size:15px;font-weight:600;color:var(--dk);animation:softblink 2.6s ease-in-out infinite}
-#lgEmail,#lgPassword{margin-bottom:12px}
+#lgEmail,#lgPassword,#forgotEmail,#forgotAdminId{width:100%;padding:12px 14px;border:1px solid var(--bd);border-radius:16px;background:var(--fld);color:var(--ink);font:inherit;font-size:15px;outline:0;margin-bottom:12px}#lgEmail,#lgPassword{margin-bottom:12px}#forgotEmail:focus,#forgotAdminId:focus{border-color:var(--g);box-shadow:0 0 0 4px rgba(15,179,90,.18)}
 .gbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:13px;border-radius:999px;background:var(--dlg);border:1px solid var(--edge);font-weight:600;font-size:15px;box-shadow:var(--sh)}
 .gbtn:hover{border-color:var(--g)}
 .lerr{margin-top:12px;padding:10px 12px;border-radius:14px;background:var(--redsoft);color:var(--red);font-size:13.5px;line-height:1.5;text-align:left}
@@ -300,6 +300,16 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 </section>
 
 
+<div class="lcard hide" id="forgotPage">
+  <div class="lglogo"><img class="lk" data-img="k" alt=""><img class="lw" data-img="w" alt="steadfast"></div>
+  <h2 data-i="forgotTitle" style="margin:8px 0 4px"></h2><p style="color:var(--mut);margin:0 0 18px" data-i="forgotSub"></p>
+  <form id="forgotForm">
+   <label for="forgotEmail" data-i="forgotEmailLabel" style="display:block;text-align:left;font-size:13px;color:var(--mut);margin:12px 0 5px"></label><input id="forgotEmail" type="email" required autocomplete="email" placeholder="name@example.com">
+   <label for="forgotAdminId" data-i="forgotAdminIdLabel" style="display:block;text-align:left;font-size:13px;color:var(--mut);margin:4px 0 5px"></label><input id="forgotAdminId" required maxlength="100" autocomplete="off">
+   <div class="lerr hide" id="forgotErr" role="alert"></div><p id="forgotSuccess" class="hide" style="color:var(--g2);font-weight:650;margin:12px 0 0" role="status"></p>
+   <button class="gbtn" id="forgotSend" type="submit" style="margin-top:18px" data-i="forgotSend"></button><button class="btn line" id="forgotBack" type="button" style="width:100%;margin-top:10px" data-i="forgotBack"></button>
+  </form><div class="road"><svg><use href="#tr"/></svg><svg><use href="#tr"/></svg></div>
+ </div>
 <div id="loginTracking" class="login-tracking hide" role="status" aria-live="polite" aria-atomic="true">
  <div class="tracking-card">
   <div class="tracking-label">STEADFAST · ACCESS EXPRESS</div>
@@ -418,6 +428,8 @@ shTitle:"শিট",shSub:"প্রতিটি টিমের রেফার
 lgCo:"STEADFAST COURIER LTD.",lgTitle:"UPDATE HUB",lgSub:"এজেন্টদের জন্য অভ্যন্তরীণ নোটিশ, FAQ ও শিট",lgPol:"অ্যাক্সেস নীতি",lg1:"অনুমোদিত স্টেডফাস্ট Google Workspace অ্যাকাউন্ট দিয়ে লগইন করুন",lg2:"শুধু স্টেডফাস্ট কর্মীদের ইমেইল ঢুকতে পারবে। এডিটর অ্যাডমিন অনুমোদিত",lg3:"লাইভ নোটিশ, FAQ ও শিট, সবসময় আপডেট",lgEmail:"অফিসের ইমেইল",lgBtn:"Google দিয়ে চালিয়ে যান",lgDemo:"শুধু ডেমো: একটি অ্যাকাউন্ট বাছুন",lgEd:"এডিটর",lgVw:"ভিউয়ার",lgOut:"বাইরের ইমেইল",lgDeny:"প্রবেশ নিষেধ। শুধু স্টেডফাস্ট কর্মীদের ইমেইল অ্যাক্সেসের জন্য আবেদন করতে পারবে।",lgNote:"এন্টারপ্রাইজ মোড · শুধুমাত্র সিএস টিমের অফিসিয়াল ব্যবহারের জন্য",lgTag:"নোটিশ, সার্ভিস ও শিট, সব এক জায়গায়",lgFoot:"স্টেডফাস্ট কুরিয়ার কর্মীদের জন্য সুরক্ষিত অভ্যন্তরীণ সিস্টেম।",signout:"সাইন আউট",edPill:"এডিটর",mLang:"ভাষা",mTheme:"লাইট / ডার্ক মোড",catNew:"+ নতুন ক্যাটাগরি",catPh:"নতুন ক্যাটাগরির নাম"}};
 Object.assign(T.en,{"rememberMe":"Remember me","readFull":"Read full notice","readLess":"Show less","saved":"Changes saved","lgBtn": "Sign in / Request access", "lgDeny": "Access denied. Contact an admin.", "lgNote": "Any email can request access. Admin approval required.", "lg1": "Sign in with your email and password", "lg2": "Any email can request access. An admin approves each account.", "showPassword": "Show password", "forgotPassword": "Forgot password?", "changePassword": "Change password", "currentPassword": "Current password", "newPassword": "New password", "confirmPassword": "Confirm new password", "badCredentials": "Incorrect email or password.", "loginRate": "Too many attempts. Try again in 15 minutes.", "resetSent": "If this account exists, your reset request has been sent to the admin. After the admin resets it, sign in with sfcnotice123.", "passwordMismatch": "The new passwords do not match.", "badCurrentPassword": "Current password is incorrect.", "passwordLength": "Use 8 to 128 characters.", "passwordChanged": "Password changed. Other sessions have been signed out.", "resetPassword": "Reset password", "resetConfirm": "Reset this account’s password to sfcnotice123 and sign out its sessions?", "passwordReset": "Password reset to sfcnotice123.", "resetRequested": "Password reset requested"});
 Object.assign(T.bn,{"rememberMe":"আমাকে মনে রাখুন","readFull":"সম্পূর্ণ নোটিশ পড়ুন","readLess":"সংক্ষিপ্ত করুন","saved":"পরিবর্তন সংরক্ষিত হয়েছে","lgBtn": "সাইন ইন / অ্যাক্সেসের আবেদন", "lgDeny": "অ্যাক্সেস নেই। অ্যাডমিনের সাথে যোগাযোগ করুন।", "lgNote": "যেকোনো ইমেইল দিয়ে আবেদন করা যাবে। অ্যাডমিনের অনুমোদন প্রয়োজন।", "lg1": "Sign in with your email and password", "lg2": "Any email can request access. An admin approves each account.", "showPassword": "পাসওয়ার্ড দেখুন", "forgotPassword": "পাসওয়ার্ড ভুলে গেছেন?", "changePassword": "পাসওয়ার্ড পরিবর্তন", "currentPassword": "বর্তমান পাসওয়ার্ড", "newPassword": "নতুন পাসওয়ার্ড", "confirmPassword": "নতুন পাসওয়ার্ড নিশ্চিত করুন", "badCredentials": "ইমেইল অথবা পাসওয়ার্ড ভুল।", "loginRate": "অনেকবার চেষ্টা করেছেন। ১৫ মিনিট পরে চেষ্টা করুন।", "resetSent": "অ্যাকাউন্টটি থাকলে অ্যাডমিনের কাছে রিসেটের আবেদন পাঠানো হয়েছে। অ্যাডমিন রিসেট করার পরে sfcnotice123 দিয়ে সাইন ইন করুন।", "passwordMismatch": "নতুন পাসওয়ার্ড দুটি মিলছে না।", "badCurrentPassword": "বর্তমান পাসওয়ার্ড ভুল।", "passwordLength": "Use 8 to 128 characters.", "passwordChanged": "পাসওয়ার্ড পরিবর্তন হয়েছে।", "resetPassword": "পাসওয়ার্ড রিসেট", "resetConfirm": "Reset this account’s password to sfcnotice123 and sign out its sessions?", "passwordReset": "Password reset to sfcnotice123.", "resetRequested": "পাসওয়ার্ড রিসেটের আবেদন রয়েছে"});
+Object.assign(T.en,{"forgotTitle":"Password reset request","forgotSub":"Enter the email registered with the portal and your Admin ID.","forgotEmailLabel":"Your email ID","forgotAdminIdLabel":"Your Admin ID","forgotAdminIdRequired":"Enter your Admin ID.","forgotSend":"Send reset request","forgotBack":"Back to sign in","resetRequestLabel":"Password reset request","dismissRequest":"Dismiss request","resetSent":"Reset request sent to admin."});
+Object.assign(T.bn,{"forgotTitle":"পাসওয়ার্ড রিসেটের আবেদন","forgotSub":"পোর্টালে নিবন্ধিত ইমেইল এবং আপনার অ্যাডমিন আইডি লিখুন।","forgotEmailLabel":"আপনার ইমেইল আইডি","forgotAdminIdLabel":"আপনার অ্যাডমিন আইডি","forgotAdminIdRequired":"আপনার অ্যাডমিন আইডি লিখুন।","forgotSend":"রিসেটের আবেদন পাঠান","forgotBack":"সাইন ইনে ফিরে যান","resetRequestLabel":"পাসওয়ার্ড রিসেটের আবেদন","dismissRequest":"আবেদন বাদ দিন","resetSent":"রিসেটের আবেদন অ্যাডমিনের কাছে পাঠানো হয়েছে।"});
 Object.assign(T.en,{"trackingTitle": "Your access is on its way", "trackingNote": "A courier-style journey while we sign you in.", "trackingReceived": "Sign-in details received", "trackingDispatch": "Dispatched to the access hub", "trackingChecking": "Checking account & admin approval", "trackingDelivered": "Access delivered · logging in", "trackingWait": "Please wait while the server responds…", "trackingWelcome": "All clear. Opening your notice panel…"});
 Object.assign(T.bn,{"trackingTitle": "আপনার অ্যাক্সেস পৌঁছে যাচ্ছে", "trackingNote": "সাইন ইনের অপেক্ষায় একটি কুরিয়ার যাত্রা।", "trackingReceived": "সাইন ইনের তথ্য গ্রহণ করা হয়েছে", "trackingDispatch": "অ্যাক্সেস হাবে পাঠানো হচ্ছে", "trackingChecking": "অ্যাকাউন্ট ও অনুমোদন যাচাই চলছে", "trackingDelivered": "অ্যাক্সেস পৌঁছে গেছে · লগইন হচ্ছে", "trackingWait": "সার্ভারের উত্তরের জন্য অপেক্ষা করুন…", "trackingWelcome": "সব ঠিক আছে। আপনার নোটিশ প্যানেল খুলছে…"});
 Object.assign(T.en,{"manageNotices": "Manage notices", "noticeGroup": "Notice group", "noticeDate": "Notice date", "noticeExpires": "Expiry date (optional)", "noticeConflict": "This notice has changed. Close the editor, refresh and try again."});
@@ -426,6 +438,7 @@ Object.assign(T.en,{adManageNotices:"Manage notices",adHistory:"Edit history",hi
 Object.assign(T.bn,{adManageNotices:"নোটিশ পরিচালনা",adHistory:"এডিট হিস্টোরি",histEmpty:"এখনও কোনো এডিট হিস্টোরি নেই।",histBy:"পরিবর্তন করেছেন",histAt:"তারিখ ও সময়",histCreate:"নোটিশ যোগ",histDelete:"নোটিশ ডিলিট",histEdit:"নোটিশ এডিট",histExpired:"মেয়াদোত্তীর্ণ",histRestore:"নোটিশ পুনরুদ্ধার",histFaq:"FAQ এডিট",deleteNoticeConfirm:"এই নোটিশটি স্থায়ীভাবে ডিলিট করবেন?"});
 var lang="en",role="viewer",me="",edName="",section="notice",view="notices",grp="cs",cat="all",sheetCat="IB",rid=null,editId=null,faqId=null,shId=null,adView="req",uEditEmail=null,curU=null,errKey="lgDeny";
 var CK=["Payment","Delivery","Return","Service update","Pickup","Complaint"],SC=["IB","IR","QA"];
+var resetRequests=[];
 var users=[
  {email:"zihad@steadfast.com.bd",name:"Zihad Sarkar Mahi",role:"admin",status:"active",perms:{n:1,f:1,s:1,ids:"all"}},
  {email:"qa.lead@steadfast.com.bd",name:"QA Lead",role:"editor",status:"active",perms:{n:1,f:1,s:1,ids:"all"}},
@@ -849,9 +862,9 @@ window.addEventListener("scroll",function(){$("cal").classList.add("hide")},{pas
 
 /* admin panel */
 function renderAdmin(){
-  var pend=users.filter(function(u){return u.status==="pending"}),act=users.filter(function(u){return u.status!=="pending"});
+  var pend=users.filter(function(u){return u.status==="pending"}),act=users.filter(function(u){return u.status!=="pending"}),resetReqs=resetRequests||[];
   var tb=$("adTabs").children;
-  var labels=[t("adReq")+" ("+pend.length+")",t("adUsr")+" ("+act.length+")",t("adManageNotices"),t("adHistory")];
+  var labels=[t("adReq")+" ("+(pend.length+resetReqs.length)+")",t("adUsr")+" ("+act.length+")",t("adManageNotices"),t("adHistory")];
   ["req","usr","notices","history"].forEach(function(v,i){tb[i].textContent=labels[i];tb[i].className=(adView===v?"on":"")+(v==="req"&&pend.length&&adView!=="req"?" al":"")});
   $("adNew").classList.toggle("hide",adView==="history");
   $("adNew").textContent=adView==="notices"?t("new"):t("adNew");
@@ -872,8 +885,14 @@ function renderAdmin(){
       return '<article class="card"><div class="ur"><span class="av2">↻</span><div><h3>'+esc(L(h.title)||"History")+'</h3><p>'+esc(t(actionKey))+' · '+esc(h.tab||h.target_type||"")+'</p></div></div><div class="history-meta"><span class="tag">'+t("histBy")+': '+esc(h.email||"")+'</span><span class="tag">'+t("histAt")+': '+esc(when)+'</span></div>'+(h.details?'<p class="history-details">'+esc(h.details)+'</p>':'')+'</article>';
     }).join("");return;
   }
-  var rows=adView==="req"?pend:act;
-  if(!rows.length){$("adList").innerHTML='<div class="empty">'+t(adView==="req"?"adNoReq":"adNoUsr")+'</div>';return}
+  if(adView==="req"){
+    var requestCards=resetReqs.map(function(r){var email=esc(r.email||""),aid=esc(r.adminId||""),when=esc(r.requestedAt||"");var active=users.some(function(u){return u.email===r.email&&u.status==="active"});return '<article class="card"><div class="ur"><span class="av2">↻</span><div><h3>'+email+'</h3><p>'+t("resetRequestLabel")+' · '+when+'</p><p>'+t("forgotAdminIdLabel")+': '+aid+'</p></div></div><div class="acts">'+(active?'<button class="btn sm" data-a="resetReqReset" data-e="'+email+'">'+t("resetPassword")+'</button>':'')+'<span class="sp"></span><button class="btn line sm" data-a="resetReqDismiss" data-e="'+email+'">'+t("dismissRequest")+'</button></div></article>'}).join("");
+    if(!pend.length&&!resetReqs.length){$("adList").innerHTML='<div class="empty">'+t("adNoReq")+'</div>';return}
+    var pendingCards=pend.map(function(u){var e=esc(u.email),sub=t("adReqAt")+" · "+esc(u.req||"");return '<article class="card"><div class="ur"><span class="av2">'+esc(u.email.charAt(0).toUpperCase())+'</span><div><h3>'+e+'</h3><p>'+sub+'</p></div></div><div class="acts"><button class="btn sm danger" data-a="urej" data-e="'+e+'">'+t("adReject")+'</button><span class="sp"></span><button class="btn" data-a="uman" data-e="'+e+'">'+t("adApprove")+'</button></div></article>'}).join("");
+    $("adList").innerHTML=requestCards+pendingCards;return;
+  }
+  var rows=act;
+  if(!rows.length){$("adList").innerHTML='<div class="empty">'+t("adNoUsr")+'</div>';return}
   $("adList").innerHTML=rows.map(function(u){
     var sub=u.status==="pending"?t("adReqAt")+" · "+fmt(u.req.slice(0,10))+" · "+dg((+u.req.slice(11,13))%12||12)+":"+dg(u.req.slice(14,16))+" "+(+u.req.slice(11,13)>=12?"PM":"AM"):(u.name||"");
     var acc=u.role!=="viewer"?'<span class="tag">'+t("fullAcc")+'</span>':((u.perms.n?'<span class="tag">'+t("sNotice")+'</span>':'')+(u.perms.f?'<span class="tag">'+t("sFaq")+'</span>':'')+(u.perms.s?'<span class="tag">'+t("sSheets")+' ('+(u.perms.ids==="all"?sheets.length:u.perms.ids.length)+'/'+sheets.length+')</span>':'')||'<span class="tag u">'+t("noneLbl")+'</span>');
@@ -910,6 +929,8 @@ $("adTabs").onclick=function(e){var tab=e.target.closest("[data-v]");if(!tab||!$
 $("adList").onclick=function(e){var b=e.target.closest("[data-a]");if(!b||!isAdmin())return;var action=b.dataset.a;
   if(action==="noticeEdit"){var n=notices.filter(function(x){return String(x.id)===String(b.dataset.id)})[0];if(n)openEd(n);return}
   if(action==="noticeDelete"){var n=notices.filter(function(x){return String(x.id)===String(b.dataset.id)})[0];if(!n||!confirm(t("deleteNoticeConfirm")))return;api("deleteNotice",{id:n.id,tab:n.tab}).then(function(d){applyData(d);render();renderAdmin();toast(t("saved"))}).catch(function(){toast(t("saveFail"))});return}
+  if(action==="resetReqDismiss"){api("dismissResetRequest",{email:b.dataset.e}).then(function(d){applyData(d);renderAdmin()}).catch(function(){toast(t("saveFail"))});return}
+  if(action==="resetReqReset"){if(!confirm(t("resetConfirm")))return;api("resetPassword",{email:b.dataset.e}).then(function(d){applyData(d);renderAdmin();toast(t("passwordReset"))}).catch(function(){toast(t("saveFail"))});return}
   var u=findU(b.dataset.e);if(!u)return;
   if(action==="uman")openU(u);
   if(action==="urej"){api("deleteUser",{email:u.email}).then(function(d){applyData(d);users=users.filter(function(x){return x!==u});renderAdmin()}).catch(function(){toast(t("saveFail"))})}};
@@ -935,7 +956,7 @@ function api(action,data){
 function sync(a,data){if(!LIVE)return;pending++;
   api(a,data).catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending"){me="";return failLogin(e)}toast(t("saveFail"));refresh(true)}).then(function(){pending--})}
 function applyData(d){
-  notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];
+  notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];resetRequests=Array.isArray(d.resetRequests)?d.resetRequests:[];
   if(d.users)users=d.users;
   notices.forEach(function(n){if(n.cat&&CK.indexOf(n.cat)<0)CK.push(n.cat)});
   sheets.forEach(function(s){if(s.cat&&SC.indexOf(s.cat)<0)SC.push(s.cat)});
@@ -963,7 +984,9 @@ if(LIVE){
   document.addEventListener("visibilitychange",function(){if(!document.hidden)refresh(false)});
 }
 $("lgShow").onchange=function(){$("lgPassword").type=this.checked?"text":"password"};
-$("forgotPassword").onclick=function(){var email=$("lgEmail").value.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){showLg("uBad");return}var b=this;b.disabled=true;api("forgotPassword",{email:email}).then(function(){showLg("resetSent",true)}).catch(function(){showLg("lgFail")}).then(function(){b.disabled=false})};
+$("forgotPassword").onclick=function(){var main=document.querySelector("#login .lcard:not(#forgotPage)");main.classList.add("hide");$("forgotPage").classList.remove("hide");$("forgotEmail").value=$("lgEmail").value.trim().toLowerCase();$("forgotAdminId").value="";$("forgotErr").className="lerr hide";$("forgotSuccess").className="hide";$("forgotForm").querySelectorAll("input").forEach(function(x){x.disabled=false});$("forgotSend").disabled=false;$("forgotEmail").focus()};
+$("forgotBack").onclick=function(){$("forgotPage").classList.add("hide");document.querySelector("#login .lcard:not(#forgotPage)").classList.remove("hide")};
+$("forgotForm").onsubmit=function(e){e.preventDefault();var email=$("forgotEmail").value.trim().toLowerCase(),adminId=$("forgotAdminId").value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ $("forgotErr").textContent=t("uBad");$("forgotErr").className="lerr";return}if(!adminId){$("forgotErr").textContent=t("forgotAdminIdRequired");$("forgotErr").className="lerr";return}var b=$("forgotSend");b.disabled=true;$("forgotErr").className="lerr hide";api("forgotPassword",{email:email,adminId:adminId}).then(function(){ $("forgotSuccess").textContent=t("resetSent");$("forgotSuccess").className="";$("forgotForm").querySelectorAll("input").forEach(function(x){x.disabled=true});b.disabled=true}).catch(function(e){$("forgotErr").textContent=e.message||t("lgFail");$("forgotErr").className="lerr"}).then(function(){if($("forgotSuccess").classList.contains("hide"))b.disabled=false})};
 $("changePassword").onclick=function(){$("menu").classList.add("hide");$("passwordForm").reset();$("passwordError").textContent="";["currentPassword","newPassword","confirmPassword"].forEach(function(id){$(id).type="password"});$("passwordDialog").showModal()};
 $("passwordCancel").onclick=function(){$("passwordDialog").close();$("passwordForm").reset()};
 $("changeShow").onchange=function(){var type=this.checked?"text":"password";["currentPassword","newPassword","confirmPassword"].forEach(function(id){$(id).type=type})};
