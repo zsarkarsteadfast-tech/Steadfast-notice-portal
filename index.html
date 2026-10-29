@@ -710,10 +710,11 @@ $("nGroups").onclick=function(e){var b=e.target.closest("[data-g]");if(b){grp=b.
 function goHome(){
   section="notice";view="notices";grp="cs";cat="all";faqCat="all";policeOpen=false;
   ["q","faqQ","dFrom","dTo"].forEach(function(i){if($(i))$(i).value=""});
-  $("menu").classList.add("hide");$("cal").classList.add("hide");var b=$("scrollHome");if(b){b.classList.remove("show");b.classList.add("hide")}render();window.scrollTo({top:0,behavior:"smooth"});setTimeout(updateScrollHome,350)}
+  $("menu").classList.add("hide");$("cal").classList.add("hide");scrollHomeForcedHidden=true;var b=$("scrollHome");if(b){b.classList.remove("show");b.classList.add("hide")}render();window.scrollTo({top:0,behavior:"smooth"})}
 $("home").onclick=function(e){e.preventDefault();goHome()};
 $("scrollHome").onclick=function(){goHome()};
-function updateScrollHome(){var b=$("scrollHome");if(!b)return;var active=!$("app").classList.contains("hide")&&$("login").classList.contains("hide");var visible=active&&window.scrollY>220;b.classList.toggle("hide",!visible);b.classList.toggle("show",visible)}
+var scrollHomeForcedHidden=false;
+function updateScrollHome(){var b=$("scrollHome");if(!b)return;var active=!$("app").classList.contains("hide")&&$("login").classList.contains("hide");if(scrollHomeForcedHidden&&window.scrollY<=220)scrollHomeForcedHidden=false;var visible=active&&window.scrollY>220&&!scrollHomeForcedHidden;b.classList.toggle("hide",!visible);b.classList.toggle("show",visible)}
 window.addEventListener("scroll",updateScrollHome,{passive:true});
 $("chips").onclick=function(e){var b=e.target.closest("[data-c]");if(b){cat=b.dataset.c;render()}};
 $("q").oninput=render;
