@@ -265,6 +265,9 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 .scroll-home .lk{height:23px;width:auto}.scroll-home .lw{height:12px;width:auto}
 .admin-tabs{display:flex;gap:5px;flex-wrap:wrap}
 .admin-tabs button{flex:1 1 auto;min-width:100px}
+.admin-tabs button.has-requests{position:relative;padding-right:27px}
+.admin-tabs button.has-requests::after{content:"";position:absolute;top:5px;right:7px;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--glass);animation:requestDotPulse 1.6s infinite}
+@keyframes requestDotPulse{0%,100%{box-shadow:0 0 0 2px var(--glass),0 0 0 0 rgba(239,68,68,.35)}50%{box-shadow:0 0 0 2px var(--glass),0 0 0 5px rgba(239,68,68,0)}}
 .history-meta{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .history-details{color:var(--mut);font-size:13px;line-height:1.55;overflow-wrap:anywhere}
 
@@ -864,7 +867,7 @@ function renderAdmin(){
   var pend=users.filter(function(u){return u.status==="pending"}),act=users.filter(function(u){return u.status!=="pending"}),resetReqs=resetRequests||[];
   var tb=$("adTabs").children;
   var labels=[t("adReq")+" ("+(pend.length+resetReqs.length)+")",t("adUsr")+" ("+act.length+")",t("adManageNotices"),t("adHistory")];
-  ["req","usr","notices","history"].forEach(function(v,i){tb[i].textContent=labels[i];tb[i].className=(adView===v?"on":"")+(v==="req"&&pend.length&&adView!=="req"?" al":"")});
+  ["req","usr","notices","history"].forEach(function(v,i){tb[i].textContent=labels[i];tb[i].className=(adView===v?"on":"")+(v==="req"&&pend.length&&adView!=="req"?" al":"");tb[i].classList.toggle("has-requests",v==="req"&&(pend.length+resetReqs.length)>0);tb[i].title=v==="req"&&(pend.length+resetReqs.length)>0?t("adReq")+" — pending requests":t("adReq")});
   $("adNew").classList.toggle("hide",adView==="history");
   $("adNew").textContent=adView==="notices"?t("new"):t("adNew");
   $("adminNotices").classList.toggle("hide",adView==="notices"||adView==="history");
