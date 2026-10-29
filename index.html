@@ -960,6 +960,7 @@ function sync(a,data){if(!LIVE)return;pending++;
 function applyData(d){
   notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];resetRequests=Array.isArray(d.resetRequests)?d.resetRequests:[];
   if(d.users)users=d.users;
+  var reqTab=document.querySelector("#adTabs [data-v=\"req\"]");if(reqTab){var pendingAccess=users.filter(function(u){return u.status==="pending"}).length;reqTab.classList.toggle("has-requests",pendingAccess+resetRequests.length>0);}
   notices.forEach(function(n){if(n.cat&&CK.indexOf(n.cat)<0)CK.push(n.cat)});
   sheets.forEach(function(s){if(s.cat&&SC.indexOf(s.cat)<0)SC.push(s.cat)});
   tkKey=""}
