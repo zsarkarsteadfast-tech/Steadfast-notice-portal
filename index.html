@@ -628,9 +628,19 @@ function renderFaq(){
 function shChips(){var vs=visSheets(),cl=isEd()?SC:SC.filter(function(c){return vs.some(function(s){return s.cat===c})});if(cl.indexOf(sheetCat)<0&&cl.length)sheetCat=cl[0];$("shChips").innerHTML=cl.map(function(c){var n=vs.filter(function(s){return s.cat===c}).length;return '<button class="chip'+(c===sheetCat?' on':'')+'" data-c="'+esc(c)+'">'+esc(c)+' ('+n+')</button>'}).join("")}
 function fillPolice(){
   var ws=$("polQ").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
-  var rows=(police||[]).filter(function(p){var h=(p.hub+" "+p.ps+" "+p.area).toLowerCase();return ws.every(function(w){return h.indexOf(w)>-1})});
+  var rows=(police||[]).filter(function(p){
+    var h=[p.name,p.ps,p.hub,p.type,p.status,p.id,p.area].join(" ").toLowerCase();
+    return ws.every(function(w){return h.indexOf(w)>-1});
+  });
   var show=rows.slice(0,40);
-  $("polRes").innerHTML='<p class="meta" style="margin:0 0 10px">'+t("polCount").replace("{n}",dg(show.length)).replace("{m}",dg(rows.length))+'</p>'+(show.length?show.map(function(p){return '<details class="fq"'+(rows.length<=3?' open':'')+'><summary><span>'+esc(p.ps||p.hub)+' <span class="tag" style="margin-left:6px">'+esc(p.hub)+'</span></span></summary><div class="ans"><p>'+esc(p.area)+'</p></div></details>'}).join(""):'<div class="empty">'+t("polNone")+'</div>')}
+  $("polRes").innerHTML='<p class="meta" style="margin:0 0 10px">'+t("polCount").replace("{n}",dg(show.length)).replace("{m}",dg(rows.length))+'</p>'+(show.length?show.map(function(p){
+    var station=p.name||p.ps||p.hub;
+    var details=[];
+    if(p.type) details.push('Type: '+p.type);
+    if(p.status) details.push('Status: '+p.status);
+    if(p.id) details.push('ID: '+p.id);
+    return '<details class="fq"'+(rows.length<=3?' open':'')+'><summary><span>'+esc(station)+' <span class="tag" style="margin-left:6px">'+esc(p.hub||'Hub not listed')+'</span></span></summary><div class="ans"><p>'+esc(details.join(' · '))+'</p></div></details>';
+  }).join(""):'<div class="empty">'+t("polNone")+'</div>')}
 function renderSheets(){
   var ed=isEd()&&!LIVE;
   $("shNew").className=ed?"btn":"btn hide";shChips();
