@@ -708,12 +708,13 @@ function openEd(n){
 }
 $("nGroups").onclick=function(e){var b=e.target.closest("[data-g]");if(b){grp=b.dataset.g;cat="all";render()}};
 function goHome(){
-  var sl=secList();section=sl[0]||"notice";view="notices";grp="cs";cat="all";faqCat="all";policeOpen=false;
+  section="notice";view="notices";grp="cs";cat="all";faqCat="all";policeOpen=false;
   ["q","faqQ","dFrom","dTo"].forEach(function(i){if($(i))$(i).value=""});
-  $("menu").classList.add("hide");$("cal").classList.add("hide");render();window.scrollTo({top:0,behavior:"smooth"})}
+  $("menu").classList.add("hide");$("cal").classList.add("hide");var b=$("scrollHome");if(b){b.classList.remove("show");b.classList.add("hide")}render();window.scrollTo({top:0,behavior:"smooth"});setTimeout(updateScrollHome,350)}
 $("home").onclick=function(e){e.preventDefault();goHome()};
 $("scrollHome").onclick=function(){goHome()};
-window.addEventListener("scroll",function(){var b=$("scrollHome");if(!b)return;var active=!$("app").classList.contains("hide")&&$("login").classList.contains("hide");b.classList.toggle("show",window.scrollY>220&&active)}, {passive:true});
+function updateScrollHome(){var b=$("scrollHome");if(!b)return;var active=!$("app").classList.contains("hide")&&$("login").classList.contains("hide");var visible=active&&window.scrollY>220;b.classList.toggle("hide",!visible);b.classList.toggle("show",visible)}
+window.addEventListener("scroll",updateScrollHome,{passive:true});
 $("chips").onclick=function(e){var b=e.target.closest("[data-c]");if(b){cat=b.dataset.c;render()}};
 $("q").oninput=render;
 $("dClear").onclick=function(){$("dFrom").value="";$("dTo").value="";render()};
@@ -820,7 +821,7 @@ function renderAdmin(){
   ["req","usr","notices","history"].forEach(function(v,i){tb[i].textContent=labels[i];tb[i].className=(adView===v?"on":"")+(v==="req"&&pend.length&&adView!=="req"?" al":"")});
   $("adNew").classList.toggle("hide",adView==="history");
   $("adNew").textContent=adView==="notices"?t("new"):t("adNew");
-  $("adminNotices").classList.toggle("hide",adView==="notices");
+  $("adminNotices").classList.toggle("hide",adView==="notices"||adView==="history");
   if(adView==="notices"){
     if(!notices.length){$("adList").innerHTML='<div class="empty">'+t("none")+'</div>';return}
     $("adList").innerHTML=notices.slice().sort(function(a,b){return String(b.date||"").localeCompare(String(a.date||""))}).map(function(n){
@@ -871,7 +872,7 @@ $("uPerm").onchange=function(e){var x=e.target,subs=[].slice.call(document.query
   syncAll()};
 $("uRole").onchange=togglePerm;
 $("adNew").onclick=function(){if(!isAdmin())return;if(adView==="notices"){grp="cs";openEd(null)}else openU(null)};
-$("adTabs").onclick=function(e){if(e.target.dataset.v){adView=e.target.dataset.v;renderAdmin()}};
+$("adTabs").onclick=function(e){var tab=e.target.closest("[data-v]");if(!tab||!$("adTabs").contains(tab))return;e.preventDefault();e.stopPropagation();adView=tab.dataset.v;renderAdmin()};
 $("adList").onclick=function(e){var b=e.target.closest("[data-a]");if(!b||!isAdmin())return;var action=b.dataset.a;
   if(action==="noticeEdit"){var n=notices.filter(function(x){return String(x.id)===String(b.dataset.id)})[0];if(n)openEd(n);return}
   if(action==="noticeDelete"){var n=notices.filter(function(x){return String(x.id)===String(b.dataset.id)})[0];if(!n||!confirm(t("deleteNoticeConfirm")))return;api("deleteNotice",{id:n.id,tab:n.tab}).then(function(d){applyData(d);render();renderAdmin();toast(t("saved"))}).catch(function(){toast(t("saveFail"))});return}
