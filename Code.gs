@@ -55,7 +55,7 @@ function handle_(req) {
     case 'saveNotice': return lock_(function () { return saveNotice_(req, user); });
     case 'createNotice': return lock_(function () { req.id = 0; return saveNotice_(req, user); });
     case 'deleteNotice': return lock_(function () { return deleteNotice_(req, user); });
-    case 'resetPassword': return lock_(function () { return resetPassword_(req); });
+    case 'resetPassword': return lock_(function () { return resetPassword_(req, user); });
     case 'dismissResetRequest': return lock_(function () { return dismissResetRequest_(req, user); });
     case 'saveUser': return lock_(function () { return saveUser_(req, user); });
     case 'deleteUser': return lock_(function () { return deleteUser_(req, user); });
@@ -463,15 +463,14 @@ function resetRequests_() {
 }
 function forgotPassword_(req) {
   var email=String(req.email||'').trim().toLowerCase(),adminId=String(req.adminId||'').trim();
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>254)fail_('bad','Enter a valid email');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)fail_('bad','Enter a valid email');
   if(!adminId||adminId.length>100)fail_('bad','Enter your Admin ID');
-  var cache=CacheService.getScriptCache(),key='reset-request:'+digest_(email);
-  if(!cache.get(key)){
-    cache.put(key,'1',900);
-    var sh=ensureTab_(ss_(),'Password Reset Requests',['email','admin_id','requested_at','status']);
-    var existing=readTab_(sh).rows.some(function(r){return s_(r.email).trim().toLowerCase()===email&&s_(r.status).toLowerCase()!=='resolved';});
-    if(!existing)sh.appendRow([email,adminId,now_(),'Pending']);
-  }
+  var sh=ensureTab_(ss_(),'Password Reset Requests',['email','admin_id','requested_at','status']);
+  var existing=readTab_(sh).rows.some(function(r){
+    return s_(r.email).trim().toLowerCase()===email&&s_(r.status).trim().toLowerCase()!=='resolved';
+  });
+  if(!existing)sh.appendRow([email,adminId,now_(),'Pending']);
+  SpreadsheetApp.flush();
   return {ok:true};
 }
 function dismissResetRequest_(req,user) {
@@ -480,7 +479,25 @@ function dismissResetRequest_(req,user) {
   return load_(user);
 }
 function changePassword_(req, user) { checkRate_(user.email); if (!matchesPassword_(user.email, req.currentPassword)) fail_('credentials', 'Current password is incorrect'); var password = String(req.newPassword || ''); if (password.length < 8 || password.length > 128) fail_('bad', 'Use 8 to 128 characters'); setPassword_(user.email, password); PropertiesService.getScriptProperties().deleteProperty('reset:' + user.email); CacheService.getScriptCache().remove('attempt:' + digest_(user.email)); return {ok: true, token: issueSession_(user.email)}; }
-function resetPassword_(req) { var email = String(req.email || '').trim().toLowerCase(); if (!findUser_(email)) fail_('bad', 'User not found'); setPassword_(email, INITIAL_PASSWORD_); PropertiesService.getScriptProperties().deleteProperty('reset:' + email); CacheService.getScriptCache().remove('attempt:' + digest_(email)); var sh=ss_().getSheetByName('Password Reset Requests'); if(sh){var d=readTab_(sh);for(var i=d.rows.length-1;i>=0;i--)if(s_(d.rows[i].email).trim().toLowerCase()===email)sh.getRange(d.rows[i]._row,d.cols.status+1).setValue('Resolved');} return load_(sessionUser_(req.token)); }
+function resetPassword_(req, user) {
+  var email=String(req.email||'').trim().toLowerCase();
+  if(!findUser_(email))fail_('bad','User not found');
+  setPassword_(email,INITIAL_PASSWORD_);
+  PropertiesService.getScriptProperties().deleteProperty('reset:'+email);
+  CacheService.getScriptCache().remove('attempt:'+digest_(email));
+  var sh=ss_().getSheetByName('Password Reset Requests');
+  if(sh){
+    var d=readTab_(sh);
+    if(d.cols.status!==undefined){
+      for(var i=d.rows.length-1;i>=0;i--){
+        if(s_(d.rows[i].email).trim().toLowerCase()===email)
+          sh.getRange(d.rows[i]._row,d.cols.status+1).setValue('Resolved');
+      }
+    }
+  }
+  SpreadsheetApp.flush();
+  return load_(user);
+}
 
 function removeSession_(token) { var key = 'session:' + digest_(String(token || '')); PropertiesService.getScriptProperties().deleteProperty(key); CacheService.getScriptCache().remove(key); }
 function issueSession_(email) { var token = Utilities.getUuid() + Utilities.getUuid(), props = PropertiesService.getScriptProperties(), now = Date.now(); var all = props.getProperties(); Object.keys(all).forEach(function (key) { if (key.indexOf('session:') === 0) { try { if (JSON.parse(all[key]).expires < now) props.deleteProperty(key); } catch (e) { props.deleteProperty(key); } } }); props.setProperty('session:' + digest_(token), JSON.stringify({email:email,version:credentials_(email).version,expires:now+7*86400000})); return token; }
