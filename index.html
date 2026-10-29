@@ -760,8 +760,9 @@ $("save").onclick=function(){
       var event=editHistory.filter(function(h){return h.email&&h.email.toLowerCase()===me.toLowerCase()&&(h.action==="EDIT_NOTICE"||h.action==="CREATE_NOTICE")})[0];
       showSaveSuccess(event||{email:me,at:new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0")+"-"+String(new Date().getDate()).padStart(2,"0")+"T"+String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0")},!!editId);
     }).catch(function(e){
-      $("noticeSaveError").textContent=e.code==="auth"?"Your session expired. Please sign in again.":"The notice could not be saved. Please try again.";
-      if(e.code==="auth"){me="";failLogin(e)}
+      var msg=e&&e.message?String(e.message):"Unknown error";
+      $("noticeSaveError").textContent=e&&e.code==="auth"?"Your session expired. Please sign in again.":(msg.length>240?msg.slice(0,240):msg);
+      if(e&&e.code==="auth"){me="";failLogin(e)}
     }).then(function(){saveBtn.disabled=false;cancelBtn.disabled=false;saveBtn.classList.remove("is-saving");saveBtn.textContent=oldSaveText});return;
   }
   var d={title:a,body:b,cat:c,urgent:+$("fU").value,upd:stamp(),src:grp};
