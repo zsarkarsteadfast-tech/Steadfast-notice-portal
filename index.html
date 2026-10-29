@@ -182,7 +182,7 @@ html[lang="bn"] .dlg h2{letter-spacing:0}
 @keyframes drive{from{transform:translateX(-140px)}to{transform:translateX(105vw)}}
 .lcard .road{margin:20px -28px 0}
 footer{margin-top:36px;text-align:center;font-size:13px;color:var(--mut);padding-bottom:30px}
-footer .road{display:none;margin-bottom:12px}
+footer .road{display:block;margin-bottom:12px}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(8px);background:rgba(12,26,18,.92);color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:.2s;z-index:80}
 .toast.show{opacity:1;transform:translateX(-50%)}
 .page-loading{position:fixed;inset:0;z-index:100;background:var(--bg);padding:26px max(18px,calc((100vw - 980px)/2));overflow:auto}.sk-top,.sk-tabs,.sk-title{display:flex;align-items:center;gap:12px;margin:0 auto 22px;max-width:980px}.sk-top{justify-content:space-between;padding:10px 4px 20px}.sk-top i{display:block;height:30px;width:150px;border-radius:12px}.sk-top i:first-child{width:210px}.sk-top i:last-child{width:42px;height:42px;border-radius:50%}.sk-tabs i{height:46px;flex:1;border-radius:18px}.sk-title{display:block;margin-top:32px}.sk-title i{display:block;height:30px;width:44%;border-radius:9px;margin-bottom:10px}.sk-title i+ i{height:15px;width:28%}.sk-search{height:50px;max-width:980px;margin:0 auto 20px;border-radius:28px}.sk-card{max-width:980px;margin:0 auto 16px;padding:22px;border-radius:24px;min-height:150px}.sk-card i{display:block;height:13px;border-radius:8px;margin:12px 0;width:86%}.sk-card i:first-child{height:18px;width:42%}.sk-card i:last-child{width:58%}.sk-top i,.sk-tabs i,.sk-title i,.sk-search,.sk-card i{background:linear-gradient(100deg,rgba(120,150,175,.12) 20%,rgba(150,180,205,.30) 38%,rgba(120,150,175,.12) 60%);background-size:220% 100%;animation:sk-shimmer 1.35s ease-in-out infinite}.sk-card{background:var(--glass);border:1px solid var(--edge);box-shadow:var(--sh)}@keyframes sk-shimmer{to{background-position-x:-220%}}
@@ -360,7 +360,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
   <div id="adList"></div>
  </section>
 </main>
-<footer><div class="road"><svg><use href="#tr"/></svg><svg><use href="#tr"/></svg></div>Steadfast · Internal use only</footer>
+<footer><div class="road"><svg><use href="#tr"/></svg><svg><use href="#tr"/></svg></div><div class="footer-label">SteadFast CS Internal Use Only</div></footer>
 </div>
 
 <dialog id="dlg"><div class="dlg">
@@ -396,7 +396,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 <script>
 var CFG={API_URL:"https://script.google.com/macros/s/AKfycbwmrkUra5GJURdGMVVl0_7WPYZCjHFvOpKvzBwOPUKkuu2GaiXhQsgmXcTQQhIrgMgVPA/exec",CLIENT_ID:"PASTE_GOOGLE_CLIENT_ID_HERE"};
 var LIVE=/^https:\/\/script\.google\.com\//.test(CFG.API_URL);
-var authToken="";var pending=0,police=null,policeOpen=false,faqCat="all",history=[];
+var authToken="";var pending=0,police=null,policeOpen=false,faqCat="all",editHistory=[];
 var T={
 en:{lgExp:"Session expired. Please sign in again.",lgFail:"Could not connect. Check your internet and try again.",saveFail:"Could not save. Please try again.",polOpen:"Open lookup",polBack:"Back",polPh:"Search area, police station or hub",polCount:"Showing {n} of {m}",polNone:"No match found.",ann:"Announced by",appr:"Approved by",addedBy:"Added by",subL:"Notices come from the Google Sheet. You can mark expired and review reports.",gCs:"CS Official Notice",gQa:"QA Follow-up",sAdmin:"Admin",adTitle:"Admin panel",adSub:"Approve people and choose what each person can see.",adNew:"+ Add user",adReq:"Requests",adUsr:"Users",adNoReq:"No pending requests.",adNoUsr:"No users yet.",adReqAt:"Requested",adApprove:"Approve",adReject:"Reject",adManage:"Manage",uAdd:"Add user",uManage:"Manage access",uApprove:"Approve access",uEmail:"Email",uRole:"Role",uStatus:"Status",roleViewer:"Viewer",roleEditor:"Editor",roleAdmin:"Admin",stActive:"Active",stBlocked:"Blocked",pAll:"Select all",uNote:"Editors and admins can see everything.",uDel:"Remove user",uBad:"Enter a valid email",uDup:"This email already exists",uSelf:"You can’t block or demote yourself",uConf:"Remove this user?",noAcc:"You have no access yet. Ask an admin.",lgPend:"Your request was sent. Please wait for admin approval.",fullAcc:"Full access",today:"Today",calClear:"Clear",adminPill:"Admin",noneLbl:"No access",tkEdit:"Edit",tkTitle:"Edit scrolling announcements",tkHint:"One message per line. Emojis are welcome.",tkEmpty:"Add an announcement",nb:"Notice",nbTip:"Notice panel only for internal use!",dFrom:"From",dTo:"To",dClear:"Clear dates",dPick:"Select date",upd:"Updated by",rpt:"Report as outdated",reported:"Reported",exp:"Expired",restore:"Restore",mark:"Mark expired",dismiss:"Dismiss",tabN:"Notices",tabR:"Reports",noRep:"No reports. All notices look current.",already:"You already reported this",rTitle:"Report outdated notice",rSub:"Let editors know this notice is backdated or expired.",rNote:"Note (optional)",rSendL:"Send report",rDone:"Report sent",title:"Notices",sub:"Latest updates for agents. View and copy only.",subE:"Latest updates for agents. You can add and edit.",new:"+ New notice",ph:"Search by keyword, e.g. payment, EBL, 25.10.2026",all:"All",copy:"Copy",edit:"Edit",del:"Delete",urg:"Urgent",none:"No notices found.",copied:"Copied",saved:"Saved",need:"Please fill in all required fields",conf:"Delete this notice?",lt:"Title",lc:"Category",lu:"Priority",lb:"Details",save:"Save",cancel:"Cancel",nt:"New notice",et:"Edit notice",nrm:"Normal",
 cat:{"Payment":"Payment","Delivery":"Delivery","Return":"Return","Service update":"Service update","Pickup":"Pickup","Complaint":"Complaint"},
@@ -832,8 +832,8 @@ function renderAdmin(){
     }).join("");return;
   }
   if(adView==="history"){
-    if(!history.length){$("adList").innerHTML='<div class="empty">'+t("histEmpty")+'</div>';return}
-    $("adList").innerHTML=history.map(function(h){
+    if(!editHistory.length){$("adList").innerHTML='<div class="empty">'+t("histEmpty")+'</div>';return}
+    $("adList").innerHTML=editHistory.map(function(h){
       var actionKey={CREATE_NOTICE:"histCreate",DELETE_NOTICE:"histDelete",EDIT_NOTICE:"histEdit",MARK_EXPIRED:"histExpired",RESTORE_NOTICE:"histRestore",EDIT_FAQ:"histFaq"}[h.action]||h.action||"Update";
       var when=String(h.at||"").replace("T","  ");
       return '<article class="card"><div class="ur"><span class="av2">↻</span><div><h3>'+esc(L(h.title)||"History")+'</h3><p>'+esc(t(actionKey))+' · '+esc(h.tab||h.target_type||"")+'</p></div></div><div class="history-meta"><span class="tag">'+t("histBy")+': '+esc(h.email||"")+'</span><span class="tag">'+t("histAt")+': '+esc(when)+'</span></div>'+(h.details?'<p class="history-details">'+esc(h.details)+'</p>':'')+'</article>';
@@ -902,7 +902,7 @@ function api(action,data){
 function sync(a,data){if(!LIVE)return;pending++;
   api(a,data).catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending"){me="";return failLogin(e)}toast(t("saveFail"));refresh(true)}).then(function(){pending--})}
 function applyData(d){
-  notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;history=d.history||history;
+  notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];
   if(d.users)users=d.users;
   notices.forEach(function(n){if(n.cat&&CK.indexOf(n.cat)<0)CK.push(n.cat)});
   sheets.forEach(function(s){if(s.cat&&SC.indexOf(s.cat)<0)SC.push(s.cat)});
