@@ -552,4 +552,4 @@ function deleteNotice_(req, user) {
   delReports_(id);
   audit_(user, 'DELETE_NOTICE', 'notice', id, title, 'Notice permanently deleted', nt.tab);
   return load_(user);
-}}
+}
