@@ -56,6 +56,7 @@ function handle_(req) {
     case 'createNotice': return lock_(function () { req.id = 0; return saveNotice_(req, user); });
     case 'deleteNotice': return lock_(function () { return deleteNotice_(req, user); });
     case 'resetPassword': return lock_(function () { return resetPassword_(req); });
+    case 'dismissResetRequest': return lock_(function () { return dismissResetRequest_(req, user); });
     case 'saveUser': return lock_(function () { return saveUser_(req, user); });
     case 'deleteUser': return lock_(function () { return deleteUser_(req, user); });
   }
@@ -335,7 +336,8 @@ function load_(user) {
   d.reports = reports_(user);
   if (user.role === 'admin') {
     var props = PropertiesService.getScriptProperties();
-    d.users = users_().map(function (u) { u.resetRequested = props.getProperty('reset:' + u.email) || ''; return u; });
+    d.users = users_();
+    d.resetRequests = resetRequests_();
     d.history = history_();
   }
   return d;
@@ -426,6 +428,7 @@ function setup() {
   ensureTab_(ss, 'Reports', ['id', 'notice_id', 'reported_by', 'note', 'date']);
   ensureTab_(ss, 'FAQ Edits', ['faq_id', 'cat', 'q', 'a', 'updated_by', 'updated_at']);
   ensureTab_(ss, 'Edit History', ['event_at', 'actor_email', 'actor_name', 'action', 'target_type', 'target_id', 'title', 'details', 'tab']);
+  ensureTab_(ss, 'Password Reset Requests', ['email', 'admin_id', 'requested_at', 'status']);
   var tk = ensureTab_(ss, 'Ticker', ['message']);
   var links = ensureTab_(ss, 'Links', ['id', 'category', 'title', 'description', 'url', 'type']);
   var hasAdmin = users.getLastRow() > 1 && readTab_(users).rows.some(function (r) { return s_(r.email).trim().toLowerCase() === FIRST_ADMIN; });
@@ -453,9 +456,31 @@ function issueSession_(email) { var token = Utilities.getUuid() + Utilities.getU
 function sessionUser_(token) { var raw = CacheService.getScriptCache().get('session:' + digest_(String(token || ''))); if (!raw) fail_('auth', 'Please sign in again'); var s = JSON.parse(raw), user = findUser_(s.email); if (!user || user.status !== 'active' || s.version !== credentials_(s.email).version) fail_('auth', 'Please sign in again'); return user; }
 function checkRate_(email) { var c = CacheService.getScriptCache(), key = 'attempt:' + digest_(email), n = Number(c.get(key) || 0); if (n >= 10) fail_('rate', 'Too many attempts. Try again in 15 minutes'); c.put(key, String(n + 1), 900); }
 function login_(req) { var email = String(req.email || '').trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) fail_('credentials', 'Enter a valid email and password'); checkRate_(email); if (!matchesPassword_(email, req.password)) fail_('credentials', 'Incorrect email or password'); var user = findUser_(email); if (!user) { requestAccess_(email); fail_('pending', 'Access requested. Wait for admin approval'); } if (user.status === 'pending') fail_('pending', 'Waiting for approval'); if (user.status !== 'active') fail_('denied', 'Access denied'); CacheService.getScriptCache().remove('attempt:' + digest_(email)); var d = load_(user); d.token = issueSession_(email); return d; }
-function forgotPassword_(req) { var email = String(req.email || '').trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) fail_('bad', 'Enter a valid email'); var cache = CacheService.getScriptCache(), key = 'reset-request:' + digest_(email); if (!cache.get(key)) { cache.put(key, '1', 900); if (findUser_(email)) PropertiesService.getScriptProperties().setProperty('reset:' + email, now_()); } return {ok: true}; }
+function resetRequests_() {
+  var sh = ss_().getSheetByName('Password Reset Requests');
+  if (!sh || sh.getLastRow() < 2) return [];
+  return readTab_(sh).rows.filter(function(r){return s_(r.status).toLowerCase() !== 'resolved';}).map(function(r){return {email:s_(r.email).trim().toLowerCase(),adminId:s_(r.admin_id).trim(),requestedAt:s_(r.requested_at)};}).filter(function(r){return r.email;}).reverse();
+}
+function forgotPassword_(req) {
+  var email=String(req.email||'').trim().toLowerCase(),adminId=String(req.adminId||'').trim();
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>254)fail_('bad','Enter a valid email');
+  if(!adminId||adminId.length>100)fail_('bad','Enter your Admin ID');
+  var cache=CacheService.getScriptCache(),key='reset-request:'+digest_(email);
+  if(!cache.get(key)){
+    cache.put(key,'1',900);
+    var sh=ensureTab_(ss_(),'Password Reset Requests',['email','admin_id','requested_at','status']);
+    var existing=readTab_(sh).rows.some(function(r){return s_(r.email).trim().toLowerCase()===email&&s_(r.status).toLowerCase()!=='resolved';});
+    if(!existing)sh.appendRow([email,adminId,now_(),'Pending']);
+  }
+  return {ok:true};
+}
+function dismissResetRequest_(req,user) {
+  var email=String(req.email||'').trim().toLowerCase(),sh=ss_().getSheetByName('Password Reset Requests');
+  if(sh){var d=readTab_(sh);for(var i=d.rows.length-1;i>=0;i--)if(s_(d.rows[i].email).trim().toLowerCase()===email&&s_(d.rows[i].status).toLowerCase()!=='resolved')sh.getRange(d.rows[i]._row,d.cols.status+1).setValue('Resolved');}
+  return load_(user);
+}
 function changePassword_(req, user) { checkRate_(user.email); if (!matchesPassword_(user.email, req.currentPassword)) fail_('credentials', 'Current password is incorrect'); var password = String(req.newPassword || ''); if (password.length < 8 || password.length > 128) fail_('bad', 'Use 8 to 128 characters'); setPassword_(user.email, password); PropertiesService.getScriptProperties().deleteProperty('reset:' + user.email); CacheService.getScriptCache().remove('attempt:' + digest_(user.email)); return {ok: true, token: issueSession_(user.email)}; }
-function resetPassword_(req) { var email = String(req.email || '').trim().toLowerCase(); if (!findUser_(email)) fail_('bad', 'User not found'); setPassword_(email, INITIAL_PASSWORD_); PropertiesService.getScriptProperties().deleteProperty('reset:' + email); CacheService.getScriptCache().remove('attempt:' + digest_(email)); return {ok: true}; }
+function resetPassword_(req) { var email = String(req.email || '').trim().toLowerCase(); if (!findUser_(email)) fail_('bad', 'User not found'); setPassword_(email, INITIAL_PASSWORD_); PropertiesService.getScriptProperties().deleteProperty('reset:' + email); CacheService.getScriptCache().remove('attempt:' + digest_(email)); var sh=ss_().getSheetByName('Password Reset Requests'); if(sh){var d=readTab_(sh);for(var i=d.rows.length-1;i>=0;i--)if(s_(d.rows[i].email).trim().toLowerCase()===email)sh.getRange(d.rows[i]._row,d.cols.status+1).setValue('Resolved');} return load_(sessionUser_(req.token)); }
 
 function removeSession_(token) { var key = 'session:' + digest_(String(token || '')); PropertiesService.getScriptProperties().deleteProperty(key); CacheService.getScriptCache().remove(key); }
 function issueSession_(email) { var token = Utilities.getUuid() + Utilities.getUuid(), props = PropertiesService.getScriptProperties(), now = Date.now(); var all = props.getProperties(); Object.keys(all).forEach(function (key) { if (key.indexOf('session:') === 0) { try { if (JSON.parse(all[key]).expires < now) props.deleteProperty(key); } catch (e) { props.deleteProperty(key); } } }); props.setProperty('session:' + digest_(token), JSON.stringify({email:email,version:credentials_(email).version,expires:now+7*86400000})); return token; }
