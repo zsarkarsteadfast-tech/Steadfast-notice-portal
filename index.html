@@ -290,6 +290,13 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 #sopEntries{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px;margin:18px 0}#sopEntries .fq{margin:0;min-width:0;overflow-wrap:anywhere}.sop-steps{white-space:pre-wrap;line-height:1.85}
 .admin-user-search{display:flex;gap:10px;margin:14px 0 20px}.admin-user-search input{width:100%;padding:12px 16px;border:1px solid var(--bd);border-radius:18px;background:var(--fld);color:var(--ink);font:inherit}.admin-user-search .btn{flex:none}.sop-empty{grid-column:1/-1}
 @media(max-width:560px){.sects button{font-size:12px;gap:4px;padding:11px 4px}}
+/* Weekly QA recognition, ranked vertically with clear dividers. */
+.sects{overflow-x:auto;scrollbar-width:none}.sects::-webkit-scrollbar{display:none}.sects button{flex:1 0 auto;white-space:nowrap}
+.weekly-hero{text-align:center;padding:30px 20px 24px}.weekly-eyebrow{display:inline-block;font-size:11px;font-weight:800;letter-spacing:2.2px;text-transform:uppercase;color:var(--dk);margin-bottom:12px}.weekly-hero h1{font-size:clamp(28px,5vw,46px);line-height:1.2}.weekly-hero p{max-width:600px;margin:12px auto 0;color:var(--mut)}
+.weekly-stage{max-width:1000px;margin:4px auto 32px}.weekly-card{--award:#b18a35;position:relative;display:grid;grid-template-columns:100px 1fr;gap:26px;align-items:center;padding:32px;border-radius:28px;border:1px solid color-mix(in srgb,var(--award) 38%,var(--edge));background:linear-gradient(120deg,color-mix(in srgb,var(--award) 10%,var(--glass)),var(--glass));box-shadow:var(--sh),inset 0 1px 0 var(--hi)}
+.weekly-card.first{padding:40px 32px;--award:#bc922d}.weekly-card.second{--award:#8294a6}.weekly-card.third{--award:#b47a54}.weekly-rank{text-align:center;color:var(--award)}.weekly-medal{display:grid;place-items:center;width:78px;height:78px;border-radius:50%;margin:0 auto 10px;border:2px solid color-mix(in srgb,var(--award) 60%,transparent);background:color-mix(in srgb,var(--award) 14%,transparent);font-size:35px}.weekly-rank strong{font-size:14px;letter-spacing:2px;text-transform:uppercase}
+.weekly-kicker{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:750;color:var(--award);margin:0 0 7px}.weekly-name{font-size:clamp(24px,4vw,34px);font-weight:750;line-height:1.3;margin:0;overflow-wrap:anywhere}.weekly-card.first .weekly-name{font-size:clamp(28px,5vw,42px)}.weekly-week{font-size:12px;color:var(--mut);margin:6px 0 17px}.weekly-team{font-size:14px;font-weight:650;margin:0 0 10px;color:var(--dk)}.weekly-details{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font-size:15px;line-height:1.8;color:var(--tx)}.weekly-divider{height:1px;background:linear-gradient(90deg,transparent,var(--bd) 15%,var(--bd) 85%,transparent);margin:22px 10px}.weekly-pending .weekly-name{color:var(--mut)}.weekly-review{text-align:center;color:var(--mut);margin:0 0 20px}
+@media(max-width:560px){.weekly-card,.weekly-card.first{grid-template-columns:60px 1fr;gap:16px;padding:24px 18px}.weekly-medal{width:54px;height:54px;font-size:25px}.weekly-rank strong{font-size:11px;letter-spacing:1px}.weekly-hero{padding:26px 8px 20px}.weekly-team{font-size:13px}}
 </style>
 </head>
 <body>
@@ -356,6 +363,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
   <button data-s="notice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span data-i="sNotice"></span></button>
   <button data-s="faq"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17v.1"/></svg><span data-i="sFaq"></span></button>
   <button data-s="sop"><span aria-hidden="true">▤</span><span data-i="sSop">SOP</span></button>
+  <button data-s="performers" title="Performer of the Week"><span aria-hidden="true">🏆</span><span data-i="sPerformers">Performers</span></button>
   <button data-s="sheets"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg><span data-i="sSheets"></span></button>
   <button data-s="admin" class="hide"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span data-i="sAdmin"></span></button>
  </div>
@@ -386,6 +394,10 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
   <div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="sopQ" type="search" aria-label="Search SOP scenarios" placeholder="Search categories, scenarios or SOP steps"></div>
   <div id="sopCategories"></div>
   <div id="sopDetail" class="hide"><button class="btn sm" id="sopBack" data-i="sopBack">← All categories</button><h2 id="sopCategoryTitle"></h2><div id="sopEntries"></div></div>
+ </section>
+ <section id="pPerformers" class="hide">
+  <div class="weekly-hero"><span class="weekly-eyebrow" data-i="weeklyEyebrow">QA EXCELLENCE · WEEKLY RECOGNITION</span><h1 data-i="weeklyTitle">Performer of the Week</h1><p data-i="weeklySub">Celebrating outstanding service and dedication. One top QA performer from each team.</p></div>
+  <div id="weeklyWinners" class="weekly-stage"></div>
  </section>
  <section id="pSheets" class="hide">
   <div class="head"><svg class="t"><use href="#tr"/></svg><div><h1 data-i="shTitle"></h1><p data-i="shSub"></p></div><button class="btn hide" id="shNew" data-i="shNew"></button></div>
@@ -438,6 +450,8 @@ var LIVE=/^https:\/\/script\.google\.com\//.test(CFG.API_URL);
 var authToken="";var pending=0,police=null,policeOpen=false,faqCat="all",editHistory=[];
 var policeShowAllActive=false,policeMeta=null;
 var sops=[],sopCategories=[],sopCategory="",adminUserGroup="users";
+var weeklyPerformers={week:"",start:"",end:"",winners:[],review:false};
+var weeklyTeamLeaders=[];
 var T={
 en:{lgExp:"Session expired. Please sign in again.",lgFail:"Could not connect. Check your internet and try again.",saveFail:"Could not save. Please try again.",polOpen:"Open lookup",polBack:"Back",polPh:"Search area, police station or hub",polCount:"Showing {n} of {m}",polNone:"No match found.",ann:"Announced by",appr:"Approved by",addedBy:"Added by",subL:"Notices come from the Google Sheet. You can mark expired and review reports.",gCs:"CS Official Notice",gQa:"QA Follow-up",sAdmin:"Admin",adTitle:"Admin panel",adSub:"Approve people and choose what each person can see.",adNew:"+ Add user",adReq:"Requests",adUsr:"Users",adNoReq:"No pending requests.",adNoUsr:"No users yet.",adReqAt:"Requested",adApprove:"Approve",adReject:"Reject",adManage:"Manage",uAdd:"Add user",uManage:"Manage access",uApprove:"Approve access",uEmail:"Email",uRole:"Role",uStatus:"Status",roleViewer:"Viewer",roleEditor:"Editor",roleAdmin:"Admin",stActive:"Active",stBlocked:"Blocked",pAll:"Select all",uNote:"Editors and admins can see everything.",uDel:"Remove user",uBad:"Enter a valid email",uDup:"This email already exists",uSelf:"You can’t block or demote yourself",uConf:"Remove this user?",noAcc:"You have no access yet. Ask an admin.",lgPend:"Your request was sent. Please wait for admin approval.",fullAcc:"Full access",today:"Today",calClear:"Clear",adminPill:"Admin",noneLbl:"No access",tkEdit:"Edit",tkTitle:"Edit scrolling announcements",tkHint:"One message per line. Emojis are welcome.",tkEmpty:"Add an announcement",nb:"Notice",nbTip:"Notice panel only for internal use!",dFrom:"From",dTo:"To",dClear:"Clear dates",dPick:"Select date",upd:"Updated by",rpt:"Report as outdated",reported:"Reported",exp:"Expired",restore:"Restore",mark:"Mark expired",dismiss:"Dismiss",tabN:"Notices",tabR:"Reports",noRep:"No reports. All notices look current.",already:"You already reported this",rTitle:"Report outdated notice",rSub:"Let editors know this notice is backdated or expired.",rNote:"Note (optional)",rSendL:"Send report",rDone:"Report sent",title:"Notices",sub:"Latest updates for agents. View and copy only.",subE:"Latest updates for agents. You can add and edit.",new:"+ New notice",ph:"Search by keyword, e.g. payment, EBL, 25.10.2026",all:"All",copy:"Copy",edit:"Edit",del:"Delete",urg:"Urgent",none:"No notices found.",copied:"Copied",saved:"Saved",need:"Please fill in all required fields",conf:"Delete this notice?",lt:"Title",lc:"Category",lu:"Priority",lb:"Details",save:"Save",cancel:"Cancel",nt:"New notice",et:"Edit notice",nrm:"Normal",
 cat:{"Payment":"Payment","Delivery":"Delivery","Return":"Return","Service update":"Service update","Pickup":"Pickup","Complaint":"Complaint"},
@@ -461,6 +475,8 @@ Object.assign(T.en,{adManageNotices:"Manage notices",adHistory:"Edit history",hi
 Object.assign(T.bn,{adManageNotices:"নোটিশ পরিচালনা",adHistory:"এডিট হিস্টোরি",histEmpty:"এখনও কোনো এডিট হিস্টোরি নেই।",histBy:"পরিবর্তন করেছেন",histAt:"তারিখ ও সময়",histCreate:"নোটিশ যোগ",histDelete:"নোটিশ ডিলিট",histEdit:"নোটিশ এডিট",histExpired:"মেয়াদোত্তীর্ণ",histRestore:"নোটিশ পুনরুদ্ধার",histFaq:"FAQ এডিট",deleteNoticeConfirm:"এই নোটিশটি স্থায়ীভাবে ডিলিট করবেন?"});
 Object.assign(T.en,{sSop:"SOP",sopTitle:"Standard Operating Procedures",sopSub:"Choose a category, then open a scenario to read the approved service steps.",sopBack:"← All categories",sopEmpty:"No published SOP scenarios in this category yet.",sopNone:"No matching SOP found.",sopSearch:"Search categories, scenarios or SOP steps",sopCount:"scenarios",staffGroup:"Admins & Editors",usersGroup:"Users",userSearch:"Search",userSearchPh:"Search email or name",userNoMatch:"No matching users in this group."});
 Object.assign(T.bn,{sSop:"SOP",sopTitle:"স্ট্যান্ডার্ড অপারেটিং প্রসিডিউর",sopSub:"ক্যাটাগরি বেছে scenario খুলে অনুমোদিত সেবার ধাপগুলো দেখুন।",sopBack:"← সব ক্যাটাগরি",sopEmpty:"এই ক্যাটাগরিতে এখনও কোনো SOP প্রকাশ করা হয়নি।",sopNone:"কোনো মিল পাওয়া যায়নি।",sopSearch:"ক্যাটাগরি, scenario বা SOP খুঁজুন",sopCount:"টি scenario",staffGroup:"অ্যাডমিন ও এডিটর",usersGroup:"ইউজার",userSearch:"খুঁজুন",userSearchPh:"ইমেইল অথবা নাম লিখুন",userNoMatch:"এই বিভাগে কোনো মিল পাওয়া যায়নি।"});
+Object.assign(T.en,{sPerformers:"Performers",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"Performer of the Week",weeklySub:"Celebrating outstanding service and dedication. One top QA performer from each team.",weeklyKicker:"Top QA performer",weeklyPending:"To be announced",weeklyPendingWeek:"Weekly results coming soon",weeklyTeam:"From the team of",weeklyReview:"Weekly results are being reviewed.",weeklyNoDetails:"Recognized for outstanding service and dedication."});
+Object.assign(T.bn,{sPerformers:"সেরা পারফর্মার",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"সপ্তাহের সেরা পারফর্মার",weeklySub:"প্রতিটি টিম থেকে একজন সেরা QA পারফর্মার—অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।",weeklyKicker:"সেরা QA পারফর্মার",weeklyPending:"শীঘ্রই ঘোষণা করা হবে",weeklyPendingWeek:"সাপ্তাহিক ফলাফল আসছে",weeklyTeam:"টিম লিডার",weeklyReview:"সাপ্তাহিক ফলাফল পর্যালোচনা চলছে।",weeklyNoDetails:"অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।"});
 var lang="en",role="viewer",me="",edName="",section="notice",view="notices",grp="cs",cat="all",sheetCat="IB",rid=null,editId=null,faqId=null,shId=null,adView="req",uEditEmail=null,curU=null,errKey="lgDeny";
 var CK=["Payment","Delivery","Return","Service update","Pickup","Complaint"],SC=["IB","IR","QA"];
 var resetRequests=[];
@@ -509,9 +525,9 @@ var $=function(i){return document.getElementById(i)};
 function t(k){return T[lang][k]}
 function isEd(){return role==="editor"||role==="admin"}
 function isAdmin(){return role==="admin"}
-function can(s){if(isEd())return true;var p=(curU&&curU.perms)||{};return s==="notice"?!!p.n:s==="faq"?!!p.f:s==="sheets"?!!p.s:s==="sop"?!!curU:false}
+function can(s){if(isEd())return true;var p=(curU&&curU.perms)||{};return s==="notice"?!!p.n:s==="faq"?!!p.f:s==="sheets"?!!p.s:s==="sop"||s==="performers"?!!curU:false}
 function visSheets(){if(isEd())return sheets;var p=(curU&&curU.perms)||{};if(!p.s)return [];return p.ids==="all"?sheets:sheets.filter(function(s){return p.ids.indexOf(s.id)>-1})}
-function secList(){var l=["notice","faq","sop","sheets"].filter(can);if(isAdmin())l.push("admin");return l}
+function secList(){var l=["notice","faq","sop","performers","sheets"].filter(can);if(isAdmin())l.push("admin");return l}
 function findU(e){return users.filter(function(u){return u.email===e})[0]}
 function toast(m){var x=$("toast");x.textContent=m;x.className="toast show";setTimeout(function(){x.className="toast"},1600)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -707,13 +723,23 @@ function renderSop(){
 $("sopCategories").onclick=function(e){var b=e.target.closest("[data-sop-category]");if(b){sopCategory=b.dataset.sopCategory;renderSop()}};
 $("sopQ").oninput=renderSop;
 $("sopBack").onclick=function(){sopCategory="";renderSop()};
+function renderPerformers(){
+  var data=weeklyPerformers||{},winners=Array.isArray(data.winners)?data.winners:[];
+  var ranks=["1st","2nd","3rd"],classes=["first","second","third"],medals=["🥇","🥈","🥉"];
+  var range=data.start&&data.end?' · '+fmt(data.start)+' – '+fmt(data.end):'';
+  $("weeklyWinners").innerHTML=(data.review?'<p class="weekly-review">'+t("weeklyReview")+'</p>':'')+[1,2,3].map(function(rank,i){
+    var w=winners.filter(function(x){return Number(x.rank)===rank})[0];
+    var team=w?w.team:(!winners.length?(weeklyTeamLeaders[i]||""):"");
+    return (i?'<div class="weekly-divider" aria-hidden="true"></div>':'')+'<article class="weekly-card '+classes[i]+(!w?' weekly-pending':'')+'" aria-label="'+ranks[i]+'"><div class="weekly-rank"><span class="weekly-medal" aria-hidden="true">'+medals[i]+'</span><strong>'+ranks[i]+'</strong></div><div><p class="weekly-kicker">'+t("weeklyKicker")+'</p><h2 class="weekly-name">'+esc(w?w.name:t("weeklyPending"))+'</h2><p class="weekly-week">'+esc(data.week?data.week+range:t("weeklyPendingWeek"))+'</p>'+(team?'<p class="weekly-team">'+t("weeklyTeam")+' '+esc(team)+'</p>':'')+(w?'<p class="weekly-details">'+esc(w.details||t("weeklyNoDetails"))+'</p>':'')+'</div></article>';
+  }).join("");
+}
 function render(){
   tick();
   var sl=secList();if(sl.indexOf(section)<0)section=sl[0]||"";
   document.querySelectorAll("#sects button").forEach(function(b){var s=b.dataset.s;b.className=(sl.indexOf(s)<0?"hide ":"")+(s===section?"on":"")});
   $("noAcc").className=sl.length?"empty hide":"empty";
-  ["notice","faq","sop","sheets","admin"].forEach(function(s){$("p"+s.charAt(0).toUpperCase()+s.slice(1)).className=s===section?"":"hide"});
-  if(section==="notice")renderNotice();else if(section==="faq")renderFaq();else if(section==="sop")renderSop();else if(section==="sheets")renderSheets();else if(section==="admin")renderAdmin();
+  ["notice","faq","sop","performers","sheets","admin"].forEach(function(s){$("p"+s.charAt(0).toUpperCase()+s.slice(1)).className=s===section?"":"hide"});
+  if(section==="notice")renderNotice();else if(section==="faq")renderFaq();else if(section==="sop")renderSop();else if(section==="performers")renderPerformers();else if(section==="sheets")renderSheets();else if(section==="admin")renderAdmin();
 }
 function fb(s){var i=document.createElement("textarea");i.value=s;document.body.appendChild(i);i.select();try{document.execCommand("copy");toast(t("copied"))}catch(e){toast("✗")}document.body.removeChild(i)}
 function copyTxt(x){try{navigator.clipboard.writeText(x).then(function(){toast(t("copied"))},function(){fb(x)})}catch(z){fb(x)}}
@@ -1030,6 +1056,7 @@ function api(action,data){
 function sync(a,data){if(!LIVE)return;pending++;
   api(a,data).catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending"){me="";return failLogin(e)}toast(t("saveFail"));refresh(true)}).then(function(){pending--})}
 function applyData(d){
+  weeklyPerformers=d.weeklyPerformers||{week:"",start:"",end:"",winners:[],review:false};weeklyTeamLeaders=Array.isArray(weeklyPerformers.teams)?weeklyPerformers.teams:[];
   sops=Array.isArray(d.sops)?d.sops:[];sopCategories=Array.isArray(d.sopCategories)?d.sopCategories:[];
   notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;policeMeta=d.policeMeta||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];resetRequests=Array.isArray(d.resetRequests)?d.resetRequests:[];
   if(d.users)users=d.users;
