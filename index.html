@@ -285,6 +285,11 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 #polRes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px;align-items:start}
 #polRes>.meta,#polRes>.empty{grid-column:1/-1}
 #polRes .fq{margin:0;min-width:0;overflow-wrap:anywhere}
+#sopCategories{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px;margin:20px 0}
+.sop-category{text-align:left;width:100%;margin:0;transition:border-color .2s}.sop-category:hover{border-color:var(--g)}.sop-category b{display:block;font-size:17px}.sop-category small{color:var(--mut)}
+#sopEntries{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px;margin:18px 0}#sopEntries .fq{margin:0;min-width:0;overflow-wrap:anywhere}.sop-steps{white-space:pre-wrap;line-height:1.85}
+.admin-user-search{display:flex;gap:10px;margin:14px 0 20px}.admin-user-search input{width:100%;padding:12px 16px;border:1px solid var(--bd);border-radius:18px;background:var(--fld);color:var(--ink);font:inherit}.admin-user-search .btn{flex:none}.sop-empty{grid-column:1/-1}
+@media(max-width:560px){.sects button{font-size:12px;gap:4px;padding:11px 4px}}
 </style>
 </head>
 <body>
@@ -350,6 +355,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
  <div class="sects" id="sects">
   <button data-s="notice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span data-i="sNotice"></span></button>
   <button data-s="faq"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17v.1"/></svg><span data-i="sFaq"></span></button>
+  <button data-s="sop"><span aria-hidden="true">▤</span><span data-i="sSop">SOP</span></button>
   <button data-s="sheets"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg><span data-i="sSheets"></span></button>
   <button data-s="admin" class="hide"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span data-i="sAdmin"></span></button>
  </div>
@@ -375,6 +381,12 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
   <div id="faqList"></div>
  </section>
 
+ <section id="pSop" class="hide">
+  <div class="head"><svg class="t"><use href="#tr"/></svg><div><h1 data-i="sopTitle">Standard Operating Procedures</h1><p data-i="sopSub">Choose a category, then open a scenario to read the approved service steps.</p></div></div>
+  <div class="search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="sopQ" type="search" aria-label="Search SOP scenarios" placeholder="Search categories, scenarios or SOP steps"></div>
+  <div id="sopCategories"></div>
+  <div id="sopDetail" class="hide"><button class="btn sm" id="sopBack" data-i="sopBack">← All categories</button><h2 id="sopCategoryTitle"></h2><div id="sopEntries"></div></div>
+ </section>
  <section id="pSheets" class="hide">
   <div class="head"><svg class="t"><use href="#tr"/></svg><div><h1 data-i="shTitle"></h1><p data-i="shSub"></p></div><button class="btn hide" id="shNew" data-i="shNew"></button></div>
   <div class="chips" id="shChips"></div>
@@ -383,6 +395,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 <section id="pAdmin" class="hide">
   <div class="head"><svg class="t"><use href="#tr"/></svg><div><h1 data-i="adTitle"></h1><p data-i="adSub"></p></div><button class="btn line" id="adminNotices" data-i="manageNotices"></button><button class="btn" id="adNew" data-i="adNew"></button></div>
   <div class="seg admin-tabs" id="adTabs" style="margin-bottom:16px"><button data-v="req"></button><button data-v="usr"></button><button data-v="notices"></button><button data-v="history"></button></div>
+  <div id="adminUserTools" class="hide"><div class="seg wide" id="adminUserGroups"><button type="button" data-user-group="staff">Admins &amp; Editors</button><button type="button" data-user-group="users">Users</button></div><form id="adminUserSearchForm" class="admin-user-search"><input id="adminUserQ" type="search" aria-label="Search users by email or name" placeholder="Search email or name"><button class="btn" type="submit" data-i="userSearch">Search</button></form></div>
   <div id="adList"></div>
  </section>
 </main>
@@ -424,6 +437,7 @@ var CFG={API_URL:"https://script.google.com/macros/s/AKfycbwmrkUra5GJURdGMVVl0_7
 var LIVE=/^https:\/\/script\.google\.com\//.test(CFG.API_URL);
 var authToken="";var pending=0,police=null,policeOpen=false,faqCat="all",editHistory=[];
 var policeShowAllActive=false,policeMeta=null;
+var sops=[],sopCategories=[],sopCategory="",adminUserGroup="users";
 var T={
 en:{lgExp:"Session expired. Please sign in again.",lgFail:"Could not connect. Check your internet and try again.",saveFail:"Could not save. Please try again.",polOpen:"Open lookup",polBack:"Back",polPh:"Search area, police station or hub",polCount:"Showing {n} of {m}",polNone:"No match found.",ann:"Announced by",appr:"Approved by",addedBy:"Added by",subL:"Notices come from the Google Sheet. You can mark expired and review reports.",gCs:"CS Official Notice",gQa:"QA Follow-up",sAdmin:"Admin",adTitle:"Admin panel",adSub:"Approve people and choose what each person can see.",adNew:"+ Add user",adReq:"Requests",adUsr:"Users",adNoReq:"No pending requests.",adNoUsr:"No users yet.",adReqAt:"Requested",adApprove:"Approve",adReject:"Reject",adManage:"Manage",uAdd:"Add user",uManage:"Manage access",uApprove:"Approve access",uEmail:"Email",uRole:"Role",uStatus:"Status",roleViewer:"Viewer",roleEditor:"Editor",roleAdmin:"Admin",stActive:"Active",stBlocked:"Blocked",pAll:"Select all",uNote:"Editors and admins can see everything.",uDel:"Remove user",uBad:"Enter a valid email",uDup:"This email already exists",uSelf:"You can’t block or demote yourself",uConf:"Remove this user?",noAcc:"You have no access yet. Ask an admin.",lgPend:"Your request was sent. Please wait for admin approval.",fullAcc:"Full access",today:"Today",calClear:"Clear",adminPill:"Admin",noneLbl:"No access",tkEdit:"Edit",tkTitle:"Edit scrolling announcements",tkHint:"One message per line. Emojis are welcome.",tkEmpty:"Add an announcement",nb:"Notice",nbTip:"Notice panel only for internal use!",dFrom:"From",dTo:"To",dClear:"Clear dates",dPick:"Select date",upd:"Updated by",rpt:"Report as outdated",reported:"Reported",exp:"Expired",restore:"Restore",mark:"Mark expired",dismiss:"Dismiss",tabN:"Notices",tabR:"Reports",noRep:"No reports. All notices look current.",already:"You already reported this",rTitle:"Report outdated notice",rSub:"Let editors know this notice is backdated or expired.",rNote:"Note (optional)",rSendL:"Send report",rDone:"Report sent",title:"Notices",sub:"Latest updates for agents. View and copy only.",subE:"Latest updates for agents. You can add and edit.",new:"+ New notice",ph:"Search by keyword, e.g. payment, EBL, 25.10.2026",all:"All",copy:"Copy",edit:"Edit",del:"Delete",urg:"Urgent",none:"No notices found.",copied:"Copied",saved:"Saved",need:"Please fill in all required fields",conf:"Delete this notice?",lt:"Title",lc:"Category",lu:"Priority",lb:"Details",save:"Save",cancel:"Cancel",nt:"New notice",et:"Edit notice",nrm:"Normal",
 cat:{"Payment":"Payment","Delivery":"Delivery","Return":"Return","Service update":"Service update","Pickup":"Pickup","Complaint":"Complaint"},
@@ -445,6 +459,8 @@ Object.assign(T.en,{"manageNotices": "Manage notices", "noticeGroup": "Notice gr
 Object.assign(T.bn,{"manageNotices": "নোটিশ পরিচালনা", "noticeGroup": "নোটিশ গ্রুপ", "noticeDate": "নোটিশের তারিখ", "noticeExpires": "মেয়াদ শেষের তারিখ (ঐচ্ছিক)", "noticeConflict": "নোটিশটি পরিবর্তন হয়েছে। এডিটর বন্ধ করে রিফ্রেশ করে আবার চেষ্টা করুন।"});
 Object.assign(T.en,{adManageNotices:"Manage notices",adHistory:"Edit history",histEmpty:"No edit history yet.",histBy:"Changed by",histAt:"Date & time",histCreate:"Add notice",histDelete:"Delete notice",histEdit:"Edit notice",histExpired:"Mark expired",histRestore:"Restore notice",histFaq:"Edit FAQ",deleteNoticeConfirm:"Delete this notice permanently?"});
 Object.assign(T.bn,{adManageNotices:"নোটিশ পরিচালনা",adHistory:"এডিট হিস্টোরি",histEmpty:"এখনও কোনো এডিট হিস্টোরি নেই।",histBy:"পরিবর্তন করেছেন",histAt:"তারিখ ও সময়",histCreate:"নোটিশ যোগ",histDelete:"নোটিশ ডিলিট",histEdit:"নোটিশ এডিট",histExpired:"মেয়াদোত্তীর্ণ",histRestore:"নোটিশ পুনরুদ্ধার",histFaq:"FAQ এডিট",deleteNoticeConfirm:"এই নোটিশটি স্থায়ীভাবে ডিলিট করবেন?"});
+Object.assign(T.en,{sSop:"SOP",sopTitle:"Standard Operating Procedures",sopSub:"Choose a category, then open a scenario to read the approved service steps.",sopBack:"← All categories",sopEmpty:"No published SOP scenarios in this category yet.",sopNone:"No matching SOP found.",sopSearch:"Search categories, scenarios or SOP steps",sopCount:"scenarios",staffGroup:"Admins & Editors",usersGroup:"Users",userSearch:"Search",userSearchPh:"Search email or name",userNoMatch:"No matching users in this group."});
+Object.assign(T.bn,{sSop:"SOP",sopTitle:"স্ট্যান্ডার্ড অপারেটিং প্রসিডিউর",sopSub:"ক্যাটাগরি বেছে scenario খুলে অনুমোদিত সেবার ধাপগুলো দেখুন।",sopBack:"← সব ক্যাটাগরি",sopEmpty:"এই ক্যাটাগরিতে এখনও কোনো SOP প্রকাশ করা হয়নি।",sopNone:"কোনো মিল পাওয়া যায়নি।",sopSearch:"ক্যাটাগরি, scenario বা SOP খুঁজুন",sopCount:"টি scenario",staffGroup:"অ্যাডমিন ও এডিটর",usersGroup:"ইউজার",userSearch:"খুঁজুন",userSearchPh:"ইমেইল অথবা নাম লিখুন",userNoMatch:"এই বিভাগে কোনো মিল পাওয়া যায়নি।"});
 var lang="en",role="viewer",me="",edName="",section="notice",view="notices",grp="cs",cat="all",sheetCat="IB",rid=null,editId=null,faqId=null,shId=null,adView="req",uEditEmail=null,curU=null,errKey="lgDeny";
 var CK=["Payment","Delivery","Return","Service update","Pickup","Complaint"],SC=["IB","IR","QA"];
 var resetRequests=[];
@@ -493,9 +509,9 @@ var $=function(i){return document.getElementById(i)};
 function t(k){return T[lang][k]}
 function isEd(){return role==="editor"||role==="admin"}
 function isAdmin(){return role==="admin"}
-function can(s){if(isEd())return true;var p=(curU&&curU.perms)||{};return s==="notice"?!!p.n:s==="faq"?!!p.f:s==="sheets"?!!p.s:false}
+function can(s){if(isEd())return true;var p=(curU&&curU.perms)||{};return s==="notice"?!!p.n:s==="faq"?!!p.f:s==="sheets"?!!p.s:s==="sop"?!!curU:false}
 function visSheets(){if(isEd())return sheets;var p=(curU&&curU.perms)||{};if(!p.s)return [];return p.ids==="all"?sheets:sheets.filter(function(s){return p.ids.indexOf(s.id)>-1})}
-function secList(){var l=["notice","faq","sheets"].filter(can);if(isAdmin())l.push("admin");return l}
+function secList(){var l=["notice","faq","sop","sheets"].filter(can);if(isAdmin())l.push("admin");return l}
 function findU(e){return users.filter(function(u){return u.email===e})[0]}
 function toast(m){var x=$("toast");x.textContent=m;x.className="toast show";setTimeout(function(){x.className="toast"},1600)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -555,6 +571,7 @@ function ui(){
   document.querySelectorAll("[data-i]").forEach(function(e){var v=t(e.dataset.i);if(v!==undefined)e.textContent=v});
   document.querySelectorAll("[data-l]").forEach(function(b){b.className=b.dataset.l===lang?"on":""});
   $("q").placeholder=t("ph");$("faqQ").placeholder=t("faqPh");
+  $("sopQ").placeholder=t("sopSearch");$("adminUserQ").placeholder=t("userSearchPh");
   fillCats();
   $("fU").options[0].textContent=t("nrm");$("fU").options[1].textContent=t("urg");
   $("nsub").textContent=isEd()?(LIVE?t("subL"):t("subE")):t("sub");
@@ -675,13 +692,28 @@ function renderSheets(){
     var open=s.type==="police"?'<button class="btn" data-a="police" data-id="'+s.id+'">'+t("polOpen")+'</button>':(s.url?'<a class="btn" href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">'+t("shOpen")+' '+IC.ext+'</a>'+ib("scopy",s.id,IC.copy,t("copyLink")):'');
     return '<article class="card"><div class="sh"><div class="shi">'+IC.sheet+'</div><div><h3>'+esc(s.title)+'</h3><p>'+esc(s.desc)+'</p></div></div>'+updHtml(s)+'<div class="acts">'+open+(ed?'<span class="sp"></span><button class="btn sm" data-a="sedit" data-id="'+s.id+'">'+t("edit")+'</button><button class="btn sm danger" data-a="sdel" data-id="'+s.id+'">'+t("del")+'</button>':'')+'</div></article>'}).join(""):'<div class="empty">'+t("shNone")+'</div>';
 }
+function sopMatches(item,q){return !q||q.split(/\s+/).every(function(w){return [item.cat,item.scenario,item.body].join(" ").toLowerCase().indexOf(w)>-1})}
+function renderSop(){
+  var q=$("sopQ").value.trim().toLowerCase();
+  var cats=sopCategories.filter(function(c){return !q||c.toLowerCase().indexOf(q)>-1||sops.some(function(x){return x.cat===c&&sopMatches(x,q)})});
+  if(sopCategory&&sopCategories.indexOf(sopCategory)<0)sopCategory="";
+  $("sopCategories").classList.toggle("hide",!!sopCategory);$("sopDetail").classList.toggle("hide",!sopCategory);
+  $("sopCategories").innerHTML=cats.length?cats.map(function(c){var n=sops.filter(function(x){return x.cat===c}).length;return '<button type="button" class="card sop-category" data-sop-category="'+esc(c)+'"><b>'+esc(c)+'</b><small>'+dg(n)+' '+t("sopCount")+'</small></button>'}).join(""):'<p class="empty sop-empty">'+t("sopNone")+'</p>';
+  if(!sopCategory)return;
+  $("sopCategoryTitle").textContent=sopCategory;
+  var rows=sops.filter(function(x){return x.cat===sopCategory&&sopMatches(x,q)});
+  $("sopEntries").innerHTML=rows.length?rows.map(function(x){return '<details class="fq"><summary>'+esc(x.scenario)+'</summary><div class="ans"><div class="sop-steps">'+esc(x.body)+'</div>'+updHtml(x)+'</div></details>'}).join(""):'<p class="empty sop-empty">'+t(q?"sopNone":"sopEmpty")+'</p>';
+}
+$("sopCategories").onclick=function(e){var b=e.target.closest("[data-sop-category]");if(b){sopCategory=b.dataset.sopCategory;renderSop()}};
+$("sopQ").oninput=renderSop;
+$("sopBack").onclick=function(){sopCategory="";renderSop()};
 function render(){
   tick();
   var sl=secList();if(sl.indexOf(section)<0)section=sl[0]||"";
   document.querySelectorAll("#sects button").forEach(function(b){var s=b.dataset.s;b.className=(sl.indexOf(s)<0?"hide ":"")+(s===section?"on":"")});
   $("noAcc").className=sl.length?"empty hide":"empty";
-  ["notice","faq","sheets","admin"].forEach(function(s){$("p"+s.charAt(0).toUpperCase()+s.slice(1)).className=s===section?"":"hide"});
-  if(section==="notice")renderNotice();else if(section==="faq")renderFaq();else if(section==="sheets")renderSheets();else if(section==="admin")renderAdmin();
+  ["notice","faq","sop","sheets","admin"].forEach(function(s){$("p"+s.charAt(0).toUpperCase()+s.slice(1)).className=s===section?"":"hide"});
+  if(section==="notice")renderNotice();else if(section==="faq")renderFaq();else if(section==="sop")renderSop();else if(section==="sheets")renderSheets();else if(section==="admin")renderAdmin();
 }
 function fb(s){var i=document.createElement("textarea");i.value=s;document.body.appendChild(i);i.select();try{document.execCommand("copy");toast(t("copied"))}catch(e){toast("✗")}document.body.removeChild(i)}
 function copyTxt(x){try{navigator.clipboard.writeText(x).then(function(){toast(t("copied"))},function(){fb(x)})}catch(z){fb(x)}}
@@ -896,6 +928,10 @@ window.addEventListener("scroll",function(){$("cal").classList.add("hide")},{pas
 
 /* admin panel */
 function renderAdmin(){
+  $("adminUserTools").classList.toggle("hide",adView!=="usr");
+  var staffCount=users.filter(function(u){return u.status!=="pending"&&(u.role==="admin"||u.role==="editor")}).length;
+  var viewerCount=users.filter(function(u){return u.status!=="pending"&&u.role==="viewer"}).length;
+  document.querySelectorAll("#adminUserGroups button").forEach(function(b){var staff=b.dataset.userGroup==="staff";b.textContent=t(staff?"staffGroup":"usersGroup")+" ("+(staff?staffCount:viewerCount)+")";b.classList.toggle("on",b.dataset.userGroup===adminUserGroup)});
   var pend=users.filter(function(u){return u.status==="pending"}),act=users.filter(function(u){return u.status!=="pending"}),resetReqs=resetRequests||[];
   var tb=$("adTabs").children;
   var labels=[t("adReq")+" ("+(pend.length+resetReqs.length)+")",t("adUsr")+" ("+act.length+")",t("adManageNotices"),t("adHistory")];
@@ -925,8 +961,9 @@ function renderAdmin(){
     var pendingCards=pend.map(function(u){var e=esc(u.email),sub=t("adReqAt")+" · "+esc(u.req||"");return '<article class="card"><div class="ur"><span class="av2">'+esc(u.email.charAt(0).toUpperCase())+'</span><div><h3>'+e+'</h3><p>'+sub+'</p></div></div><div class="acts"><button class="btn sm danger" data-a="urej" data-e="'+e+'">'+t("adReject")+'</button><span class="sp"></span><button class="btn" data-a="uman" data-e="'+e+'">'+t("adApprove")+'</button></div></article>'}).join("");
     $("adList").innerHTML=requestCards+pendingCards;return;
   }
-  var rows=act;
-  if(!rows.length){$("adList").innerHTML='<div class="empty">'+t("adNoUsr")+'</div>';return}
+  var query=$("adminUserQ").value.trim().toLowerCase();
+  var rows=act.filter(function(u){var staff=u.role==="admin"||u.role==="editor";return (adminUserGroup==="staff"?staff:!staff)&&(!query||query.split(/\s+/).every(function(w){return [u.email,u.name,u.role,u.status].join(" ").toLowerCase().indexOf(w)>-1}))});
+  if(!rows.length){$("adList").innerHTML='<div class="empty">'+t(query?"userNoMatch":"adNoUsr")+'</div>';return}
   $("adList").innerHTML=rows.map(function(u){
     var sub=u.status==="pending"?t("adReqAt")+" · "+fmt(u.req.slice(0,10))+" · "+dg((+u.req.slice(11,13))%12||12)+":"+dg(u.req.slice(14,16))+" "+(+u.req.slice(11,13)>=12?"PM":"AM"):(u.name||"");
     var acc=u.role!=="viewer"?'<span class="tag">'+t("fullAcc")+'</span>':((u.perms.n?'<span class="tag">'+t("sNotice")+'</span>':'')+(u.perms.f?'<span class="tag">'+t("sFaq")+'</span>':'')+(u.perms.s?'<span class="tag">'+t("sSheets")+' ('+(u.perms.ids==="all"?sheets.length:u.perms.ids.length)+'/'+sheets.length+')</span>':'')||'<span class="tag u">'+t("noneLbl")+'</span>');
@@ -936,6 +973,9 @@ function renderAdmin(){
     return '<article class="card"><div class="ur"><span class="av2">'+esc(u.email.charAt(0).toUpperCase())+'</span><div><h3>'+e+'</h3>'+(sub?'<p>'+esc(sub)+'</p>':'')+'</div></div>'+(u.status==="pending"?'':'<div class="meta" style="margin:12px 0 0">'+role+acc+'</div>')+'<div class="acts">'+(u.status==="pending"?'<button class="btn sm danger" data-a="urej" data-e="'+e+'">'+t("adReject")+'</button><span class="sp"></span><button class="btn" data-a="uman" data-e="'+e+'">'+t("adApprove")+'</button>':'<span class="sp"></span><button class="btn sm" data-a="uman" data-e="'+e+'">'+t("adManage")+'</button>')+'</div></article>';
   }).join("");
 }
+$("adminUserGroups").onclick=function(e){var b=e.target.closest("[data-user-group]");if(b){adminUserGroup=b.dataset.userGroup;renderAdmin()}};
+$("adminUserSearchForm").onsubmit=function(e){e.preventDefault();renderAdmin()};
+$("adminUserQ").oninput=renderAdmin;
 function syncAll(){var bx=[$("pN"),$("pF"),$("pS")].concat([].slice.call(document.querySelectorAll("#pSl input")));$("pAll").checked=bx.every(function(b){return b.checked});$("pSl").className=$("pS").checked?"pls":"pls hide"}
 function togglePerm(){var v=$("uRole").value==="viewer";$("uPerm").className=v?"perm":"perm hide";$("uNote").className=v?"unote hide":"unote"}
 function openU(u){
@@ -990,6 +1030,7 @@ function api(action,data){
 function sync(a,data){if(!LIVE)return;pending++;
   api(a,data).catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending"){me="";return failLogin(e)}toast(t("saveFail"));refresh(true)}).then(function(){pending--})}
 function applyData(d){
+  sops=Array.isArray(d.sops)?d.sops:[];sopCategories=Array.isArray(d.sopCategories)?d.sopCategories:[];
   notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;policeMeta=d.policeMeta||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];resetRequests=Array.isArray(d.resetRequests)?d.resetRequests:[];
   if(d.users)users=d.users;
   var reqTab=document.querySelector("#adTabs [data-v=\"req\"]");if(reqTab){var pendingAccess=users.filter(function(u){return u.status==="pending"}).length;reqTab.classList.toggle("has-requests",pendingAccess+resetRequests.length>0);}
