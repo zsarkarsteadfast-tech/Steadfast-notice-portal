@@ -237,7 +237,7 @@ function faqs_() {
       if (r && (!s_(r.source_revision) || s_(r.source_revision) === f.sourceRevision)) { if (/^deleted$/i.test(s_(r.status))) { f.deleted = true; return; } f.q = s_(r.q) || f.q; f.a = s_(r.a); f.upd = {by: s_(r.updated_by), at: s_(r.updated_at)}; }
     });
   }
-  if (edits) ed.rows.forEach(function(r){ if (/^active$/i.test(s_(r.status)) && !out.some(function(f){return String(f.id)===s_(r.faq_id);}) && s_(r.q).trim()) out.push({id:Number(r.faq_id),cat:s_(r.cat)||'General',q:s_(r.q),a:s_(r.a),upd:{by:s_(r.updated_by),at:s_(r.updated_at)}}); });
+  if (edits) ed.rows.forEach(function(r){ if (/^active$/i.test(s_(r.status)) && !s_(r.source_revision) && !out.some(function(f){return String(f.id)===s_(r.faq_id);}) && s_(r.q).trim()) out.push({id:Number(r.faq_id),cat:s_(r.cat)||'General',q:s_(r.q),a:s_(r.a),upd:{by:s_(r.updated_by),at:s_(r.updated_at)}}); });
   return out.filter(function(f){return !f.deleted;});
 }
 
