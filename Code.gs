@@ -332,6 +332,7 @@ function load_(user) {
   var can = function (k) { return user.role !== 'viewer' || user.perms[k]; };
   var d = {user: user, notices: [], faqs: [], sheets: [], police: null, reports: [], ticker: ticker_(), users: null, history: []};
   var sopData = sopData_(); d.sops = sopData.entries; d.sopCategories = sopData.categories;
+  d.weeklyPerformers = weeklyPerformers_();
   if (can('n')) d.notices = notices_();
   if (can('f')) d.faqs = faqs_();
   if (can('s')) {
@@ -665,4 +666,34 @@ function sopData_() {
     entries.push({id: r._row, cat: category, scenario: scenario, body: body, upd: {by: s_(r.updated_by), at: at}});
   });
   return {categories: categories, entries: entries};
+}
+
+/* QA officers publish one ranked winner per team in Weekly Performers. */
+function weeklyPerformers_() {
+  var sh = ss_().getSheetByName('Weekly Performers');
+  if (!sh) return {week: '', start: '', end: '', winners: [], review: false};
+  var today = today_(), groups = {}, order = [], teams = [], sourceRows = readTab_(sh).rows;
+  sourceRows.forEach(function (r) { var team = s_(r.team_leader).trim(); if (team && teams.indexOf(team) < 0) teams.push(team); });
+  sourceRows.forEach(function (r) {
+    var status = s_(r.status).trim().toLowerCase(), name = s_(r.performer_name).trim();
+    var week = s_(r.week).trim(), team = s_(r.team_leader).trim(), rank = Number(r.rank);
+    if (!week || !name || !team || [1, 2, 3].indexOf(rank) < 0 || ['active', 'published'].indexOf(status) < 0) return;
+    var start = r.week_start ? parseDate_(r.week_start, '', '') : '';
+    var end = r.week_end ? parseDate_(r.week_end, '', '') : '';
+    if ((r.week_start && !start) || (r.week_end && !end) || (start && end && end < start)) return;
+    if ((start && start > today) || (end && end < today)) return;
+    var key = week + '|' + start + '|' + end;
+    if (!groups[key]) { groups[key] = {week: week, start: start, end: end, winners: [], review: false, lastRow: r._row}; order.push(key); }
+    groups[key].lastRow = r._row;
+    groups[key].winners.push({rank: rank, team: team, name: name, details: s_(r.appreciation).trim()});
+  });
+  var candidates = order.map(function (k) { return groups[k]; });
+  candidates.sort(function (a, b) { return (b.start || '').localeCompare(a.start || '') || b.lastRow - a.lastRow; });
+  if (!candidates.length) return {week: '', start: '', end: '', winners: [], review: false, teams: teams.slice(0, 3)};
+  var selected = candidates[0], rankCounts = {}, teamCounts = {};
+  selected.winners.forEach(function (w) { rankCounts[w.rank] = (rankCounts[w.rank] || 0) + 1; var key = w.team.toLowerCase().replace(/[^a-z0-9]/g, ''); teamCounts[key] = (teamCounts[key] || 0) + 1; });
+  selected.winners = selected.winners.filter(function (w) { var key = w.team.toLowerCase().replace(/[^a-z0-9]/g, ''); var valid = rankCounts[w.rank] === 1 && teamCounts[key] === 1; if (!valid) selected.review = true; return valid; }).sort(function (a, b) { return a.rank - b.rank; });
+  selected.teams = teams.slice(0, 3);
+  delete selected.lastRow;
+  return selected;
 }
