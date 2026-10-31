@@ -40,7 +40,7 @@ function handle_(req) {
   if (req.action === 'changePassword') return lock_(function () { return changePassword_(req, user); });
 
   switch (req.action) {
-    case 'load': return load_(user);
+    case 'load': return lock_(function () { return load_(user); });
     case 'report': return lock_(function () { return report_(req, user); });
   }
   if (user.role === 'viewer') fail_('forbidden', 'Editors only');
@@ -48,6 +48,9 @@ function handle_(req) {
     case 'setExpired': return lock_(function () { return setExpired_(req, user); });
     case 'dismiss': return lock_(function () { delReports_(Number(req.id)); return {ok: true}; });
     case 'saveTicker': return lock_(function () { return saveTicker_(req.messages); });
+    case 'saveLink': return lock_(function () { return saveLink_(req, user); });
+    case 'deleteLink': return lock_(function () { return deleteLink_(req, user); });
+    case 'deleteFaq': return lock_(function () { return deleteFaq_(req, user); });
     case 'saveFaq': return lock_(function () { return saveFaq_(req, user); });
   }
   if (user.role !== 'admin') fail_('forbidden', 'Admins only');
@@ -155,14 +158,16 @@ function noticesOf_(nt) {
     r.date_key = date;
     var id = noticeId_(nt.tab, r, seen);
     var sp = splitNotice_(txt);
-    var title = nz_(r.title) || sp.title;
+    var combined = (nz_(r.title) + (s_(r.body) ? '\n\n' + s_(r.body) : '')).trim();
+    var externalChange = nz_(r.title) && combined !== txt;
+    var title = externalChange ? sp.title : (nz_(r.title) || sp.title);
     var exp = yes_(r.expired) || /^expired$/i.test(s_(r.status).trim());
     if (!exp && r.expires) { var ex = parseDate_(r.expires, '', ''); if (ex && ex < today) exp = true; }
     var urgent = d.cols.urgent !== undefined && s_(r.urgent).trim() !== '' ? yes_(r.urgent) : sp.urgent;
     out.push({
       id: id, tab: nt.tab, src: nt.group, date: date,
       cat: s_(r.type).replace(/\s+/g, ' ').trim() || 'General',
-      title: title, body: d.cols.body !== undefined && s_(r.body) ? s_(r.body) : sp.body, expires: r.expires ? parseDate_(r.expires, "", "") : "", revision: digest_(JSON.stringify(r)), urgent: urgent ? 1 : 0, expired: exp ? 1 : 0,
+      title: title, body: externalChange ? sp.body : (d.cols.body !== undefined && s_(r.body) ? s_(r.body) : sp.body), expires: r.expires ? parseDate_(r.expires, "", "") : "", revision: digest_(JSON.stringify(r)), urgent: urgent ? 1 : 0, expired: exp ? 1 : 0,
       ann: nz_(r.announced_by), appr: nz_(r.approved_by),
       upd: {by: nz_(r.sheet_update_by), at: ''}
     });
@@ -215,10 +220,11 @@ function faqs_() {
   d.rows.forEach(function (r) {
     var cat = s_(r.type).replace(/\s+/g, ' ').trim() || 'General';
     var date = parseDate_(r.date, r.year, r.month);
-    parseQA_(r.service).forEach(function (p) {
+    var pairs = s_(r.question || r.q).trim() ? [{q:s_(r.question || r.q),a:s_(r.answer || r.a)}] : parseQA_(r.service);
+    pairs.forEach(function (p) {
       var key = 'faq|' + cat + '|' + p.q.slice(0, 80);
       seen[key] = (seen[key] || 0) + 1;
-      out.push({id: h32_(key + '|' + seen[key]), cat: cat, q: p.q, a: p.a, upd: {by: nz_(r.added_by), at: ''}, date: date});
+      out.push({id: h32_(key + '|' + seen[key]), cat: cat, q: p.q, a: p.a, upd: {by: nz_(r.added_by), at: ''}, date: date, sourceRevision: digest_(p.q + '\n' + p.a)});
     });
   });
   // Keep edits in a separate helper tab so the original knowledge sheet is never overwritten.
@@ -228,10 +234,11 @@ function faqs_() {
     ed.rows.forEach(function (r) { if (s_(r.faq_id).trim()) byId[s_(r.faq_id).trim()] = r; });
     out.forEach(function (f) {
       var r = byId[String(f.id)];
-      if (r) { f.q = s_(r.q) || f.q; f.a = s_(r.a); f.upd = {by: s_(r.updated_by), at: s_(r.updated_at)}; }
+      if (r && (!s_(r.source_revision) || s_(r.source_revision) === f.sourceRevision)) { if (/^deleted$/i.test(s_(r.status))) { f.deleted = true; return; } f.q = s_(r.q) || f.q; f.a = s_(r.a); f.upd = {by: s_(r.updated_by), at: s_(r.updated_at)}; }
     });
   }
-  return out;
+  if (edits) ed.rows.forEach(function(r){ if (/^active$/i.test(s_(r.status)) && !out.some(function(f){return String(f.id)===s_(r.faq_id);}) && s_(r.q).trim()) out.push({id:Number(r.faq_id),cat:s_(r.cat)||'General',q:s_(r.q),a:s_(r.a),upd:{by:s_(r.updated_by),at:s_(r.updated_at)}}); });
+  return out.filter(function(f){return !f.deleted;});
 }
 
 function saveFaq_(req, user) {
@@ -240,13 +247,13 @@ function saveFaq_(req, user) {
   if (!/^\d+$/.test(id) || !q || !a || q.length > 5000 || a.length > 20000 || cat.length > 150)
     fail_('bad', 'Invalid FAQ content');
   var existing = faqs_().filter(function (x) { return String(x.id) === id; })[0];
-  if (!existing) fail_('conflict', 'FAQ no longer exists');
+  if (!existing) existing = {cat:cat || 'General', sourceRevision:''};
   // Prevent changing an FAQ into a different record by tampering with its identity.
   if (cat && cat !== existing.cat) fail_('conflict', 'FAQ category changed; reload and try again');
-  var sh = ensureTab_(ss_(), 'FAQ Edits', ['faq_id', 'cat', 'q', 'a', 'updated_by', 'updated_at']);
+  var sh = ensureTab_(ss_(), 'FAQ Edits', ['faq_id', 'cat', 'q', 'a', 'updated_by', 'updated_at', 'source_revision', 'status']);
   var d = readTab_(sh), hit = null;
   d.rows.forEach(function (r) { if (s_(r.faq_id).trim() === id) hit = r; });
-  var values = [Number(id), existing.cat, q, a, user.name || user.email, now_()];
+  var values = [Number(id), existing.cat, q, a, user.name || user.email, now_(),existing.sourceRevision || '', 'Active'];
   if (hit) sh.getRange(hit._row, 1, 1, values.length).setValues([values]);
   else sh.appendRow(values);
   audit_(user, 'EDIT_FAQ', 'faq', id, q, 'FAQ question and answer updated', FAQ_TAB);
@@ -379,8 +386,10 @@ function setExpired_(req, user) {
   if (!hit) fail_('bad', 'Notice not found');
   var col = d.cols.expired;
   if (col === undefined) { col = sh.getLastColumn(); sh.getRange(1, col + 1).setValue('Expired'); }
+  allowPortalRow_(sh,hit._row,sh.getLastColumn());
   sh.getRange(hit._row, col + 1).setValue(req.expired ? 'Yes' : '');
-  if (d.cols.sheet_update_by !== undefined) sh.getRange(hit._row, d.cols.sheet_update_by + 1).setValue(user.name);
+  if(d.cols.status!==undefined)sh.getRange(hit._row,d.cols.status+1).setValue(req.expired?'Expired':'Active');
+  if (d.cols.sheet_update_by !== undefined) { var cell=sh.getRange(hit._row,d.cols.sheet_update_by+1),rule=cell.getDataValidation();if(rule)cell.setDataValidation(rule.copy().setAllowInvalid(true).build());cell.setValue(user.name); }
   if (req.expired) {
     audit_(user, 'MARK_EXPIRED', 'notice', id, s_(hit.title) || splitNotice_(hit.notice).title, 'Notice marked as expired', nt.tab);
     delReports_(id);
@@ -428,13 +437,14 @@ function ensureTab_(ss, name, headers) {
     sh.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
     sh.setFrozenRows(1);
   }
+  else { var current=sh.getRange(1,1,1,Math.max(sh.getLastColumn(),headers.length)).getValues()[0];headers.forEach(function(h,i){if(!current[i])sh.getRange(1,i+1).setValue(h);}); }
   return sh;
 }
 function setup() {
   var ss = ss_();
   var users = ensureTab_(ss, 'Users', ['email', 'role', 'name', 'status', 'notice', 'faq', 'sheets', 'sheet_ids', 'requested_at']);
   ensureTab_(ss, 'Reports', ['id', 'notice_id', 'reported_by', 'note', 'date']);
-  ensureTab_(ss, 'FAQ Edits', ['faq_id', 'cat', 'q', 'a', 'updated_by', 'updated_at']);
+  ensureTab_(ss, 'FAQ Edits', ['faq_id', 'cat', 'q', 'a', 'updated_by', 'updated_at', 'source_revision', 'status']);
   ensureTab_(ss, 'Edit History', ['event_at', 'actor_email', 'actor_name', 'action', 'target_type', 'target_id', 'title', 'details', 'tab']);
   ensureTab_(ss, 'Password Reset Requests', ['email', 'admin_id', 'requested_at', 'status']);
   var tk = ensureTab_(ss, 'Ticker', ['message']);
@@ -588,18 +598,22 @@ function saveNotice_(req, user) {
   if (creating) {
     var values = new Array(dest.getLastColumn()).fill('');
     Object.keys(fields).forEach(function (key) { values[destData.cols[key]] = fields[key]; });
+    allowPortalRow_(dest,dest.getLastRow()+1,values.length);
     dest.appendRow(values.map(function (v) { return typeof v === 'string' && v.charAt(0) === '=' ? "'" + v : v; }));
     audit_(user, 'CREATE_NOTICE', 'notice', id, title, 'Notice created', target.tab);
   } else if (target.tab === nt.tab) {
     Object.keys(fields).forEach(function (key) {
       var value = fields[key];
-      dest.getRange(hit._row, destData.cols[key] + 1).setValue(typeof value === 'string' && value.charAt(0) === '=' ? "'" + value : value);
+      var cell = dest.getRange(hit._row, destData.cols[key] + 1);
+      var rule = cell.getDataValidation(); if (rule) cell.setDataValidation(rule.copy().setAllowInvalid(true).build());
+      cell.setValue(typeof value === 'string' && value.charAt(0) === '=' ? "'" + value : value);
     });
     audit_(user, 'EDIT_NOTICE', 'notice', id, title, 'Notice details updated', target.tab);
   } else {
     var values = new Array(dest.getLastColumn()).fill('');
     Object.keys(destData.cols).forEach(function (key) { if (hit[key] !== undefined) values[destData.cols[key]] = hit[key]; });
     Object.keys(fields).forEach(function (key) { values[destData.cols[key]] = fields[key]; });
+    allowPortalRow_(dest,dest.getLastRow()+1,values.length);
     dest.appendRow(values.map(function (v) { return typeof v === 'string' && v.charAt(0) === '=' ? "'" + v : v; }));
     src.deleteRow(hit._row);
     audit_(user, 'EDIT_NOTICE', 'notice', id, title, 'Notice updated and moved to ' + target.tab, target.tab);
@@ -671,29 +685,48 @@ function sopData_() {
 /* QA officers publish one ranked winner per team in Weekly Performers. */
 function weeklyPerformers_() {
   var sh = ss_().getSheetByName('Top Performers') || ss_().getSheetByName('Weekly Performers');
-  if (!sh) return {week: '', start: '', end: '', winners: [], review: false};
-  var today = today_(), groups = {}, order = [], teams = [], sourceRows = readTab_(sh).rows;
-  sourceRows.forEach(function (r) { var team = s_(r.team_leader).trim(); if (team && teams.indexOf(team) < 0) teams.push(team); });
-  sourceRows.forEach(function (r) {
-    var status = s_(r.status).trim().toLowerCase(), name = s_(r.performer_name).trim();
-    var week = s_(r.week).trim(), team = s_(r.team_leader).trim(), rank = Number(r.rank);
-    if (!week || !name || !team || [1, 2, 3].indexOf(rank) < 0 || ['active', 'published'].indexOf(status) < 0) return;
-    var start = r.week_start ? parseDate_(r.week_start, '', '') : '';
-    var end = r.week_end ? parseDate_(r.week_end, '', '') : '';
-    if ((r.week_start && !start) || (r.week_end && !end) || (start && end && end < start)) return;
-    if ((start && start > today) || (end && end < today)) return;
-    var key = week + '|' + start + '|' + end;
-    if (!groups[key]) { groups[key] = {week: week, start: start, end: end, winners: [], review: false, lastRow: r._row}; order.push(key); }
-    groups[key].lastRow = r._row;
-    groups[key].winners.push({rank: rank, team: team, name: name, details: s_(r.appreciation).trim()});
-  });
-  var candidates = order.map(function (k) { return groups[k]; });
-  candidates.sort(function (a, b) { return (b.start || '').localeCompare(a.start || '') || b.lastRow - a.lastRow; });
-  if (!candidates.length) return {week: '', start: '', end: '', winners: [], review: false, teams: teams.slice(0, 3)};
-  var selected = candidates[0], rankCounts = {}, teamCounts = {};
-  selected.winners.forEach(function (w) { rankCounts[w.rank] = (rankCounts[w.rank] || 0) + 1; var key = w.team.toLowerCase().replace(/[^a-z0-9]/g, ''); teamCounts[key] = (teamCounts[key] || 0) + 1; });
-  selected.winners = selected.winners.filter(function (w) { var key = w.team.toLowerCase().replace(/[^a-z0-9]/g, ''); var valid = rankCounts[w.rank] === 1 && teamCounts[key] === 1; if (!valid) selected.review = true; return valid; }).sort(function (a, b) { return a.rank - b.rank; });
-  selected.teams = teams.slice(0, 3);
-  delete selected.lastRow;
-  return selected;
+  var shifts = ['Morning','Evening','Night'], rows = sh ? readTab_(sh).rows : [], today = today_();
+  return {shifts: shifts.map(function(shift){
+    var groups = {}, keys = [];
+    rows.forEach(function(r){
+      if(s_(r.shift).trim().toLowerCase() !== shift.toLowerCase()) return;
+      var start = r.week_start ? parseDate_(r.week_start,'','') : '', end = r.week_end ? parseDate_(r.week_end,'','') : '';
+      if((r.week_start && !start)||(r.week_end && !end)||(start && end && start>end)||(start && start>today)||(end && end<today)) return;
+      var rank=Number(r.rank), name=s_(r.performer_name).trim(), week=s_(r.week).trim();
+      if(!week || !name || [1,2,3].indexOf(rank)<0 || !/^(active|published)$/i.test(s_(r.status).trim())) return;
+      var key=week+'|'+start+'|'+end;
+      if(!groups[key]){groups[key]={shift:shift,week:week,start:start,end:end,winners:[],review:false,lastRow:r._row};keys.push(key);}
+      groups[key].lastRow=r._row;groups[key].winners.push({rank:rank,name:name,team:s_(r.team_leader).trim(),details:s_(r.appreciation).trim()});
+    });
+    var candidates=keys.map(function(k){return groups[k];}).sort(function(a,b){return b.start.localeCompare(a.start)||b.lastRow-a.lastRow;});
+    if(!candidates.length)return {shift:shift,week:'',start:'',end:'',winners:[],review:false};
+    var selected=candidates[0],counts={};selected.winners.forEach(function(w){counts[w.rank]=(counts[w.rank]||0)+1;});
+    selected.winners=selected.winners.filter(function(w){if(counts[w.rank]!==1){selected.review=true;return false;}return true;}).sort(function(a,b){return a.rank-b.rank;});
+    delete selected.lastRow;return selected;
+  })};
 }
+
+function deleteFaq_(req,user){
+  var f=faqs_().filter(function(x){return String(x.id)===String(req.id);})[0]; if(!f) fail_('notfound','FAQ not found');
+  var sh=ensureTab_(ss_(),'FAQ Edits',['faq_id','cat','q','a','updated_by','updated_at','source_revision','status']), d=readTab_(sh),hit=null;
+  d.rows.forEach(function(r){if(String(r.faq_id)===String(f.id))hit=r;});
+  var values=[f.id,f.cat,f.q,f.a,user.name||user.email,now_(),f.sourceRevision||'','Deleted'];
+  if(hit)sh.getRange(hit._row,1,1,values.length).setValues([values]);else sh.appendRow(values);
+  return load_(user);
+}
+function saveLink_(req,user){
+  var f=req.link||{},id=Number(f.id)||Date.now(), title=s_(f.title).trim(), url=s_(f.url).trim();
+  if(!title || !/^https?:\/\//i.test(url))fail_('bad','Enter a title and valid web URL');
+  var sh=tab_('Links'),d=readTab_(sh),hit=null;
+  d.rows.forEach(function(r){if(Number(r.id)===id)hit=r;});
+  var fields={id:id,category:s_(f.cat)||'IB',title:title,description:s_(f.desc),url:url,type:f.type==='police'?'police':'link'};
+  var row=hit?hit._row:sh.getLastRow()+1;
+  Object.keys(fields).forEach(function(k){if(d.cols[k]!==undefined)sh.getRange(row,d.cols[k]+1).setValue(s_(fields[k]).charAt(0)==='=' ? "'"+fields[k] : fields[k]);});
+  return load_(user);
+}
+function deleteLink_(req,user){
+  var d=readTab_(tab_('Links')),hit=d.rows.filter(function(r){return Number(r.id)===Number(req.id);})[0];
+  if(!hit)fail_('notfound','Link not found');d.sh.deleteRow(hit._row);return load_(user);
+}
+
+function allowPortalRow_(sh,row,width){if(row>sh.getMaxRows())sh.insertRowsAfter(sh.getMaxRows(),1);var range=sh.getRange(row,1,1,width),rules=range.getDataValidations();rules[0]=rules[0].map(function(rule){return rule?rule.copy().setAllowInvalid(true).build():null;});range.setDataValidations(rules);}
