@@ -263,7 +263,7 @@ function police_() {
     var type = s_(r.type).replace(/\s+/g, ' ').trim();
     var status = s_(r.status).replace(/\s+/g, ' ').trim();
     var id = s_(r.id || r.record_id).trim();
-    var area = s_(r.area).replace(/\s+/g, ' ').trim();
+    var area = s_(r.area || r.areas || r.delivery_area).replace(/\s+/g, ' ').trim();
     return {id: id, name: name, ps: name, hub: hub, type: type, status: status, area: area};
   }).filter(function (x) { return x.hub || x.name || x.area; });
 }
