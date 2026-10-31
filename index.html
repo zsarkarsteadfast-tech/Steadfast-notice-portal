@@ -423,6 +423,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 var CFG={API_URL:"https://script.google.com/macros/s/AKfycbwmrkUra5GJURdGMVVl0_7WPYZCjHFvOpKvzBwOPUKkuu2GaiXhQsgmXcTQQhIrgMgVPA/exec",CLIENT_ID:"PASTE_GOOGLE_CLIENT_ID_HERE"};
 var LIVE=/^https:\/\/script\.google\.com\//.test(CFG.API_URL);
 var authToken="";var pending=0,police=null,policeOpen=false,faqCat="all",editHistory=[];
+var policeShowAllActive=false,policeMeta=null;
 var T={
 en:{lgExp:"Session expired. Please sign in again.",lgFail:"Could not connect. Check your internet and try again.",saveFail:"Could not save. Please try again.",polOpen:"Open lookup",polBack:"Back",polPh:"Search area, police station or hub",polCount:"Showing {n} of {m}",polNone:"No match found.",ann:"Announced by",appr:"Approved by",addedBy:"Added by",subL:"Notices come from the Google Sheet. You can mark expired and review reports.",gCs:"CS Official Notice",gQa:"QA Follow-up",sAdmin:"Admin",adTitle:"Admin panel",adSub:"Approve people and choose what each person can see.",adNew:"+ Add user",adReq:"Requests",adUsr:"Users",adNoReq:"No pending requests.",adNoUsr:"No users yet.",adReqAt:"Requested",adApprove:"Approve",adReject:"Reject",adManage:"Manage",uAdd:"Add user",uManage:"Manage access",uApprove:"Approve access",uEmail:"Email",uRole:"Role",uStatus:"Status",roleViewer:"Viewer",roleEditor:"Editor",roleAdmin:"Admin",stActive:"Active",stBlocked:"Blocked",pAll:"Select all",uNote:"Editors and admins can see everything.",uDel:"Remove user",uBad:"Enter a valid email",uDup:"This email already exists",uSelf:"You can’t block or demote yourself",uConf:"Remove this user?",noAcc:"You have no access yet. Ask an admin.",lgPend:"Your request was sent. Please wait for admin approval.",fullAcc:"Full access",today:"Today",calClear:"Clear",adminPill:"Admin",noneLbl:"No access",tkEdit:"Edit",tkTitle:"Edit scrolling announcements",tkHint:"One message per line. Emojis are welcome.",tkEmpty:"Add an announcement",nb:"Notice",nbTip:"Notice panel only for internal use!",dFrom:"From",dTo:"To",dClear:"Clear dates",dPick:"Select date",upd:"Updated by",rpt:"Report as outdated",reported:"Reported",exp:"Expired",restore:"Restore",mark:"Mark expired",dismiss:"Dismiss",tabN:"Notices",tabR:"Reports",noRep:"No reports. All notices look current.",already:"You already reported this",rTitle:"Report outdated notice",rSub:"Let editors know this notice is backdated or expired.",rNote:"Note (optional)",rSendL:"Send report",rDone:"Report sent",title:"Notices",sub:"Latest updates for agents. View and copy only.",subE:"Latest updates for agents. You can add and edit.",new:"+ New notice",ph:"Search by keyword, e.g. payment, EBL, 25.10.2026",all:"All",copy:"Copy",edit:"Edit",del:"Delete",urg:"Urgent",none:"No notices found.",copied:"Copied",saved:"Saved",need:"Please fill in all required fields",conf:"Delete this notice?",lt:"Title",lc:"Category",lu:"Priority",lb:"Details",save:"Save",cancel:"Cancel",nt:"New notice",et:"Edit notice",nrm:"Normal",
 cat:{"Payment":"Payment","Delivery":"Delivery","Return":"Return","Service update":"Service update","Pickup":"Pickup","Complaint":"Complaint"},
@@ -636,11 +637,12 @@ function policeSearchText(value){return String(value||"").normalize("NFKC").toLo
 function fillPolice(){
   var ws=policeSearchText($("polQ").value).split(/\s+/).filter(Boolean);
   var rows=(police||[]).filter(function(p){
+    if(policeShowAllActive&&String(p.status).toLowerCase()!=="active")return false;
     var h=policeSearchText([p.name,p.ps,p.hub,p.type,p.status,p.id,p.area].join(" "));
     return ws.every(function(w){return h.indexOf(w)>-1});
   });
   rows.sort(function(a,b){return (String(a.status).toLowerCase()==="inactive")-(String(b.status).toLowerCase()==="inactive")||String(a.name||a.ps).localeCompare(String(b.name||b.ps))});
-  var show=rows.slice(0,40);
+  var show=policeShowAllActive?rows:rows.slice(0,40);
   $("polRes").innerHTML='<p class="meta" style="margin:0 0 10px">'+t("polCount").replace("{n}",dg(show.length)).replace("{m}",dg(rows.length))+'</p>'+(show.length?show.map(function(p){
     var station=p.name||p.ps||p.hub;
     var details=[];
@@ -650,7 +652,15 @@ function fillPolice(){
     var inactive=String(p.status).toLowerCase()==='inactive';
     var status=p.status?'<span class="tag'+(inactive?' u':'')+'" style="margin-left:6px">'+esc(p.status)+'</span>':'';
     return '<details class="fq"'+(rows.length<=3?' open':'')+'><summary><span>'+esc(station)+' <span class="tag" style="margin-left:6px">'+(lang==='bn'?'হাব: ':'Hub: ')+esc(p.hub||'Hub not listed')+'</span>'+status+'</span></summary><div class="ans"><p>'+esc(details.join(' · '))+'</p>'+(p.area?'<p style="margin-top:8px">'+(lang==='bn'?'এলাকা: ':'Areas: ')+esc(p.area)+'</p>':'')+'</div></details>';
-  }).join(""):'<div class="empty">'+t("polNone")+'</div>')}
+  }).join(""):'<div class="empty">'+t("polNone")+'</div>');
+  $("polRes").innerHTML+='<div style="grid-column:1/-1;text-align:center;margin-top:14px"><button class="btn" data-a="polall">'+(policeShowAllActive?'Show first 40 records':'Show all active hubs')+'</button></div>';
+  if(policeMeta&&policeMeta.refreshedAt){
+    var parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',day:'2-digit',month:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}).formatToParts(new Date(policeMeta.refreshedAt));
+    var part=function(type){return (parts.filter(function(p){return p.type===type})[0]||{}).value||''};
+    var stamp=part('day')+'.'+part('month')+'.'+part('year')+' at '+part('hour')+'.'+part('minute')+' '+(part('dayPeriod').toLowerCase()==='pm'?'P.M':'A.M');
+    $("polRes").innerHTML+='<p style="grid-column:1/-1;text-align:right;font-style:italic;font-size:12px;color:var(--mut);margin:12px 0 0">last updated on '+esc(stamp)+'</p>';
+  }
+}
 function renderSheets(){
   var ed=isEd()&&!LIVE;
   $("shNew").className=ed?"btn":"btn hide";shChips();
@@ -659,7 +669,7 @@ function renderSheets(){
   if(policeOpen){
     var old=$("polQ")?$("polQ").value:"";
     $("shList").innerHTML='<button class="btn sm" data-a="polback">← '+t("polBack")+'</button><div class="search" style="margin:14px 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="polQ" type="search" placeholder="'+esc(t("polPh"))+'"></div><div id="polRes"></div>';
-    $("polQ").value=old;$("polQ").oninput=fillPolice;fillPolice();return}
+    $("polQ").value=old;$("polQ").oninput=function(){policeShowAllActive=false;fillPolice()};fillPolice();return}
   var rows=visSheets().filter(function(s){return s.cat===sheetCat});
   $("shList").innerHTML=rows.length?rows.map(function(s){
     var open=s.type==="police"?'<button class="btn" data-a="police" data-id="'+s.id+'">'+t("polOpen")+'</button>':(s.url?'<a class="btn" href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">'+t("shOpen")+' '+IC.ext+'</a>'+ib("scopy",s.id,IC.copy,t("copyLink")):'');
@@ -857,9 +867,10 @@ $("sSave").onclick=function(){
   sheetCat=o.cat;$("sdlg").close();render();toast(t("saved"));
 };
 $("shList").onclick=function(e){
+  if(e.target.closest('[data-a="polall"]')){policeShowAllActive=!policeShowAllActive;fillPolice();return}
   var b=e.target.closest("[data-a]");if(!b)return;if(b.dataset.a==="polback"){policeOpen=false;render();return}var id=+b.dataset.id,s=sheets.filter(function(x){return x.id===id})[0];if(!s)return;
   if(b.dataset.a==="polback"){policeOpen=false;render();return}
-  if(b.dataset.a==="police"){policeOpen=true;render();return}
+  if(b.dataset.a==="police"){policeShowAllActive=false;policeOpen=true;render();return}
   if(b.dataset.a==="scopy"){copyTxt(s.url);return}
   if(!isEd())return;
   if(b.dataset.a==="sedit"){shId=id;$("sdTitle").textContent=t("shEt");$("shN").value=s.title;$("shU").value=s.url;$("shD").value=s.desc;fillCats();$("shCn").className="hide";$("shCn").value="";$("shC").value=s.cat;$("sdlg").showModal()}
@@ -979,7 +990,7 @@ function api(action,data){
 function sync(a,data){if(!LIVE)return;pending++;
   api(a,data).catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending"){me="";return failLogin(e)}toast(t("saveFail"));refresh(true)}).then(function(){pending--})}
 function applyData(d){
-  notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];resetRequests=Array.isArray(d.resetRequests)?d.resetRequests:[];
+  notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;policeMeta=d.policeMeta||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];resetRequests=Array.isArray(d.resetRequests)?d.resetRequests:[];
   if(d.users)users=d.users;
   var reqTab=document.querySelector("#adTabs [data-v=\"req\"]");if(reqTab){var pendingAccess=users.filter(function(u){return u.status==="pending"}).length;reqTab.classList.toggle("has-requests",pendingAccess+resetRequests.length>0);}
   notices.forEach(function(n){if(n.cat&&CK.indexOf(n.cat)<0)CK.push(n.cat)});
