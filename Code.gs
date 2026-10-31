@@ -46,7 +46,7 @@ function handle_(req) {
   if (user.role === 'viewer') fail_('forbidden', 'Editors only');
   switch (req.action) {
     case 'setExpired': return lock_(function () { return setExpired_(req, user); });
-    case 'dismiss': return lock_(function () { delReports_(Number(req.id)); return {ok: true}; });
+    case 'dismiss': return lock_(function () { delReports_(Number(req.id)); return mutationPatch_(user,'reports'); });
     case 'saveTicker': return lock_(function () { return saveTicker_(req.messages); });
     case 'saveLink': return lock_(function () { return saveLink_(req, user); });
     case 'deleteLink': return lock_(function () { return deleteLink_(req, user); });
@@ -257,7 +257,7 @@ function saveFaq_(req, user) {
   if (hit) sh.getRange(hit._row, 1, 1, values.length).setValues([values]);
   else sh.appendRow(values);
   audit_(user, 'EDIT_FAQ', 'faq', id, q, 'FAQ question and answer updated', FAQ_TAB);
-  return load_(user);
+  return mutationPatch_(user,'faqs');
 }
 
 /* ------------------------------ police station lookup ------------------------------ */
@@ -370,9 +370,9 @@ function report_(req, user) {
   if (!exists) fail_('bad', 'Notice not found');
   var d = readTab_(tab_('Reports'));
   for (var i = 0; i < d.rows.length; i++)
-    if (Number(d.rows[i].notice_id) === nid && s_(d.rows[i].reported_by).toLowerCase() === user.email) return {ok: true, dup: true};
+    if (Number(d.rows[i].notice_id) === nid && s_(d.rows[i].reported_by).toLowerCase() === user.email) return mutationPatch_(user,'reports');
   d.sh.appendRow([Date.now(), nid, user.email, s_(req.note).slice(0, 500), today_()]);
-  return {ok: true};
+  return mutationPatch_(user,'reports');
 }
 function setExpired_(req, user) {
   var nt = NOTICE_TABS.filter(function (x) { return x.tab === req.tab; })[0];
@@ -396,14 +396,14 @@ function setExpired_(req, user) {
   } else {
     audit_(user, 'RESTORE_NOTICE', 'notice', id, s_(hit.title) || splitNotice_(hit.notice).title, 'Notice restored to active status', nt.tab);
   }
-  return load_(user);
+  return mutationPatch_(user,'notices,reports');
 }
 function saveTicker_(msgs) {
   var sh = tab_('Ticker'), list = (msgs || []).map(function (m) { return s_(m).trim().slice(0, 300); }).filter(Boolean).slice(0, 20);
   var last = sh.getLastRow();
   if (last > 1) sh.getRange(2, 1, last - 1, 1).clearContent();
   if (list.length) sh.getRange(2, 1, list.length, 1).setNumberFormat('@').setValues(list.map(function (m) { return [m]; }));
-  return {ok: true};
+  return {ok:true,patch:{ticker:list}};
 }
 function saveUser_(req, me) {
   var email = s_(req.email).trim().toLowerCase();
@@ -419,14 +419,14 @@ function saveUser_(req, me) {
   var vals = [email, role, keep, st, yn(p.n), yn(p.f), yn(p.s), ids, ''];
   if (row) { vals[8] = s_(row.requested_at); d.sh.getRange(row._row, 1, 1, vals.length).setNumberFormat('@').setValues([vals]); }
   else d.sh.appendRow(vals);
-  return {ok: true};
+  return {ok:true,changes:{user:userOf_({email:email,role:role,name:keep,status:st,notice:yn(p.n),faq:yn(p.f),sheets:yn(p.s),sheet_ids:ids,requested_at:vals[8]})}};
 }
 function deleteUser_(req, me) {
   var email = s_(req.email).trim().toLowerCase();
   if (email === me.email) fail_('self', 'You cannot remove yourself');
   var d = readTab_(tab_('Users'));
   for (var i = d.rows.length - 1; i >= 0; i--) if (s_(d.rows[i].email).trim().toLowerCase() === email) d.sh.deleteRow(d.rows[i]._row);
-  return {ok: true};
+  return {ok:true,changes:{deletedUser:email}};
 }
 
 /* ------------------------------ one-time setup (run from the editor) ------------------------------ */
@@ -494,7 +494,7 @@ function forgotPassword_(req) {
 function dismissResetRequest_(req,user) {
   var email=String(req.email||'').trim().toLowerCase(),sh=ss_().getSheetByName('Password Reset Requests');
   if(sh){var d=readTab_(sh);for(var i=d.rows.length-1;i>=0;i--)if(s_(d.rows[i].email).trim().toLowerCase()===email&&s_(d.rows[i].status).toLowerCase()!=='resolved')sh.getRange(d.rows[i]._row,d.cols.status+1).setValue('Resolved');}
-  return load_(user);
+  return mutationPatch_(user,'resetRequests');
 }
 function changePassword_(req, user) { checkRate_(user.email); if (!matchesPassword_(user.email, req.currentPassword)) fail_('credentials', 'Current password is incorrect'); var password = String(req.newPassword || ''); if (password.length < 8 || password.length > 128) fail_('bad', 'Use 8 to 128 characters'); setPassword_(user.email, password); PropertiesService.getScriptProperties().deleteProperty('reset:' + user.email); CacheService.getScriptCache().remove('attempt:' + digest_(user.email)); return {ok: true, token: issueSession_(user.email)}; }
 function resetPassword_(req, user) {
@@ -514,7 +514,7 @@ function resetPassword_(req, user) {
     }
   }
   SpreadsheetApp.flush();
-  return load_(user);
+  return mutationPatch_(user,'resetRequests');
 }
 
 function removeSession_(token) { var key = 'session:' + digest_(String(token || '')); PropertiesService.getScriptProperties().deleteProperty(key); CacheService.getScriptCache().remove(key); }
@@ -619,7 +619,7 @@ function saveNotice_(req, user) {
     audit_(user, 'EDIT_NOTICE', 'notice', id, title, 'Notice updated and moved to ' + target.tab, target.tab);
   }
   if (req.expired) delReports_(id);
-  return load_(user);
+  return mutationPatch_(user,'notices,reports');
 }
 function deleteNotice_(req, user) {
   var nt = NOTICE_TABS.filter(function (x) { return x.tab === req.tab; })[0];
@@ -635,7 +635,7 @@ function deleteNotice_(req, user) {
   sh.deleteRow(hit._row);
   delReports_(id);
   audit_(user, 'DELETE_NOTICE', 'notice', id, title, 'Notice permanently deleted', nt.tab);
-  return load_(user);
+  return mutationPatch_(user,'notices,reports');
 }
 
 
@@ -712,7 +712,7 @@ function deleteFaq_(req,user){
   d.rows.forEach(function(r){if(String(r.faq_id)===String(f.id))hit=r;});
   var values=[f.id,f.cat,f.q,f.a,user.name||user.email,now_(),f.sourceRevision||'','Deleted'];
   if(hit)sh.getRange(hit._row,1,1,values.length).setValues([values]);else sh.appendRow(values);
-  return load_(user);
+  return mutationPatch_(user,'faqs');
 }
 function saveLink_(req,user){
   var f=req.link||{},id=Number(f.id)||Date.now(), title=s_(f.title).trim(), url=s_(f.url).trim();
@@ -722,11 +722,22 @@ function saveLink_(req,user){
   var fields={id:id,category:s_(f.cat)||'IB',title:title,description:s_(f.desc),url:url,type:f.type==='police'?'police':'link'};
   var row=hit?hit._row:sh.getLastRow()+1;
   Object.keys(fields).forEach(function(k){if(d.cols[k]!==undefined)sh.getRange(row,d.cols[k]+1).setValue(s_(fields[k]).charAt(0)==='=' ? "'"+fields[k] : fields[k]);});
-  return load_(user);
+  return mutationPatch_(user,'sheets');
 }
 function deleteLink_(req,user){
   var d=readTab_(tab_('Links')),hit=d.rows.filter(function(r){return Number(r.id)===Number(req.id);})[0];
-  if(!hit)fail_('notfound','Link not found');d.sh.deleteRow(hit._row);return load_(user);
+  if(!hit)fail_('notfound','Link not found');d.sh.deleteRow(hit._row);return mutationPatch_(user,'sheets');
 }
 
 function allowPortalRow_(sh,row,width){if(row>sh.getMaxRows())sh.insertRowsAfter(sh.getMaxRows(),1);var range=sh.getRange(row,1,1,width),rules=range.getDataValidations();rules[0]=rules[0].map(function(rule){return rule?rule.copy().setAllowInvalid(true).build():null;});range.setDataValidations(rules);}
+
+// Mutations return only affected collections; never rebuild the whole portal.
+function mutationPatch_(user,scopes){
+  var patch={};scopes.split(',').forEach(function(scope){
+    if(scope==='notices')patch.notices=notices_();
+    if(scope==='reports')patch.reports=reports_(user);
+    if(scope==='faqs')patch.faqs=faqs_();
+    if(scope==='sheets')patch.sheets=links_().filter(function(l){return user.role!=='viewer'||user.perms.ids==='all'||user.perms.ids.indexOf(l.id)>-1;});
+    if(scope==='resetRequests'&&user.role==='admin')patch.resetRequests=resetRequests_();
+  });return {ok:true,patch:patch,savedAt:now_()};
+}
