@@ -337,7 +337,7 @@ function load_(user) {
     d.sheets = links_().filter(function (l) {
       return user.role !== 'viewer' || user.perms.ids === 'all' || user.perms.ids.indexOf(l.id) > -1;
     });
-    if (d.sheets.some(function (l) { return l.type === 'police'; })) d.police = police_();
+    if (d.sheets.some(function (l) { return l.type === 'police'; })) { d.police = police_(); d.policeMeta = policeMeta_(d.police); }
   }
   d.reports = reports_(user);
   if (user.role === 'admin') {
@@ -620,4 +620,32 @@ function deleteNotice_(req, user) {
   delReports_(id);
   audit_(user, 'DELETE_NOTICE', 'notice', id, title, 'Notice permanently deleted', nt.tab);
   return load_(user);
+}
+
+
+/* Police lookup freshness: actual edits plus a scheduled 12-hour refresh. */
+function policeMeta_(rows, forceRefresh) {
+  var props = PropertiesService.getScriptProperties(), key = 'policeLookupMeta';
+  var meta = JSON.parse(props.getProperty(key) || '{}'), now = Date.now();
+  var fingerprint = digest_(JSON.stringify(rows));
+  if (meta.fingerprint !== fingerprint) { meta.changedAt = now; meta.refreshedAt = now; }
+  if (forceRefresh || !meta.refreshedAt || now - meta.refreshedAt >= 12 * 3600000) meta.refreshedAt = now;
+  meta.fingerprint = fingerprint;
+  props.setProperty(key, JSON.stringify(meta));
+  return {changedAt: meta.changedAt, refreshedAt: meta.refreshedAt};
+}
+function refreshPoliceLookup() {
+  return lock_(function () { return policeMeta_(police_(), true); });
+}
+function policeLookupEdited(e) {
+  if (!e || !e.range || e.range.getSheet().getName() !== POLICE_TAB) return;
+  refreshPoliceLookup();
+}
+function setupPoliceLookupRefresh() {
+  var triggers = ScriptApp.getProjectTriggers();
+  var has = function (name) { return triggers.some(function (t) { return t.getHandlerFunction() === name; }); };
+  if (!has('refreshPoliceLookup')) ScriptApp.newTrigger('refreshPoliceLookup').timeBased().everyHours(12).create();
+  if (!has('policeLookupEdited')) ScriptApp.newTrigger('policeLookupEdited').forSpreadsheet(SHEET_ID).onEdit().create();
+  var meta = refreshPoliceLookup();
+  Logger.log('Police lookup refresh installed: ' + JSON.stringify(meta));
 }
