@@ -331,6 +331,7 @@ function history_() {
 function load_(user) {
   var can = function (k) { return user.role !== 'viewer' || user.perms[k]; };
   var d = {user: user, notices: [], faqs: [], sheets: [], police: null, reports: [], ticker: ticker_(), users: null, history: []};
+  var sopData = sopData_(); d.sops = sopData.entries; d.sopCategories = sopData.categories;
   if (can('n')) d.notices = notices_();
   if (can('f')) d.faqs = faqs_();
   if (can('s')) {
@@ -648,4 +649,20 @@ function setupPoliceLookupRefresh() {
   if (!has('policeLookupEdited')) ScriptApp.newTrigger('policeLookupEdited').forSpreadsheet(SHEET_ID).onEdit().create();
   var meta = refreshPoliceLookup();
   Logger.log('Police lookup refresh installed: ' + JSON.stringify(meta));
+}
+
+/* SOP rows are published from the SOP worksheet; no invented service guidance. */
+function sopData_() {
+  var sh = ss_().getSheetByName('SOP'), categories = [], entries = [];
+  if (!sh) return {categories: categories, entries: entries};
+  readTab_(sh).rows.forEach(function (r) {
+    var category = s_(r.category).trim(), scenario = s_(r.scenario).trim(), body = s_(r.sop).trim();
+    if (!category) return;
+    if (categories.indexOf(category) < 0) categories.push(category);
+    var status = s_(r.status).trim().toLowerCase();
+    if (!scenario || !body || (status && status !== 'active' && status !== 'published')) return;
+    var at = r.updated_at instanceof Date ? Utilities.formatDate(r.updated_at, TZ, "yyyy-MM-dd'T'HH:mm") : s_(r.updated_at);
+    entries.push({id: r._row, cat: category, scenario: scenario, body: body, upd: {by: s_(r.updated_by), at: at}});
+  });
+  return {categories: categories, entries: entries};
 }
