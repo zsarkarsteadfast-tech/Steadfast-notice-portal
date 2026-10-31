@@ -279,6 +279,12 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 .save-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}.save-confetti i{position:absolute;top:-24px;width:10px;height:18px;border-radius:3px;animation:confettiFall 2.3s ease-in forwards}.save-confetti i:nth-child(6n+1){background:#17c964;left:8%;animation-delay:.05s}.save-confetti i:nth-child(6n+2){background:#ffd166;left:22%;animation-delay:.2s}.save-confetti i:nth-child(6n+3){background:#55c7ff;left:38%;animation-delay:.1s}.save-confetti i:nth-child(6n+4){background:#f78da7;left:61%;animation-delay:.25s}.save-confetti i:nth-child(6n+5){background:#a78bfa;left:78%;animation-delay:.15s}.save-confetti i:nth-child(6n){background:#17c964;left:92%;animation-delay:.3s}
 .save-success-card h2{font-size:clamp(25px,5vw,34px);line-height:1.2;margin:0 0 8px;letter-spacing:-.5px}.save-success-card .success-sub{color:var(--mut);margin:0 0 22px}.save-success-meta{padding:16px;border-radius:18px;background:var(--soft);text-align:left;overflow-wrap:anywhere;margin-bottom:22px}.save-success-meta strong{display:block;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}.save-success-meta span{font-weight:650}
 @keyframes successPop{0%{transform:scale(.3) rotate(-18deg);opacity:0}75%{transform:scale(1.12) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}@keyframes successDraw{to{stroke-dashoffset:0}}@keyframes confettiFall{0%{transform:translateY(-10px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(110vh) rotate(640deg);opacity:0}}@media(prefers-reduced-motion:reduce){.save-spinner,.save-success-mark,.save-success-mark svg,.save-confetti i{animation:none!important}#saveSuccessOverlay,.save-success-card{transition:none}}
+/* The lookup owns the full sheets panel rather than individual sheet-card columns. */
+#shList.police-lookup{display:block;width:100%;min-width:0}
+#shList.police-lookup>.search{width:100%;margin:16px 0 20px}
+#polRes{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px;align-items:start}
+#polRes>.meta,#polRes>.empty{grid-column:1/-1}
+#polRes .fq{margin:0;min-width:0;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -649,6 +655,7 @@ function renderSheets(){
   var ed=isEd()&&!LIVE;
   $("shNew").className=ed?"btn":"btn hide";shChips();
   $("shChips").className=policeOpen?"chips hide":"chips";
+  $("shList").classList.toggle("police-lookup",policeOpen);
   if(policeOpen){
     var old=$("polQ")?$("polQ").value:"";
     $("shList").innerHTML='<button class="btn sm" data-a="polback">← '+t("polBack")+'</button><div class="search" style="margin:14px 0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="polQ" type="search" placeholder="'+esc(t("polPh"))+'"></div><div id="polRes"></div>';
