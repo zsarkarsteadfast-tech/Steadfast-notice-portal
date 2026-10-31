@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Steadfast Update Hub</title>
+<title>Steadfast QA Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#0c1a12;--tx:#0c1a12;--mut:#587062;--g:#0fb35a;--g2:#0a8a45;--pri:#0fb35a;--dk:#0a7a45;--soft:rgba(15,179,90,.13);--chip:rgba(15,179,90,.13);--glass:rgba(255,255,255,.55);--card:rgba(255,255,255,.55);--dlg:rgba(255,255,255,.92);--fld:rgba(255,255,255,.6);--edge:rgba(255,255,255,.85);--bd:rgba(10,100,55,.14);--sh:0 10px 40px rgba(8,70,35,.13);--hi:rgba(255,255,255,.95);--b1:#eaffdc;--b2:#c9f3d8;--b3:#f4fff0;--bg:#f4fff0;--red:#d64545;--redsoft:rgba(214,69,69,.13);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -297,6 +297,14 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 .weekly-card.first{padding:40px 32px;--award:#bc922d}.weekly-card.second{--award:#8294a6}.weekly-card.third{--award:#b47a54}.weekly-rank{text-align:center;color:var(--award)}.weekly-medal{display:grid;place-items:center;width:78px;height:78px;border-radius:50%;margin:0 auto 10px;border:2px solid color-mix(in srgb,var(--award) 60%,transparent);background:color-mix(in srgb,var(--award) 14%,transparent);font-size:35px}.weekly-rank strong{font-size:14px;letter-spacing:2px;text-transform:uppercase}
 .weekly-kicker{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:750;color:var(--award);margin:0 0 7px}.weekly-name{font-size:clamp(24px,4vw,34px);font-weight:750;line-height:1.3;margin:0;overflow-wrap:anywhere}.weekly-card.first .weekly-name{font-size:clamp(28px,5vw,42px)}.weekly-week{font-size:12px;color:var(--mut);margin:6px 0 17px}.weekly-team{font-size:14px;font-weight:650;margin:0 0 10px;color:var(--dk)}.weekly-details{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font-size:15px;line-height:1.8;color:var(--tx)}.weekly-divider{height:1px;background:linear-gradient(90deg,transparent,var(--bd) 15%,var(--bd) 85%,transparent);margin:22px 10px}.weekly-pending .weekly-name{color:var(--mut)}.weekly-review{text-align:center;color:var(--mut);margin:0 0 20px}
 @media(max-width:560px){.weekly-card,.weekly-card.first{grid-template-columns:60px 1fr;gap:16px;padding:24px 18px}.weekly-medal{width:54px;height:54px;font-size:25px}.weekly-rank strong{font-size:11px;letter-spacing:1px}.weekly-hero{padding:26px 8px 20px}.weekly-team{font-size:13px}}
+/* Alternating recognition panels and consistent portal identity. */
+.weekly-card.second{grid-template-columns:minmax(0,1fr) 100px}.weekly-card.second .weekly-rank{grid-column:2;grid-row:1}.weekly-card.second .weekly-copy{grid-column:1;grid-row:1}.weekly-copy{min-width:0}.weekly-name{font-weight:800}
+.weekly-medal{position:relative;overflow:visible}.weekly-logo{display:block;width:56px;height:56px;object-fit:contain}.weekly-award{position:absolute;right:-8px;bottom:-8px;font-size:27px;line-height:1}.weekly-rank strong{display:block;margin-top:15px}
+.portal-brand{gap:8px}.portal-brand .lk{height:32px}.portal-brand .lw{height:20px;margin-top:6px}.portal-name{font:800 20px/1.2 Inter,"Segoe UI",sans-serif;letter-spacing:-.6px;white-space:nowrap;margin-top:4px}
+.login-tracking{background:radial-gradient(60vw 50vh at 12% 8%,var(--b2),transparent 70%),radial-gradient(50vw 50vh at 92% 30%,rgba(15,179,90,.2),transparent 70%),linear-gradient(160deg,var(--b1),var(--b3));color:var(--ink)}
+.tracking-card{background:var(--dlg);border-color:var(--bd);box-shadow:var(--sh)}.tracking-route{background:var(--chip)}.tracking-label{color:var(--dk)}
+@media(max-width:560px){.weekly-card.second{grid-template-columns:minmax(0,1fr) 60px}.weekly-logo{width:38px;height:38px}.weekly-award{font-size:21px;right:-5px;bottom:-5px}.nav{grid-template-columns:minmax(0,1fr) auto;gap:8px}.nav>span{display:none}.mid{justify-self:start;min-width:0}.portal-brand{gap:6px}.portal-brand .lk{height:26px}.portal-brand .lw{height:16px}.portal-name{font-size:16px;letter-spacing:-.4px}}
+@media(max-width:360px){.portal-brand .lw{height:14px}.portal-name{font-size:14px}.portal-brand{gap:4px}}
 </style>
 </head>
 <body>
@@ -344,7 +352,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
  <div id="pageLoading" class="page-loading hide" role="status" aria-live="polite" aria-label="Loading page"><div class="sk-top"><i></i><i></i><i></i></div><div class="sk-tabs"><i></i><i></i><i></i></div><div class="sk-title"><i></i><i></i></div><div class="sk-search"></div><div class="sk-card"><i></i><i></i><i></i><i></i></div><div class="sk-card"><i></i><i></i><i></i><i></i></div><div class="sk-card"><i></i><i></i><i></i></div></div>
 <nav><div class="wrap nav">
   <span></span>
-  <div class="mid"><div class="brand"><a class="home" id="home" href="#" aria-label="Home"><img class="lk" data-img="k" alt=""><img class="lw" data-img="w" alt="steadfast"></a><span class="nbadge" tabindex="0" aria-describedby="nbtip"><span data-i="nb"></span><b class="ex">!</b></span></div><span class="tip" id="nbtip" role="tooltip" data-i="nbTip"></span></div>
+  <div class="mid"><div class="brand"><a class="home portal-brand" id="home" href="#" aria-label="Steadfast QA Portal home"><img class="lk" data-img="k" alt=""><img class="lw" data-img="w" alt="Steadfast"><strong class="portal-name">QA Portal</strong></a></div></div>
   <div class="menuwrap" id="menuWrap">
     <button class="av" id="av" aria-haspopup="menu" aria-label="Account"></button>
     <div class="menu hide" id="menu" role="menu">
@@ -363,7 +371,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
   <button data-s="notice"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span data-i="sNotice"></span></button>
   <button data-s="faq"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17v.1"/></svg><span data-i="sFaq"></span></button>
   <button data-s="sop"><span aria-hidden="true">▤</span><span data-i="sSop">SOP</span></button>
-  <button data-s="performers" title="Performer of the Week"><span aria-hidden="true">🏆</span><span data-i="sPerformers">Performers</span></button>
+  <button data-s="performers" title="Top performers"><span aria-hidden="true">🏆</span><span data-i="sPerformers">Top performers</span></button>
   <button data-s="sheets"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg><span data-i="sSheets"></span></button>
   <button data-s="admin" class="hide"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg><span data-i="sAdmin"></span></button>
  </div>
@@ -396,7 +404,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
   <div id="sopDetail" class="hide"><button class="btn sm" id="sopBack" data-i="sopBack">← All categories</button><h2 id="sopCategoryTitle"></h2><div id="sopEntries"></div></div>
  </section>
  <section id="pPerformers" class="hide">
-  <div class="weekly-hero"><span class="weekly-eyebrow" data-i="weeklyEyebrow">QA EXCELLENCE · WEEKLY RECOGNITION</span><h1 data-i="weeklyTitle">Performer of the Week</h1><p data-i="weeklySub">Celebrating outstanding service and dedication. One top QA performer from each team.</p></div>
+  <div class="weekly-hero"><span class="weekly-eyebrow" data-i="weeklyEyebrow">QA EXCELLENCE · WEEKLY RECOGNITION</span><h1 data-i="weeklyTitle">Top performers</h1><p data-i="weeklySub">Celebrating outstanding service and dedication. One top QA performer from each team.</p></div>
   <div id="weeklyWinners" class="weekly-stage"></div>
  </section>
  <section id="pSheets" class="hide">
@@ -475,8 +483,8 @@ Object.assign(T.en,{adManageNotices:"Manage notices",adHistory:"Edit history",hi
 Object.assign(T.bn,{adManageNotices:"নোটিশ পরিচালনা",adHistory:"এডিট হিস্টোরি",histEmpty:"এখনও কোনো এডিট হিস্টোরি নেই।",histBy:"পরিবর্তন করেছেন",histAt:"তারিখ ও সময়",histCreate:"নোটিশ যোগ",histDelete:"নোটিশ ডিলিট",histEdit:"নোটিশ এডিট",histExpired:"মেয়াদোত্তীর্ণ",histRestore:"নোটিশ পুনরুদ্ধার",histFaq:"FAQ এডিট",deleteNoticeConfirm:"এই নোটিশটি স্থায়ীভাবে ডিলিট করবেন?"});
 Object.assign(T.en,{sSop:"SOP",sopTitle:"Standard Operating Procedures",sopSub:"Choose a category, then open a scenario to read the approved service steps.",sopBack:"← All categories",sopEmpty:"No published SOP scenarios in this category yet.",sopNone:"No matching SOP found.",sopSearch:"Search categories, scenarios or SOP steps",sopCount:"scenarios",staffGroup:"Admins & Editors",usersGroup:"Users",userSearch:"Search",userSearchPh:"Search email or name",userNoMatch:"No matching users in this group."});
 Object.assign(T.bn,{sSop:"SOP",sopTitle:"স্ট্যান্ডার্ড অপারেটিং প্রসিডিউর",sopSub:"ক্যাটাগরি বেছে scenario খুলে অনুমোদিত সেবার ধাপগুলো দেখুন।",sopBack:"← সব ক্যাটাগরি",sopEmpty:"এই ক্যাটাগরিতে এখনও কোনো SOP প্রকাশ করা হয়নি।",sopNone:"কোনো মিল পাওয়া যায়নি।",sopSearch:"ক্যাটাগরি, scenario বা SOP খুঁজুন",sopCount:"টি scenario",staffGroup:"অ্যাডমিন ও এডিটর",usersGroup:"ইউজার",userSearch:"খুঁজুন",userSearchPh:"ইমেইল অথবা নাম লিখুন",userNoMatch:"এই বিভাগে কোনো মিল পাওয়া যায়নি।"});
-Object.assign(T.en,{sPerformers:"Performers",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"Performer of the Week",weeklySub:"Celebrating outstanding service and dedication. One top QA performer from each team.",weeklyKicker:"Top QA performer",weeklyPending:"To be announced",weeklyPendingWeek:"Weekly results coming soon",weeklyTeam:"From the team of",weeklyReview:"Weekly results are being reviewed.",weeklyNoDetails:"Recognized for outstanding service and dedication."});
-Object.assign(T.bn,{sPerformers:"সেরা পারফর্মার",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"সপ্তাহের সেরা পারফর্মার",weeklySub:"প্রতিটি টিম থেকে একজন সেরা QA পারফর্মার—অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।",weeklyKicker:"সেরা QA পারফর্মার",weeklyPending:"শীঘ্রই ঘোষণা করা হবে",weeklyPendingWeek:"সাপ্তাহিক ফলাফল আসছে",weeklyTeam:"টিম লিডার",weeklyReview:"সাপ্তাহিক ফলাফল পর্যালোচনা চলছে।",weeklyNoDetails:"অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।"});
+Object.assign(T.en,{sPerformers:"Top performers",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"Top performers",weeklySub:"Celebrating outstanding service and dedication. One top QA performer from each team.",weeklyKicker:"Top QA performer",weeklyPending:"To be announced",weeklyPendingWeek:"Weekly results coming soon",weeklyTeam:"From the team of",weeklyReview:"Weekly results are being reviewed.",weeklyNoDetails:"Recognized for outstanding service and dedication."});
+Object.assign(T.bn,{sPerformers:"Top performers",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"Top performers",weeklySub:"প্রতিটি টিম থেকে একজন সেরা QA পারফর্মার—অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।",weeklyKicker:"সেরা QA পারফর্মার",weeklyPending:"শীঘ্রই ঘোষণা করা হবে",weeklyPendingWeek:"সাপ্তাহিক ফলাফল আসছে",weeklyTeam:"টিম লিডার",weeklyReview:"সাপ্তাহিক ফলাফল পর্যালোচনা চলছে।",weeklyNoDetails:"অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।"});
 var lang="en",role="viewer",me="",edName="",section="notice",view="notices",grp="cs",cat="all",sheetCat="IB",rid=null,editId=null,faqId=null,shId=null,adView="req",uEditEmail=null,curU=null,errKey="lgDeny";
 var CK=["Payment","Delivery","Return","Service update","Pickup","Complaint"],SC=["IB","IR","QA"];
 var resetRequests=[];
@@ -730,7 +738,7 @@ function renderPerformers(){
   $("weeklyWinners").innerHTML=(data.review?'<p class="weekly-review">'+t("weeklyReview")+'</p>':'')+[1,2,3].map(function(rank,i){
     var w=winners.filter(function(x){return Number(x.rank)===rank})[0];
     var team=w?w.team:(!winners.length?(weeklyTeamLeaders[i]||""):"");
-    return (i?'<div class="weekly-divider" aria-hidden="true"></div>':'')+'<article class="weekly-card '+classes[i]+(!w?' weekly-pending':'')+'" aria-label="'+ranks[i]+'"><div class="weekly-rank"><span class="weekly-medal" aria-hidden="true">'+medals[i]+'</span><strong>'+ranks[i]+'</strong></div><div><p class="weekly-kicker">'+t("weeklyKicker")+'</p><h2 class="weekly-name">'+esc(w?w.name:t("weeklyPending"))+'</h2><p class="weekly-week">'+esc(data.week?data.week+range:t("weeklyPendingWeek"))+'</p>'+(team?'<p class="weekly-team">'+t("weeklyTeam")+' '+esc(team)+'</p>':'')+(w?'<p class="weekly-details">'+esc(w.details||t("weeklyNoDetails"))+'</p>':'')+'</div></article>';
+    return (i?'<div class="weekly-divider" aria-hidden="true"></div>':'')+'<article class="weekly-card '+classes[i]+(!w?' weekly-pending':'')+'" aria-label="'+ranks[i]+'"><div class="weekly-rank"><span class="weekly-medal"><img class="weekly-logo" src="'+esc(IMG.k)+'" alt="Steadfast"><span class="weekly-award" aria-hidden="true">'+medals[i]+'</span></span><strong>'+ranks[i]+'</strong></div><div class="weekly-copy"><p class="weekly-kicker">'+t("weeklyKicker")+'</p><h2 class="weekly-name">'+esc(w?w.name:t("weeklyPending"))+'</h2><p class="weekly-week">'+esc(data.week?data.week+range:t("weeklyPendingWeek"))+'</p>'+(team?'<p class="weekly-team">'+t("weeklyTeam")+' '+esc(team)+'</p>':'')+(w?'<p class="weekly-details">'+esc(w.details||t("weeklyNoDetails"))+'</p>':'')+'</div></article>';
   }).join("");
 }
 function render(){
