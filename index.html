@@ -300,11 +300,15 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 /* Alternating recognition panels and consistent portal identity. */
 .weekly-card.second{grid-template-columns:minmax(0,1fr) 100px}.weekly-card.second .weekly-rank{grid-column:2;grid-row:1}.weekly-card.second .weekly-copy{grid-column:1;grid-row:1}.weekly-copy{min-width:0}.weekly-name{font-weight:800}
 .weekly-medal{position:relative;overflow:visible}.weekly-logo{display:block;width:56px;height:56px;object-fit:contain}.weekly-award{position:absolute;right:-8px;bottom:-8px;font-size:27px;line-height:1}.weekly-rank strong{display:block;margin-top:15px}
-.portal-brand{gap:8px}.portal-brand .lk{height:32px}.portal-brand .lw{height:20px;margin-top:6px}.portal-name{font:800 20px/1.2 Inter,"Segoe UI",sans-serif;letter-spacing:-.6px;white-space:nowrap;margin-top:4px}
+.portal-brand{gap:8px}.portal-brand .lk{height:32px}.portal-brand .lw{height:20px;margin-top:6px}.portal-name{font:900 italic 22px/1.2 "Arial Rounded MT Bold",Arial,sans-serif;color:#212121;letter-spacing:-1px;white-space:nowrap;margin-top:4px}
 .login-tracking{background:radial-gradient(60vw 50vh at 12% 8%,var(--b2),transparent 70%),radial-gradient(50vw 50vh at 92% 30%,rgba(15,179,90,.2),transparent 70%),linear-gradient(160deg,var(--b1),var(--b3));color:var(--ink)}
 .tracking-card{background:var(--dlg);border-color:var(--bd);box-shadow:var(--sh)}.tracking-route{background:var(--chip)}.tracking-label{color:var(--dk)}
 @media(max-width:560px){.weekly-card.second{grid-template-columns:minmax(0,1fr) 60px}.weekly-logo{width:38px;height:38px}.weekly-award{font-size:21px;right:-5px;bottom:-5px}.nav{grid-template-columns:minmax(0,1fr) auto;gap:8px}.nav>span{display:none}.mid{justify-self:start;min-width:0}.portal-brand{gap:6px}.portal-brand .lk{height:26px}.portal-brand .lw{height:16px}.portal-name{font-size:16px;letter-spacing:-.4px}}
 @media(max-width:360px){.portal-brand .lw{height:14px}.portal-name{font-size:14px}.portal-brand{gap:4px}}
+
+:root[data-theme="dark"] .portal-name{color:#dedede}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .portal-name{color:#dedede}}
+.shift-section{margin:26px 0 48px}.shift-heading{font-size:26px;margin:0 0 20px;color:var(--dk)}
+.save-progress{max-width:none;max-height:none;width:100%;height:100%;margin:0;border:0;padding:0;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.35);display:grid;place-items:center;backdrop-filter:blur(4px)}.save-progress.hide{display:none}.save-progress>div{background:var(--dlg);color:var(--ink);border:1px solid var(--bd);padding:28px 40px;border-radius:22px;box-shadow:var(--sh);display:flex;align-items:center;gap:14px;font-weight:700}.save-progress .save-spinner{width:25px;height:25px;border-color:var(--bd);border-top-color:var(--g)}
 </style>
 </head>
 <body>
@@ -404,7 +408,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
   <div id="sopDetail" class="hide"><button class="btn sm" id="sopBack" data-i="sopBack">← All categories</button><h2 id="sopCategoryTitle"></h2><div id="sopEntries"></div></div>
  </section>
  <section id="pPerformers" class="hide">
-  <div class="weekly-hero"><span class="weekly-eyebrow" data-i="weeklyEyebrow">QA EXCELLENCE · WEEKLY RECOGNITION</span><h1 data-i="weeklyTitle">Top performers</h1><p data-i="weeklySub">Celebrating outstanding service and dedication. One top QA performer from each team.</p></div>
+  <div class="weekly-hero"><span class="weekly-eyebrow" data-i="weeklyEyebrow">QA EXCELLENCE · WEEKLY RECOGNITION</span><h1 data-i="weeklyTitle">Top performers</h1><p data-i="weeklySub">Celebrating outstanding service and dedication. Three outstanding agents from each Morning, Evening and Night shift.</p></div>
   <div id="weeklyWinners" class="weekly-stage"></div>
  </section>
  <section id="pSheets" class="hide">
@@ -483,8 +487,8 @@ Object.assign(T.en,{adManageNotices:"Manage notices",adHistory:"Edit history",hi
 Object.assign(T.bn,{adManageNotices:"নোটিশ পরিচালনা",adHistory:"এডিট হিস্টোরি",histEmpty:"এখনও কোনো এডিট হিস্টোরি নেই।",histBy:"পরিবর্তন করেছেন",histAt:"তারিখ ও সময়",histCreate:"নোটিশ যোগ",histDelete:"নোটিশ ডিলিট",histEdit:"নোটিশ এডিট",histExpired:"মেয়াদোত্তীর্ণ",histRestore:"নোটিশ পুনরুদ্ধার",histFaq:"FAQ এডিট",deleteNoticeConfirm:"এই নোটিশটি স্থায়ীভাবে ডিলিট করবেন?"});
 Object.assign(T.en,{sSop:"SOP",sopTitle:"Standard Operating Procedures",sopSub:"Choose a category, then open a scenario to read the approved service steps.",sopBack:"← All categories",sopEmpty:"No published SOP scenarios in this category yet.",sopNone:"No matching SOP found.",sopSearch:"Search categories, scenarios or SOP steps",sopCount:"scenarios",staffGroup:"Admins & Editors",usersGroup:"Users",userSearch:"Search",userSearchPh:"Search email or name",userNoMatch:"No matching users in this group."});
 Object.assign(T.bn,{sSop:"SOP",sopTitle:"স্ট্যান্ডার্ড অপারেটিং প্রসিডিউর",sopSub:"ক্যাটাগরি বেছে scenario খুলে অনুমোদিত সেবার ধাপগুলো দেখুন।",sopBack:"← সব ক্যাটাগরি",sopEmpty:"এই ক্যাটাগরিতে এখনও কোনো SOP প্রকাশ করা হয়নি।",sopNone:"কোনো মিল পাওয়া যায়নি।",sopSearch:"ক্যাটাগরি, scenario বা SOP খুঁজুন",sopCount:"টি scenario",staffGroup:"অ্যাডমিন ও এডিটর",usersGroup:"ইউজার",userSearch:"খুঁজুন",userSearchPh:"ইমেইল অথবা নাম লিখুন",userNoMatch:"এই বিভাগে কোনো মিল পাওয়া যায়নি।"});
-Object.assign(T.en,{sPerformers:"Top performers",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"Top performers",weeklySub:"Celebrating outstanding service and dedication. One top QA performer from each team.",weeklyKicker:"Top QA performer",weeklyPending:"To be announced",weeklyPendingWeek:"Weekly results coming soon",weeklyTeam:"From the team of",weeklyReview:"Weekly results are being reviewed.",weeklyNoDetails:"Recognized for outstanding service and dedication."});
-Object.assign(T.bn,{sPerformers:"Top performers",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"Top performers",weeklySub:"প্রতিটি টিম থেকে একজন সেরা QA পারফর্মার—অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।",weeklyKicker:"সেরা QA পারফর্মার",weeklyPending:"শীঘ্রই ঘোষণা করা হবে",weeklyPendingWeek:"সাপ্তাহিক ফলাফল আসছে",weeklyTeam:"টিম লিডার",weeklyReview:"সাপ্তাহিক ফলাফল পর্যালোচনা চলছে।",weeklyNoDetails:"অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।"});
+Object.assign(T.en,{sPerformers:"Top performers",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"Top performers",weeklySub:"Celebrating outstanding service and dedication. Three outstanding agents from each Morning, Evening and Night shift.",weeklyKicker:"Top QA performer",weeklyPending:"To be announced",weeklyPendingWeek:"Weekly results coming soon",weeklyTeam:"From the team of",weeklyReview:"Weekly results are being reviewed.",weeklyNoDetails:"Recognized for outstanding service and dedication."});
+Object.assign(T.bn,{sPerformers:"Top performers",weeklyEyebrow:"QA EXCELLENCE · WEEKLY RECOGNITION",weeklyTitle:"Top performers",weeklySub:"Morning, Evening ও Night—প্রতি শিফটের সেরা তিনজন এজেন্টের অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।",weeklyKicker:"সেরা QA পারফর্মার",weeklyPending:"শীঘ্রই ঘোষণা করা হবে",weeklyPendingWeek:"সাপ্তাহিক ফলাফল আসছে",weeklyTeam:"টিম লিডার",weeklyReview:"সাপ্তাহিক ফলাফল পর্যালোচনা চলছে।",weeklyNoDetails:"অসাধারণ সেবা ও নিষ্ঠার স্বীকৃতি।"});
 var lang="en",role="viewer",me="",edName="",section="notice",view="notices",grp="cs",cat="all",sheetCat="IB",rid=null,editId=null,faqId=null,shId=null,adView="req",uEditEmail=null,curU=null,errKey="lgDeny";
 var CK=["Payment","Delivery","Return","Service update","Pickup","Complaint"],SC=["IB","IR","QA"];
 var resetRequests=[];
@@ -537,7 +541,7 @@ function can(s){if(isEd())return true;var p=(curU&&curU.perms)||{};return s==="n
 function visSheets(){if(isEd())return sheets;var p=(curU&&curU.perms)||{};if(!p.s)return [];return p.ids==="all"?sheets:sheets.filter(function(s){return p.ids.indexOf(s.id)>-1})}
 function secList(){var l=["notice","faq","sop","performers","sheets"].filter(can);if(isAdmin())l.push("admin");return l}
 function findU(e){return users.filter(function(u){return u.email===e})[0]}
-function toast(m){var x=$("toast");x.textContent=m;x.className="toast show";setTimeout(function(){x.className="toast"},1600)}
+function toast(m){if(LIVE&&pending>0&&m===t("saved"))return;var x=$("toast");x.textContent=m;x.className="toast show";setTimeout(function(){x.className="toast"},1600)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function L(v){return typeof v==="string"?v:(v[lang]||v.en)}
 function allTxt(v){return typeof v==="string"?v:Object.keys(v).map(function(k){return v[k]}).join(" ")}
@@ -732,14 +736,15 @@ $("sopCategories").onclick=function(e){var b=e.target.closest("[data-sop-categor
 $("sopQ").oninput=renderSop;
 $("sopBack").onclick=function(){sopCategory="";renderSop()};
 function renderPerformers(){
-  var data=weeklyPerformers||{},winners=Array.isArray(data.winners)?data.winners:[];
+  var data=weeklyPerformers||{},groups=Array.isArray(data.shifts)?data.shifts:["Morning","Evening","Night"].map(function(x){return {shift:x,winners:[]}});
   var ranks=["1st","2nd","3rd"],classes=["first","second","third"],medals=["🥇","🥈","🥉"];
-  var range=data.start&&data.end?' · '+fmt(data.start)+' – '+fmt(data.end):'';
-  $("weeklyWinners").innerHTML=(data.review?'<p class="weekly-review">'+t("weeklyReview")+'</p>':'')+[1,2,3].map(function(rank,i){
-    var w=winners.filter(function(x){return Number(x.rank)===rank})[0];
-    var team=w?w.team:(!winners.length?(weeklyTeamLeaders[i]||""):"");
-    return (i?'<div class="weekly-divider" aria-hidden="true"></div>':'')+'<article class="weekly-card '+classes[i]+(!w?' weekly-pending':'')+'" aria-label="'+ranks[i]+'"><div class="weekly-rank"><span class="weekly-medal"><img class="weekly-logo" src="'+esc(IMG.k)+'" alt="Steadfast"><span class="weekly-award" aria-hidden="true">'+medals[i]+'</span></span><strong>'+ranks[i]+'</strong></div><div class="weekly-copy"><p class="weekly-kicker">'+t("weeklyKicker")+'</p><h2 class="weekly-name">'+esc(w?w.name:t("weeklyPending"))+'</h2><p class="weekly-week">'+esc(data.week?data.week+range:t("weeklyPendingWeek"))+'</p>'+(team?'<p class="weekly-team">'+t("weeklyTeam")+' '+esc(team)+'</p>':'')+(w?'<p class="weekly-details">'+esc(w.details||t("weeklyNoDetails"))+'</p>':'')+'</div></article>';
-  }).join("");
+  $("weeklyWinners").innerHTML=groups.map(function(group){
+    var winners=group.winners||[],range=group.start&&group.end?' · '+fmt(group.start)+' – '+fmt(group.end):'';
+    return '<section class="shift-section"><h2 class="shift-heading">'+esc(group.shift)+' shift</h2>'+(group.review?'<p class="weekly-review">'+t("weeklyReview")+'</p>':'')+[1,2,3].map(function(rank,i){
+      var w=winners.filter(function(x){return Number(x.rank)===rank})[0];
+      return (i?'<div class="weekly-divider" aria-hidden="true"></div>':'')+'<article class="weekly-card '+classes[i]+(!w?' weekly-pending':'')+'" aria-label="'+esc(group.shift)+' '+ranks[i]+'"><div class="weekly-rank"><span class="weekly-medal"><img class="weekly-logo" src="'+esc(IMG.k)+'" alt="Steadfast"><span class="weekly-award" aria-hidden="true">'+medals[i]+'</span></span><strong>'+ranks[i]+'</strong></div><div class="weekly-copy"><p class="weekly-kicker">Top agent · '+esc(group.shift)+'</p><h2 class="weekly-name">'+esc(w?w.name:t("weeklyPending"))+'</h2><p class="weekly-week">'+esc(group.week?group.week+range:t("weeklyPendingWeek"))+'</p>'+(w&&w.team?'<p class="weekly-team">'+t("weeklyTeam")+' '+esc(w.team)+'</p>':'')+(w?'<p class="weekly-details">'+esc(w.details||t("weeklyNoDetails"))+'</p>':'')+'</div></article>';
+    }).join('')+'</section>';
+  }).join('');
 }
 function render(){
   tick();
@@ -893,15 +898,15 @@ $("list").onclick=function(e){
   if(a==="edit"){if(!LIVE||isAdmin())openEd(n);return}
   if(a==="del"&&confirm(t("conf"))){if(LIVE){api("deleteNotice",{id:id,tab:n.tab}).then(function(d){applyData(d);render();if(section==="admin")renderAdmin();toast(t("saved"))}).catch(function(){toast(t("saveFail"))});return}else{notices=notices.filter(function(x){return x.id!==id});clr()}}
   if(a==="exp"){var nextExpired=!n.expired;if(LIVE){api("setExpired",{id:id,tab:n.tab,expired:nextExpired?1:0}).then(function(d){applyData(d);render();toast(nextExpired?t("exp"):t("restore"))}).catch(function(){toast(t("saveFail"))});return}else{n.expired=nextExpired;n.upd=stamp();if(n.expired)clr();toast(n.expired?t("exp"):t("restore"))}}
-  if(a==="dismiss"){clr();sync("dismiss",{id:id})}
+  if(a==="dismiss"){clr();sync("dismiss",{id:id}).catch(function(){})}
   render();
 };
 $("tabs").onclick=function(e){if(e.target.dataset.v){view=e.target.dataset.v;render()}};
 $("rCancel").onclick=function(){$("rdlg").close()};
-$("rSend").onclick=function(){sync("report",{id:rid,note:$("rNote").value.trim()});reports.push({id:Date.now(),nid:rid,by:me,note:$("rNote").value.trim(),date:nowIso().slice(0,10)});$("rdlg").close();render();toast(t("rDone"))};
+$("rSend").onclick=function(){var payload={id:rid,note:$("rNote").value.trim()};if(LIVE){sync('report',payload).then(function(){$('rdlg').close();toast(t('rDone'));}).catch(function(){});return;}reports.push({id:Date.now(),nid:rid,by:me,note:payload.note,date:nowIso().slice(0,10)});$("rdlg").close();render();toast(t("rDone"))};
 $("tkEdit").onclick=function(){$("tkText").value=ticker.join("\n");$("tkdlg").showModal()};
 $("tkCancel").onclick=function(){$("tkdlg").close()};
-$("tkSave").onclick=function(){ticker=$("tkText").value.split("\n").map(function(x){return x.trim()}).filter(Boolean);sync("saveTicker",{messages:ticker});$("tkdlg").close();tkKey="";tick();toast(t("saved"))};
+$("tkSave").onclick=function(){var messages=$("tkText").value.split("\n").map(function(x){return x.trim()}).filter(Boolean);if(LIVE){sync('saveTicker',{messages:messages}).then(function(){$('tkdlg').close();}).catch(function(){});return;}ticker=messages;$("tkdlg").close();tkKey="";tick();toast(t("saved"))};
 
 /* faq */
 $("faqQ").oninput=render;
@@ -909,14 +914,15 @@ $("faqChips").onclick=function(e){var b=e.target.closest("[data-c]");if(b){faqCa
 $("faqNew").onclick=function(){faqId=null;$("fdTitle").textContent=t("faqNt");$("faqT").value="";$("faqA").value="";$("fdlg").showModal()};
 $("fCancel").onclick=function(){$("fdlg").close()};
 $("fSave").onclick=function(){
-  var q=$("faqT").value.trim(),a=$("faqA").value.trim();if(!q||!a){toast(t("need"));return}
-  if(faqId){faqs.forEach(function(f){if(f.id===faqId){f.q=q;f.a=a;f.upd=stamp()}})}else{faqs.unshift({id:Date.now(),q:q,a:a,upd:stamp()})}
-  $("fdlg").close();if(LIVE){var changed=faqId?faqs.filter(function(f){return f.id===faqId})[0]:faqs[0];if(changed)sync("saveFaq",{faq:changed})}render();toast(t("saved"));
+  var q=$("faqT").value.trim(),a=$("faqA").value.trim();if(!q||!a){toast(t("need"));return;}
+  var existing=faqs.filter(function(f){return f.id===faqId})[0],changed={id:faqId||Date.now(),cat:existing?existing.cat:'General',q:q,a:a};
+  if(LIVE){sync('saveFaq',{faq:changed}).then(function(){$('fdlg').close();}).catch(function(){});return;}
+  if(existing)Object.assign(existing,changed);else faqs.unshift(changed);$('fdlg').close();render();toast(t('saved'));
 };
 $("faqList").onclick=function(e){
   var b=e.target.closest("[data-a]");if(!b||!isEd())return;var id=+b.dataset.id,f=faqs.filter(function(x){return x.id===id})[0];if(!f)return;
   if(b.dataset.a==="fedit"){faqId=id;$("fdTitle").textContent=t("faqEt");$("faqT").value=L(f.q);$("faqA").value=L(f.a);$("fdlg").showModal()}
-  if(b.dataset.a==="fdel"&&confirm(t("faqConf"))){faqs=faqs.filter(function(x){return x.id!==id});render()}
+  if(b.dataset.a==="fdel"&&confirm(t("faqConf"))){if(LIVE){sync('deleteFaq',{id:id}).catch(function(){});return;}faqs=faqs.filter(function(x){return x.id!==id});render()}
 };
 
 /* sheets */
@@ -929,6 +935,7 @@ $("sSave").onclick=function(){
   if(!/^https?:\/\//i.test(u)){toast(t("badUrl"));return}
   var c=pickCat(SC,$("shC").value,"shCn");if(!c){toast(t("need"));return}
   var o={cat:c,title:n,url:u,desc:d,upd:stamp()};
+  if(LIVE){o.id=shId||Date.now();var existing=sheets.filter(function(x){return x.id===shId})[0];if(existing)o.type=existing.type;sync('saveLink',{link:o}).then(function(){sheetCat=o.cat;$('sdlg').close();render();}).catch(function(){});return;}
   if(shId){sheets.forEach(function(s){if(s.id===shId)Object.assign(s,o)})}else{o.id=Date.now();sheets.push(o)}
   sheetCat=o.cat;$("sdlg").close();render();toast(t("saved"));
 };
@@ -940,7 +947,7 @@ $("shList").onclick=function(e){
   if(b.dataset.a==="scopy"){copyTxt(s.url);return}
   if(!isEd())return;
   if(b.dataset.a==="sedit"){shId=id;$("sdTitle").textContent=t("shEt");$("shN").value=s.title;$("shU").value=s.url;$("shD").value=s.desc;fillCats();$("shCn").className="hide";$("shCn").value="";$("shC").value=s.cat;$("sdlg").showModal()}
-  if(b.dataset.a==="sdel"&&confirm(t("shConf"))){sheets=sheets.filter(function(x){return x.id!==id});render()}
+  if(b.dataset.a==="sdel"&&confirm(t("shConf"))){if(LIVE){sync('deleteLink',{id:id}).catch(function(){});return;}sheets=sheets.filter(function(x){return x.id!==id});render()}
 };
 
 /* calendar */
@@ -1043,26 +1050,36 @@ $("adList").onclick=function(e){var b=e.target.closest("[data-a]");if(!b||!isAdm
   if(action==="uman")openU(u);
   if(action==="urej"){api("deleteUser",{email:u.email}).then(function(d){applyData(d);users=users.filter(function(x){return x!==u});renderAdmin()}).catch(function(){toast(t("saveFail"))})}};
 $("uCancel").onclick=function(){$("udlg").close()};
-$("uDel").onclick=function(){if(uEditEmail===me){toast(t("uSelf"));return}if(!confirm(t("uConf")))return;sync("deleteUser",{email:uEditEmail});users=users.filter(function(x){return x.email!==uEditEmail});$("udlg").close();render();toast(t("saved"))};
+$("uDel").onclick=function(){if(uEditEmail===me){toast(t("uSelf"));return}if(!confirm(t("uConf")))return;if(LIVE){sync('deleteUser',{email:uEditEmail}).then(function(){$('udlg').close();}).catch(function(){});return;}users=users.filter(function(x){return x.email!==uEditEmail});$("udlg").close();render();toast(t("saved"))};
 $("uSave").onclick=function(){
   var em=$("uEm").value.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){toast(t("uBad"));return}
   var u=findU(em);if(uEditEmail===null&&u&&u.status!=="pending"){toast(t("uDup"));return}
   var role=$("uRole").value,st=$("uSt").value;if(em===me&&(role!=="admin"||st!=="active")){toast(t("uSelf"));return}
   var sids=[].slice.call(document.querySelectorAll("#pSl input")).filter(function(b){return b.checked}).map(function(b){return +b.dataset.sid});
   var perms={n:$("pN").checked?1:0,f:$("pF").checked?1:0,s:sids.length?1:0,ids:(sids.length&&sids.length===sheets.length)?"all":sids};
-  if(!u){u={email:em};users.push(u)}
-  u.role=role;u.status=st;u.perms=perms;delete u.req;sync("saveUser",{email:em,role:role,status:st,perms:perms});
-  $("udlg").close();render();toast(t("saved"));
+  if(LIVE){sync('saveUser',{email:em,role:role,status:st,perms:perms}).then(function(){$('udlg').close();}).catch(function(){});return;}
+  if(!u){u={email:em};users.push(u)}u.role=role;u.status=st;u.perms=perms;delete u.req;$("udlg").close();render();toast(t("saved"));
 };
 
 /* ---------- LIVE (Google Sheet, plain email sign-in) ---------- */
+var activeWrites=0,loadSequence=0,appliedSequence=0;
+function saveProgress(on){
+  var el=$("saveProgress");if(!el){el=document.createElement('dialog');el.id='saveProgress';el.className='save-progress hide';el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.innerHTML='<div><span class="save-spinner" aria-hidden="true"></span><span>Saving changes…</span></div>';document.body.appendChild(el);}
+  el.classList.toggle('hide',!on);if(on&&!el.open)el.showModal();if(!on&&el.open)el.close();
+}
 function api(action,data){
   var body=Object.assign({action:action,email:me,token:authToken},data||{});
-  return fetch(CFG.API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})
-    .then(function(r){return r.json()})
-    .then(function(d){if(d&&d.error){var e=new Error(d.error);e.code=d.code;throw e}return d})}
-function sync(a,data){if(!LIVE)return;pending++;
-  api(a,data).catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending"){me="";return failLogin(e)}toast(t("saveFail"));refresh(true)}).then(function(){pending--})}
+  var write=!/^(load|login|logout|forgotPassword)$/.test(action);
+  if(write){activeWrites++;pending++;loadSequence++;saveProgress(true);}
+  return fetch(CFG.API_URL,{method:"POST",cache:"no-store",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})
+    .then(function(r){if(!r.ok)throw new Error('Server unavailable. Please try again.');return r.json()})
+    .then(function(d){if(d&&d.error){var e=new Error(d.error);e.code=d.code;throw e}return d})
+    .finally(function(){if(write){activeWrites--;pending--;saveProgress(activeWrites>0);}}).then(function(d){if(write)toast(t('saved'));return d;});
+}
+function sync(a,data){if(!LIVE)return Promise.resolve();
+  return api(a,data).then(function(d){return d&&d.user?d:api('load');}).then(function(d){if(d&&d.user){applyData(d);render();if(section==='admin')renderAdmin();}return d;})
+    .catch(function(e){if(e.code==='auth'||e.code==='denied'||e.code==='pending'){me='';failLogin(e);}else{toast(e.message||t('saveFail'));refresh(true);}throw e;});
+}
 function applyData(d){
   weeklyPerformers=d.weeklyPerformers||{week:"",start:"",end:"",winners:[],review:false};weeklyTeamLeaders=Array.isArray(weeklyPerformers.teams)?weeklyPerformers.teams:[];
   sops=Array.isArray(d.sops)?d.sops:[];sopCategories=Array.isArray(d.sopCategories)?d.sopCategories:[];
@@ -1086,12 +1103,12 @@ function failLogin(e,email){$("pageLoading").classList.add("hide");authToken="";
 function boot(email){me=email;ui();$("loginTracking").classList.add("hide");$("login").className="login hide";$("app").className="";$("pageLoading").classList.remove("hide");api("load").then(function(d){enter(d,email)}).catch(function(e){$("pageLoading").classList.add("hide");if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,email);else{showLg("lgFail");$("app").className="hide";$("login").className="login"}})}
 function refresh(force){
   if(!LIVE||!me||(pending>0&&!force)||document.querySelector("dialog[open]"))return;
-  api("load").then(function(d){applyData(d);if(d.user){role=d.user.role;curU=d.user;edName=d.user.name||edName}render()})
+  var sequence=++loadSequence;api("load").then(function(d){if(sequence!==loadSequence||activeWrites>0||sequence<appliedSequence)return;appliedSequence=sequence;applyData(d);if(d.user){role=d.user.role;curU=d.user;edName=d.user.name||edName}render();if(section==="admin")renderAdmin()})
     .catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,me)})}
 if(LIVE){
   var savedEmail=null;try{$("lgRemember").checked=localStorage.getItem("rememberMe")==="1";savedEmail=localStorage.getItem("email")||sessionStorage.getItem("email");authToken=localStorage.getItem("authToken")||sessionStorage.getItem("authToken")||"";if(savedEmail&&!$("lgEmail").value)$("lgEmail").value=savedEmail}catch(e){}
   if(savedEmail&&authToken)boot(savedEmail);
-  setInterval(function(){if(!document.hidden)refresh(false)},60000);
+  setInterval(function(){if(!document.hidden)refresh(false)},15000);
   document.addEventListener("visibilitychange",function(){if(!document.hidden)refresh(false)});
 }
 $("lgShow").onchange=function(){$("lgPassword").type=this.checked?"text":"password"};
