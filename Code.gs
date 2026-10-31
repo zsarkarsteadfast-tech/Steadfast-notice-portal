@@ -670,7 +670,7 @@ function sopData_() {
 
 /* QA officers publish one ranked winner per team in Weekly Performers. */
 function weeklyPerformers_() {
-  var sh = ss_().getSheetByName('Weekly Performers');
+  var sh = ss_().getSheetByName('Top Performers') || ss_().getSheetByName('Weekly Performers');
   if (!sh) return {week: '', start: '', end: '', winners: [], review: false};
   var today = today_(), groups = {}, order = [], teams = [], sourceRows = readTab_(sh).rows;
   sourceRows.forEach(function (r) { var team = s_(r.team_leader).trim(); if (team && teams.indexOf(team) < 0) teams.push(team); });
