@@ -875,7 +875,7 @@ $("save").onclick=function(){
     api(editId?"saveNotice":"createNotice",payload).then(function(d){
       applyData(d);$("dlg").close();grp=payload.src;cat="all";render();if(section==="admin")renderAdmin();
       var event=editHistory.filter(function(h){return h.email&&h.email.toLowerCase()===me.toLowerCase()&&(h.action==="EDIT_NOTICE"||h.action==="CREATE_NOTICE")})[0];
-      showSaveSuccess(event||{email:me,at:new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0")+"-"+String(new Date().getDate()).padStart(2,"0")+"T"+String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0")},!!editId);
+      showSaveSuccess(d.savedAt?{email:me,at:d.savedAt}:(event||{email:me,at:new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0")+"-"+String(new Date().getDate()).padStart(2,"0")+"T"+String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0")}),!!editId);
     }).catch(function(e){
       var msg=e&&e.message?String(e.message):"Unknown error";
       $("noticeSaveError").textContent=e&&e.code==="auth"?"Your session expired. Please sign in again.":(msg.length>240?msg.slice(0,240):msg);
@@ -1062,7 +1062,21 @@ $("uSave").onclick=function(){
 };
 
 /* ---------- LIVE (Google Sheet, plain email sign-in) ---------- */
-var activeWrites=0,loadSequence=0,appliedSequence=0;
+var activeWrites=0,loadSequence=0,appliedSequence=0,lastWriteButton=null;
+document.addEventListener('click',function(e){lastWriteButton=e.target.closest('button');},true);
+function buttonSaving(){
+  var b=lastWriteButton||document.activeElement;lastWriteButton=null;
+  if(!b||b.tagName!=='BUTTON')return function(){};
+  var original=b.innerHTML,disabled=b.disabled;b.disabled=true;b.setAttribute('aria-busy','true');b.innerHTML='<span class="save-spinner" aria-hidden="true"></span> Saving…';
+  return function(){if(b.isConnected){b.innerHTML=original;b.disabled=disabled;b.removeAttribute('aria-busy');}};
+}
+function applyMutation(d){
+  if(d.patch)applyData(d);
+  var c=d.changes||{};
+  if(c.user){var i=users.findIndex(function(u){return u.email===c.user.email});if(i<0)users.push(c.user);else users[i]=c.user;}
+  if(c.deletedUser)users=users.filter(function(u){return u.email!==c.deletedUser});
+  if(d.patch||d.changes){render();if(section==='admin')renderAdmin();}
+}
 function saveProgress(on){
   var el=$("saveProgress");if(!el){el=document.createElement('dialog');el.id='saveProgress';el.className='save-progress hide';el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.innerHTML='<div><span class="save-spinner" aria-hidden="true"></span><span>Saving changes…</span></div>';document.body.appendChild(el);}
   el.classList.toggle('hide',!on);if(on&&!el.open)el.showModal();if(!on&&el.open)el.close();
@@ -1070,17 +1084,19 @@ function saveProgress(on){
 function api(action,data){
   var body=Object.assign({action:action,email:me,token:authToken},data||{});
   var write=!/^(load|login|logout|forgotPassword)$/.test(action);
-  if(write){activeWrites++;pending++;loadSequence++;saveProgress(true);}
+  var restoreButton=function(){};if(write){activeWrites++;pending++;loadSequence++;restoreButton=buttonSaving();}
   return fetch(CFG.API_URL,{method:"POST",cache:"no-store",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})
     .then(function(r){if(!r.ok)throw new Error('Server unavailable. Please try again.');return r.json()})
     .then(function(d){if(d&&d.error){var e=new Error(d.error);e.code=d.code;throw e}return d})
-    .finally(function(){if(write){activeWrites--;pending--;saveProgress(activeWrites>0);}}).then(function(d){if(write)toast(t('saved'));return d;});
+    .finally(function(){if(write){activeWrites--;pending--;restoreButton();}}).then(function(d){if(write){applyMutation(d);toast(action==='saveUser'&&data&&data.status==='active'?'User saved successfully.':t('saved'));}return d;});
 }
 function sync(a,data){if(!LIVE)return Promise.resolve();
-  return api(a,data).then(function(d){return d&&d.user?d:api('load');}).then(function(d){if(d&&d.user){applyData(d);render();if(section==='admin')renderAdmin();}return d;})
+  return api(a,data).then(function(d){if(d&&d.user){applyData(d);render();if(section==='admin')renderAdmin();}return d;})
     .catch(function(e){if(e.code==='auth'||e.code==='denied'||e.code==='pending'){me='';failLogin(e);}else{toast(e.message||t('saveFail'));refresh(true);}throw e;});
 }
 function applyData(d){
+  if(!d||(!d.user&&!d.patch))return;
+  if(d.patch)d=Object.assign({weeklyPerformers:weeklyPerformers,sops:sops,sopCategories:sopCategories,notices:notices,reports:reports,faqs:faqs,sheets:sheets,ticker:ticker,police:police,policeMeta:policeMeta,history:editHistory,resetRequests:resetRequests},d.patch);
   weeklyPerformers=d.weeklyPerformers||{week:"",start:"",end:"",winners:[],review:false};weeklyTeamLeaders=Array.isArray(weeklyPerformers.teams)?weeklyPerformers.teams:[];
   sops=Array.isArray(d.sops)?d.sops:[];sopCategories=Array.isArray(d.sopCategories)?d.sopCategories:[];
   notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;policeMeta=d.policeMeta||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];resetRequests=Array.isArray(d.resetRequests)?d.resetRequests:[];
