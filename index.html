@@ -1062,7 +1062,7 @@ $("uSave").onclick=function(){
 };
 
 /* ---------- LIVE (Google Sheet, plain email sign-in) ---------- */
-var activeWrites=0,loadSequence=0,appliedSequence=0,lastWriteButton=null;
+var activeWrites=0,loadSequence=0,appliedSequence=0,lastWriteButton=null,refreshInFlight=false;
 document.addEventListener('click',function(e){lastWriteButton=e.target.closest('button');},true);
 function buttonSaving(){
   var b=lastWriteButton||document.activeElement;lastWriteButton=null;
@@ -1088,7 +1088,7 @@ function api(action,data){
   return fetch(CFG.API_URL,{method:"POST",cache:"no-store",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})
     .then(function(r){if(!r.ok)throw new Error('Server unavailable. Please try again.');return r.json()})
     .then(function(d){if(d&&d.error){var e=new Error(d.error);e.code=d.code;throw e}return d})
-    .finally(function(){if(write){activeWrites--;pending--;restoreButton();}}).then(function(d){if(write){applyMutation(d);toast(action==='saveUser'&&data&&data.status==='active'?'User saved successfully.':t('saved'));}return d;});
+    .finally(function(){if(write){activeWrites--;pending--;restoreButton();}}).then(function(d){if(write){if(d.ok&&!d.user&&!d.patch&&!d.changes){if(action==='saveUser')d.changes={user:Object.assign({},findU(data.email)||{},data,{email:data.email,req:''})};if(action==='deleteUser')d.changes={deletedUser:data.email};if(action==='saveTicker')d.patch={ticker:data.messages};}applyMutation(d);toast(action==='saveUser'&&data&&data.status==='active'?'User saved successfully.':t('saved'));}return d;});
 }
 function sync(a,data){if(!LIVE)return Promise.resolve();
   return api(a,data).then(function(d){if(d&&d.user){applyData(d);render();if(section==='admin')renderAdmin();}return d;})
@@ -1118,9 +1118,9 @@ function failLogin(e,email){$("pageLoading").classList.add("hide");authToken="";
   showLg(k,k==="lgPend");$("app").className="hide";$("login").className="login"}
 function boot(email){me=email;ui();$("loginTracking").classList.add("hide");$("login").className="login hide";$("app").className="";$("pageLoading").classList.remove("hide");api("load").then(function(d){enter(d,email)}).catch(function(e){$("pageLoading").classList.add("hide");if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,email);else{showLg("lgFail");$("app").className="hide";$("login").className="login"}})}
 function refresh(force){
-  if(!LIVE||!me||(pending>0&&!force)||document.querySelector("dialog[open]"))return;
+  if(!LIVE||!me||pending>0||refreshInFlight||document.querySelector("dialog[open]"))return;refreshInFlight=true;
   var sequence=++loadSequence;api("load").then(function(d){if(sequence!==loadSequence||activeWrites>0||sequence<appliedSequence)return;appliedSequence=sequence;applyData(d);if(d.user){role=d.user.role;curU=d.user;edName=d.user.name||edName}render();if(section==="admin")renderAdmin()})
-    .catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,me)})}
+    .catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,me)}).finally(function(){refreshInFlight=false;})}
 if(LIVE){
   var savedEmail=null;try{$("lgRemember").checked=localStorage.getItem("rememberMe")==="1";savedEmail=localStorage.getItem("email")||sessionStorage.getItem("email");authToken=localStorage.getItem("authToken")||sessionStorage.getItem("authToken")||"";if(savedEmail&&!$("lgEmail").value)$("lgEmail").value=savedEmail}catch(e){}
   if(savedEmail&&authToken)boot(savedEmail);
