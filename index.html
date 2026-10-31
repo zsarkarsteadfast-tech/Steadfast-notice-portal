@@ -626,12 +626,14 @@ function renderFaq(){
     return '<details class="fq"><summary>'+esc(L(f.q))+'</summary><div class="ans">'+(f.cat?'<div class="meta"><span class="tag">'+esc(f.cat)+'</span></div>':'')+'<p>'+esc(L(f.a))+'</p>'+by+(ed?'<div class="acts"><span class="sp"></span><button class="btn sm" data-a="fedit" data-id="'+f.id+'">'+t("edit")+'</button><button class="btn sm danger" data-a="fdel" data-id="'+f.id+'">'+t("del")+'</button></div>':'')+'</div></details>'}).join(""):'<div class="empty">'+t("faqNone")+'</div>';
 }
 function shChips(){var vs=visSheets(),cl=isEd()?SC:SC.filter(function(c){return vs.some(function(s){return s.cat===c})});if(cl.indexOf(sheetCat)<0&&cl.length)sheetCat=cl[0];$("shChips").innerHTML=cl.map(function(c){var n=vs.filter(function(s){return s.cat===c}).length;return '<button class="chip'+(c===sheetCat?' on':'')+'" data-c="'+esc(c)+'">'+esc(c)+' ('+n+')</button>'}).join("")}
+function policeSearchText(value){return String(value||"").normalize("NFKC").toLowerCase().replace(/[\u200b-\u200d\ufeff]/g,"").replace(/[^\p{L}\p{M}\p{N}]+/gu," ").trim()}
 function fillPolice(){
-  var ws=$("polQ").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  var ws=policeSearchText($("polQ").value).split(/\s+/).filter(Boolean);
   var rows=(police||[]).filter(function(p){
-    var h=[p.name,p.ps,p.hub,p.type,p.status,p.id,p.area].join(" ").toLowerCase();
+    var h=policeSearchText([p.name,p.ps,p.hub,p.type,p.status,p.id,p.area].join(" "));
     return ws.every(function(w){return h.indexOf(w)>-1});
   });
+  rows.sort(function(a,b){return (String(a.status).toLowerCase()==="inactive")-(String(b.status).toLowerCase()==="inactive")||String(a.name||a.ps).localeCompare(String(b.name||b.ps))});
   var show=rows.slice(0,40);
   $("polRes").innerHTML='<p class="meta" style="margin:0 0 10px">'+t("polCount").replace("{n}",dg(show.length)).replace("{m}",dg(rows.length))+'</p>'+(show.length?show.map(function(p){
     var station=p.name||p.ps||p.hub;
@@ -639,7 +641,9 @@ function fillPolice(){
     if(p.type) details.push('Type: '+p.type);
     if(p.status) details.push('Status: '+p.status);
     if(p.id) details.push('ID: '+p.id);
-    return '<details class="fq"'+(rows.length<=3?' open':'')+'><summary><span>'+esc(station)+' <span class="tag" style="margin-left:6px">'+esc(p.hub||'Hub not listed')+'</span></span></summary><div class="ans"><p>'+esc(details.join(' · '))+'</p></div></details>';
+    var inactive=String(p.status).toLowerCase()==='inactive';
+    var status=p.status?'<span class="tag'+(inactive?' u':'')+'" style="margin-left:6px">'+esc(p.status)+'</span>':'';
+    return '<details class="fq"'+(rows.length<=3?' open':'')+'><summary><span>'+esc(station)+' <span class="tag" style="margin-left:6px">'+(lang==='bn'?'হাব: ':'Hub: ')+esc(p.hub||'Hub not listed')+'</span>'+status+'</span></summary><div class="ans"><p>'+esc(details.join(' · '))+'</p>'+(p.area?'<p style="margin-top:8px">'+(lang==='bn'?'এলাকা: ':'Areas: ')+esc(p.area)+'</p>':'')+'</div></details>';
   }).join(""):'<div class="empty">'+t("polNone")+'</div>')}
 function renderSheets(){
   var ed=isEd()&&!LIVE;
