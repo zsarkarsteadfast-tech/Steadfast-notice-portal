@@ -625,7 +625,7 @@ function listHtml(){
     var a=ib("copy",n.id,IC.copy,t("copy"));
     if(!isEd()&&!n.expired)a+=ib("report",n.id,IC.flag,mine?t("reported"):t("rpt"),mine);
     if(isEd())a+='<span class="sp"></span><button class="btn sm" data-a="exp" data-id="'+n.id+'">'+(n.expired?t("restore"):t("mark"))+'</button>'+((!LIVE||isAdmin())?'<button class="btn sm" data-a="edit" data-id="'+n.id+'">'+t("edit")+'</button>':'')+(LIVE?'':'<button class="btn sm danger" data-a="del" data-id="'+n.id+'">'+t("del")+'</button>');
-    return '<article class="card'+(n.expired?' exp':'')+(red?' rep':'')+'"><div class="meta">'+tags+'<span>'+fmt(n.date)+'</span>'+right+'</div><h3>'+esc(L(n.title))+'</h3><p class="notice-body" id="body-'+n.id+'">'+esc(L(n.body))+'</p>'+(String(L(n.body)).length>260?'<button type="button" class="read-more" data-a="read" data-id="'+n.id+'">'+t("readFull")+'</button>':'')+updHtml(n)+'<div class="acts">'+a+'</div></article>';
+    return '<article class="card'+(n.expired?' exp':'')+(red?' rep':'')+'"><div class="meta">'+tags+'<span>'+fmt(n.date)+'</span>'+right+'</div><h3>'+esc(L(n.title))+'</h3><p class="notice-body'+(expandedNotices[n.id]?' expanded':'')+'" id="body-'+n.id+'">'+esc(L(n.body))+'</p>'+(String(L(n.body)).length>260?'<button type="button" class="read-more" data-a="read" data-id="'+n.id+'">'+t(expandedNotices[n.id]?"readLess":"readFull")+'</button>':'')+updHtml(n)+'<div class="acts">'+a+'</div></article>';
   }).join("");
 }
 function repHtml(){
@@ -646,6 +646,21 @@ function tick(){
   var set=it.map(function(i){return '<span class="tk-i">'+esc(i)+'</span><span class="tk-d">•</span>'}).join("");
   var half=set+set;$("tkTrack").innerHTML=half+half;
   $("tkTrack").style.animationDuration=Math.max(25,it.join("").length*.4)+"s";
+}
+var openRecords=Object.create(null),expandedNotices=Object.create(null);
+function openRecord(key,defaultOpen){return Object.prototype.hasOwnProperty.call(openRecords,key)?openRecords[key]:!!defaultOpen;}
+document.addEventListener('toggle',function(e){var el=e.target;if(el.isConnected&&el.matches&&el.matches('details[data-open-key]'))openRecords[el.dataset.openKey]=el.open;},true);
+function renderCurrent(){
+  if(section==='notice')renderNotice();else if(section==='faq')renderFaq();else if(section==='sop')renderSop();else if(section==='performers')renderPerformers();else if(section==='sheets')renderSheets();else if(section==='admin')renderAdmin();
+}
+function renderChanged(keys){
+  if(keys.indexOf('ticker')>=0)tick();
+  var deps={notice:['notices','reports'],faq:['faqs'],sop:['sops','sopCategories'],performers:['weeklyPerformers'],sheets:['sheets','police','policeMeta'],admin:['users','resetRequests','notices','reports','history']};
+  if((deps[section]||[]).some(function(k){return keys.indexOf(k)>=0;}))renderCurrent();
+}
+function changedPatch(patch){
+  var current={notices:notices,reports:reports,faqs:faqs,sops:sops,sopCategories:sopCategories,weeklyPerformers:weeklyPerformers,sheets:sheets,police:police,policeMeta:policeMeta,users:users,resetRequests:resetRequests,history:editHistory,ticker:ticker};
+  var changed={};Object.keys(patch||{}).forEach(function(k){if(JSON.stringify(current[k])!==JSON.stringify(patch[k]))changed[k]=patch[k];});return changed;
 }
 function renderNotice(){
   var rv=view==="reports"&&isEd();
@@ -675,7 +690,7 @@ function renderFaq(){
   var rows=faqs.filter(function(f){if(faqCat!=="all"&&f.cat!==faqCat)return false;if(!q)return true;var h=(allTxt(f.q)+" "+allTxt(f.a)+" "+(f.cat||"")).toLowerCase();return q.split(/\s+/).every(function(w){return h.indexOf(w)>-1})});
   $("faqList").innerHTML=rows.length?rows.map(function(f){
     var by=LIVE?(f.upd&&f.upd.by?'<div class="upd">'+t("addedBy")+' <b>'+esc(f.upd.by)+'</b></div>':''):updHtml(f);
-    return '<details class="fq"><summary>'+esc(L(f.q))+'</summary><div class="ans">'+(f.cat?'<div class="meta"><span class="tag">'+esc(f.cat)+'</span></div>':'')+'<p>'+esc(L(f.a))+'</p>'+by+(ed?'<div class="acts"><span class="sp"></span><button class="btn sm" data-a="fedit" data-id="'+f.id+'">'+t("edit")+'</button><button class="btn sm danger" data-a="fdel" data-id="'+f.id+'">'+t("del")+'</button></div>':'')+'</div></details>'}).join(""):'<div class="empty">'+t("faqNone")+'</div>';
+    return '<details class="fq" data-open-key="faq-'+f.id+'"'+(openRecord('faq-'+f.id)?' open':'')+'><summary>'+esc(L(f.q))+'</summary><div class="ans">'+(f.cat?'<div class="meta"><span class="tag">'+esc(f.cat)+'</span></div>':'')+'<p>'+esc(L(f.a))+'</p>'+by+(ed?'<div class="acts"><span class="sp"></span><button class="btn sm" data-a="fedit" data-id="'+f.id+'">'+t("edit")+'</button><button class="btn sm danger" data-a="fdel" data-id="'+f.id+'">'+t("del")+'</button></div>':'')+'</div></details>'}).join(""):'<div class="empty">'+t("faqNone")+'</div>';
 }
 function shChips(){var vs=visSheets(),cl=isEd()?SC:SC.filter(function(c){return vs.some(function(s){return s.cat===c})});if(cl.indexOf(sheetCat)<0&&cl.length)sheetCat=cl[0];$("shChips").innerHTML=cl.map(function(c){var n=vs.filter(function(s){return s.cat===c}).length;return '<button class="chip'+(c===sheetCat?' on':'')+'" data-c="'+esc(c)+'">'+esc(c)+' ('+n+')</button>'}).join("")}
 function policeSearchText(value){return String(value||"").normalize("NFKC").toLowerCase().replace(/[\u200b-\u200d\ufeff]/g,"").replace(/[^\p{L}\p{M}\p{N}]+/gu," ").trim()}
@@ -696,7 +711,8 @@ function fillPolice(){
     if(p.id) details.push('ID: '+p.id);
     var inactive=String(p.status).toLowerCase()==='inactive';
     var status=p.status?'<span class="tag'+(inactive?' u':'')+'" style="margin-left:6px">'+esc(p.status)+'</span>':'';
-    return '<details class="fq"'+(rows.length<=3?' open':'')+'><summary><span>'+esc(station)+' <span class="tag" style="margin-left:6px">'+(lang==='bn'?'হাব: ':'Hub: ')+esc(p.hub||'Hub not listed')+'</span>'+status+'</span></summary><div class="ans"><p>'+esc(details.join(' · '))+'</p>'+(p.area?'<p style="margin-top:8px">'+(lang==='bn'?'এলাকা: ':'Areas: ')+esc(p.area)+'</p>':'')+'</div></details>';
+    var stateKey='police-'+(p.id||station+'|'+p.hub);
+    return '<details class="fq" data-open-key="'+esc(stateKey)+'"'+(openRecord(stateKey,rows.length<=3)?' open':'')+'><summary><span>'+esc(station)+' <span class="tag" style="margin-left:6px">'+(lang==='bn'?'হাব: ':'Hub: ')+esc(p.hub||'Hub not listed')+'</span>'+status+'</span></summary><div class="ans"><p>'+esc(details.join(' · '))+'</p>'+(p.area?'<p style="margin-top:8px">'+(lang==='bn'?'এলাকা: ':'Areas: ')+esc(p.area)+'</p>':'')+'</div></details>';
   }).join(""):'<div class="empty">'+t("polNone")+'</div>');
   $("polRes").innerHTML+='<div style="grid-column:1/-1;text-align:center;margin-top:14px"><button class="btn" data-a="polall">'+(policeShowAllActive?'Show first 40 records':'Show all active hubs')+'</button></div>';
   if(policeMeta&&policeMeta.refreshedAt){
@@ -730,7 +746,7 @@ function renderSop(){
   if(!sopCategory)return;
   $("sopCategoryTitle").textContent=sopCategory;
   var rows=sops.filter(function(x){return x.cat===sopCategory&&sopMatches(x,q)});
-  $("sopEntries").innerHTML=rows.length?rows.map(function(x){return '<details class="fq"><summary>'+esc(x.scenario)+'</summary><div class="ans"><div class="sop-steps">'+esc(x.body)+'</div>'+updHtml(x)+'</div></details>'}).join(""):'<p class="empty sop-empty">'+t(q?"sopNone":"sopEmpty")+'</p>';
+  $("sopEntries").innerHTML=rows.length?rows.map(function(x){return '<details class="fq" data-open-key="sop-'+x.id+'"'+(openRecord('sop-'+x.id)?' open':'')+'><summary>'+esc(x.scenario)+'</summary><div class="ans"><div class="sop-steps">'+esc(x.body)+'</div>'+updHtml(x)+'</div></details>'}).join(""):'<p class="empty sop-empty">'+t(q?"sopNone":"sopEmpty")+'</p>';
 }
 $("sopCategories").onclick=function(e){var b=e.target.closest("[data-sop-category]");if(b){sopCategory=b.dataset.sopCategory;renderSop()}};
 $("sopQ").oninput=renderSop;
@@ -858,7 +874,7 @@ var scrollHomeForcedHidden=false;
 function updateScrollHome(){var b=$("scrollHome");if(!b)return;var active=!$("app").classList.contains("hide")&&$("login").classList.contains("hide");if(scrollHomeForcedHidden&&window.scrollY<=220)scrollHomeForcedHidden=false;var visible=active&&window.scrollY>220&&!scrollHomeForcedHidden;b.classList.toggle("hide",!visible);b.classList.toggle("show",visible)}
 window.addEventListener("scroll",updateScrollHome,{passive:true});
 $("chips").onclick=function(e){var b=e.target.closest("[data-c]");if(b){cat=b.dataset.c;render()}};
-$("q").oninput=render;
+$("q").oninput=renderNotice;
 $("dClear").onclick=function(){$("dFrom").value="";$("dTo").value="";render()};
 $("newBtn").onclick=function(){openEd(null)};
 $("fC").onchange=function(){$("fCn").className=this.value==="__new"?"":"hide";if(this.value==="__new")$("fCn").focus()};
@@ -873,7 +889,7 @@ $("save").onclick=function(){
     var saveBtn=$("save"),cancelBtn=$("cancel"),oldSaveText=saveBtn.textContent;
     saveBtn.disabled=true;cancelBtn.disabled=true;saveBtn.classList.add("is-saving");saveBtn.innerHTML='<span class="save-spinner" aria-hidden="true"></span> Saving…';$("noticeSaveError").textContent="";
     api(editId?"saveNotice":"createNotice",payload).then(function(d){
-      applyData(d);$("dlg").close();grp=payload.src;cat="all";render();if(section==="admin")renderAdmin();
+      applyData(d);$("dlg").close();grp=payload.src;cat="all";renderCurrent();
       var event=editHistory.filter(function(h){return h.email&&h.email.toLowerCase()===me.toLowerCase()&&(h.action==="EDIT_NOTICE"||h.action==="CREATE_NOTICE")})[0];
       showSaveSuccess(d.savedAt?{email:me,at:d.savedAt}:(event||{email:me,at:new Date().getFullYear()+"-"+String(new Date().getMonth()+1).padStart(2,"0")+"-"+String(new Date().getDate()).padStart(2,"0")+"T"+String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0")}),!!editId);
     }).catch(function(e){
@@ -890,13 +906,13 @@ $("save").onclick=function(){
 $("list").onclick=function(e){
   var b=e.target.closest("[data-a]");if(!b)return;var a=b.dataset.a,id=+b.dataset.id;
   var n=notices.filter(function(x){return x.id===id})[0];if(!n)return;
-  if(a==="read"){var p=$("body-"+id);if(!p)return;var expanded=p.classList.toggle("expanded");b.textContent=t(expanded?"readLess":"readFull");return;}
+  if(a==="read"){var p=$("body-"+id);if(!p)return;var expanded=p.classList.toggle("expanded");expandedNotices[id]=expanded;b.setAttribute("aria-expanded",String(expanded));b.textContent=t(expanded?"readLess":"readFull");return;}
   function clr(){reports=reports.filter(function(r){return r.nid!==id})}
   if(a==="copy"){copyTxt(L(n.title)+"\n\n"+L(n.body));return}
   if(a==="report"){if(repsOf(id).some(function(r){return r.by===me})){toast(t("already"));return}rid=id;$("rNote").value="";$("rdlg").showModal();return}
   if(!isEd())return;
   if(a==="edit"){if(!LIVE||isAdmin())openEd(n);return}
-  if(a==="del"&&confirm(t("conf"))){if(LIVE){api("deleteNotice",{id:id,tab:n.tab}).then(function(d){applyData(d);render();if(section==="admin")renderAdmin();toast(t("saved"))}).catch(function(){toast(t("saveFail"))});return}else{notices=notices.filter(function(x){return x.id!==id});clr()}}
+  if(a==="del"&&confirm(t("conf"))){if(LIVE){api("deleteNotice",{id:id,tab:n.tab}).then(function(d){applyData(d);renderCurrent();if(section==="admin")renderAdmin();toast(t("saved"))}).catch(function(){toast(t("saveFail"))});return}else{notices=notices.filter(function(x){return x.id!==id});clr()}}
   if(a==="exp"){var nextExpired=!n.expired;if(LIVE){api("setExpired",{id:id,tab:n.tab,expired:nextExpired?1:0}).then(function(d){applyData(d);render();toast(nextExpired?t("exp"):t("restore"))}).catch(function(){toast(t("saveFail"))});return}else{n.expired=nextExpired;n.upd=stamp();if(n.expired)clr();toast(n.expired?t("exp"):t("restore"))}}
   if(a==="dismiss"){clr();sync("dismiss",{id:id}).catch(function(){})}
   render();
@@ -909,7 +925,7 @@ $("tkCancel").onclick=function(){$("tkdlg").close()};
 $("tkSave").onclick=function(){var messages=$("tkText").value.split("\n").map(function(x){return x.trim()}).filter(Boolean);if(LIVE){sync('saveTicker',{messages:messages}).then(function(){$('tkdlg').close();}).catch(function(){});return;}ticker=messages;$("tkdlg").close();tkKey="";tick();toast(t("saved"))};
 
 /* faq */
-$("faqQ").oninput=render;
+$("faqQ").oninput=renderFaq;
 $("faqChips").onclick=function(e){var b=e.target.closest("[data-c]");if(b){faqCat=b.dataset.c;render()}};
 $("faqNew").onclick=function(){faqId=null;$("fdTitle").textContent=t("faqNt");$("faqT").value="";$("faqA").value="";$("fdlg").showModal()};
 $("fCancel").onclick=function(){$("fdlg").close()};
@@ -1075,7 +1091,7 @@ function applyMutation(d){
   var c=d.changes||{};
   if(c.user){var i=users.findIndex(function(u){return u.email===c.user.email});if(i<0)users.push(c.user);else users[i]=c.user;}
   if(c.deletedUser)users=users.filter(function(u){return u.email!==c.deletedUser});
-  if(d.patch||d.changes){render();if(section==='admin')renderAdmin();}
+  var keys=Object.keys(d.patch||{});if(c.user||c.deletedUser)keys.push('users');renderChanged(keys);
 }
 function saveProgress(on){
   var el=$("saveProgress");if(!el){el=document.createElement('dialog');el.id='saveProgress';el.className='save-progress hide';el.setAttribute('role','status');el.setAttribute('aria-live','polite');el.innerHTML='<div><span class="save-spinner" aria-hidden="true"></span><span>Saving changes…</span></div>';document.body.appendChild(el);}
@@ -1083,7 +1099,7 @@ function saveProgress(on){
 }
 function api(action,data){
   var body=Object.assign({action:action,email:me,token:authToken},data||{});
-  var write=!/^(load|login|logout|forgotPassword)$/.test(action);
+  var write=!/^(load|loadSection|login|logout|forgotPassword)$/.test(action);
   var restoreButton=function(){};if(write){activeWrites++;pending++;loadSequence++;restoreButton=buttonSaving();}
   return fetch(CFG.API_URL,{method:"POST",cache:"no-store",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})
     .then(function(r){if(!r.ok)throw new Error('Server unavailable. Please try again.');return r.json()})
@@ -1091,7 +1107,7 @@ function api(action,data){
     .finally(function(){if(write){activeWrites--;pending--;restoreButton();}}).then(function(d){if(write){if(d.ok&&!d.user&&!d.patch&&!d.changes){if(action==='saveUser')d.changes={user:Object.assign({},findU(data.email)||{},data,{email:data.email,req:''})};if(action==='deleteUser')d.changes={deletedUser:data.email};if(action==='saveTicker')d.patch={ticker:data.messages};}applyMutation(d);toast(action==='saveUser'&&data&&data.status==='active'?'User saved successfully.':t('saved'));}return d;});
 }
 function sync(a,data){if(!LIVE)return Promise.resolve();
-  return api(a,data).then(function(d){if(d&&d.user){applyData(d);render();if(section==='admin')renderAdmin();}return d;})
+  return api(a,data).then(function(d){if(d&&d.user){applyData(d);renderCurrent();if(section==='admin')renderAdmin();}return d;})
     .catch(function(e){if(e.code==='auth'||e.code==='denied'||e.code==='pending'){me='';failLogin(e);}else{toast(e.message||t('saveFail'));refresh(true);}throw e;});
 }
 function applyData(d){
@@ -1118,9 +1134,14 @@ function failLogin(e,email){$("pageLoading").classList.add("hide");authToken="";
   showLg(k,k==="lgPend");$("app").className="hide";$("login").className="login"}
 function boot(email){me=email;ui();$("loginTracking").classList.add("hide");$("login").className="login hide";$("app").className="";$("pageLoading").classList.remove("hide");api("load").then(function(d){enter(d,email)}).catch(function(e){$("pageLoading").classList.add("hide");if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,email);else{showLg("lgFail");$("app").className="hide";$("login").className="login"}})}
 function refresh(force){
-  if(!LIVE||!me||pending>0||refreshInFlight||document.querySelector("dialog[open]"))return;refreshInFlight=true;
-  var sequence=++loadSequence;api("load").then(function(d){if(sequence!==loadSequence||activeWrites>0||sequence<appliedSequence)return;appliedSequence=sequence;applyData(d);if(d.user){role=d.user.role;curU=d.user;edName=d.user.name||edName}render();if(section==="admin")renderAdmin()})
-    .catch(function(e){if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,me)}).finally(function(){refreshInFlight=false;})}
+  if(!LIVE||!me||pending>0||refreshInFlight||document.hidden||document.querySelector("dialog[open]"))return;
+  refreshInFlight=true;var currentSection=section,currentView=adView,sequence=loadSequence;
+  return api('loadSection',{section:currentSection,adminView:currentView,policeOpen:policeOpen}).then(function(d){
+    if(sequence!==loadSequence||pending>0||currentSection!==section||currentView!==adView)return;
+    var patch=changedPatch(d.patch);if(!Object.keys(patch).length)return;
+    applyData({patch:patch});renderChanged(Object.keys(patch));
+  }).catch(function(e){if(e.code==='auth'||e.code==='denied'||e.code==='pending')failLogin(e,me);}).finally(function(){refreshInFlight=false;});
+}
 if(LIVE){
   var savedEmail=null;try{$("lgRemember").checked=localStorage.getItem("rememberMe")==="1";savedEmail=localStorage.getItem("email")||sessionStorage.getItem("email");authToken=localStorage.getItem("authToken")||sessionStorage.getItem("authToken")||"";if(savedEmail&&!$("lgEmail").value)$("lgEmail").value=savedEmail}catch(e){}
   if(savedEmail&&authToken)boot(savedEmail);
