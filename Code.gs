@@ -41,6 +41,7 @@ function handle_(req) {
 
   switch (req.action) {
     case 'load': return lock_(function () { return load_(user); });
+    case 'loadSection': return sectionData_(req, user);
     case 'report': return lock_(function () { return report_(req, user); });
   }
   if (user.role === 'viewer') fail_('forbidden', 'Editors only');
@@ -73,7 +74,8 @@ function lock_(fn) {
 }
 
 /* ------------------------------ sheet helpers ------------------------------ */
-function ss_() { return SpreadsheetApp.openById(SHEET_ID); }
+var requestSpreadsheet_;
+function ss_() { if(!requestSpreadsheet_)requestSpreadsheet_=SpreadsheetApp.openById(SHEET_ID);return requestSpreadsheet_; }
 function tab_(name) { var s = ss_().getSheetByName(name); if (!s) fail_('server', 'Missing tab: ' + name); return s; }
 
 function readTab_(sh) {
@@ -740,4 +742,22 @@ function mutationPatch_(user,scopes){
     if(scope==='sheets')patch.sheets=links_().filter(function(l){return user.role!=='viewer'||user.perms.ids==='all'||user.perms.ids.indexOf(l.id)>-1;});
     if(scope==='resetRequests'&&user.role==='admin')patch.resetRequests=resetRequests_();
   });return {ok:true,patch:patch,savedAt:now_()};
+}
+
+// Background freshness reads only the section currently visible to this user.
+function sectionData_(req,user){
+  var section=s_(req.section),patch={},can=function(k){return user.role!=='viewer'||user.perms[k];};
+  if(section==='notice'&&can('n')){patch.notices=notices_();patch.reports=reports_(user);}
+  else if(section==='faq'&&can('f'))patch.faqs=faqs_();
+  else if(section==='sop'){var sop=sopData_();patch.sops=sop.entries;patch.sopCategories=sop.categories;}
+  else if(section==='performers')patch.weeklyPerformers=weeklyPerformers_();
+  else if(section==='sheets'&&can('s')){
+    patch.sheets=links_().filter(function(l){return user.role!=='viewer'||user.perms.ids==='all'||user.perms.ids.indexOf(l.id)>-1;});
+    if(req.policeOpen&&patch.sheets.some(function(l){return l.type==='police';})){patch.police=police_();patch.policeMeta=policeMeta_(patch.police);}
+  }else if(section==='admin'&&user.role==='admin'){
+    if(req.adminView==='notices')patch.notices=notices_();
+    else if(req.adminView==='history')patch.history=history_();
+    else {patch.users=users_();patch.resetRequests=resetRequests_();}
+  }
+  return {ok:true,patch:patch};
 }
