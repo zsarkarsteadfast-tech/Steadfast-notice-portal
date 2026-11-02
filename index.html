@@ -311,6 +311,13 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 :root[data-theme="dark"] .portal-name{color:#dedede}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .portal-name{color:#dedede}}
 .shift-section{margin:26px 0 48px}.shift-heading{font-size:26px;margin:0 0 20px;color:var(--dk)}
 .save-progress{max-width:none;max-height:none;width:100%;height:100%;margin:0;border:0;padding:0;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.35);display:grid;place-items:center;backdrop-filter:blur(4px)}.save-progress.hide{display:none}.save-progress>div{background:var(--dlg);color:var(--ink);border:1px solid var(--bd);padding:28px 40px;border-radius:22px;box-shadow:var(--sh);display:flex;align-items:center;gap:14px;font-weight:700}.save-progress .save-spinner{width:25px;height:25px;border-color:var(--bd);border-top-color:var(--g)}
+
+/* Blocked-account maintenance screen, using the current login theme. */
+.maintenance-screen{min-height:100dvh;display:grid;place-items:center;padding:28px;background:radial-gradient(60vw 50vh at 12% 8%,var(--b2),transparent 70%),linear-gradient(160deg,var(--b1),var(--b3));color:var(--ink)}
+.maintenance-card{width:min(100%,520px);text-align:center;background:var(--dlg);border:1px solid var(--bd);border-radius:28px;padding:36px 24px;box-shadow:var(--sh)}
+.maintenance-card h1{font-size:clamp(26px,6vw,38px);line-height:1.2;margin:8px 0 14px}.maintenance-card p{color:var(--mut);font-size:17px;margin:0 0 26px}
+.maintenance-art{position:relative;width:260px;max-width:100%;height:185px;margin:0 auto 14px}.maintenance-art svg{position:absolute;inset:0;width:100%;height:100%}.maintenance-worker{position:absolute;left:90px;top:58px;font-size:72px;line-height:1}.maintenance-spark{transform-origin:130px 75px;animation:maintenanceSpark 1.8s ease-in-out infinite}
+@keyframes maintenanceSpark{50%{opacity:.25}}@media(prefers-reduced-motion:reduce){.maintenance-spark{animation:none}}
 </style>
 </head>
 <body>
@@ -777,13 +784,13 @@ function copyTxt(x){try{navigator.clipboard.writeText(x).then(function(){toast(t
 function stamp(){return {by:edName,at:nowIso()}}
 
 /* login */
-var loginTrackingBusy=false,loginTrackingTimers=[],loginTrackingFocus=null;
+var loginTrackingStartedAt=0,loginTrackingBusy=false,loginTrackingTimers=[],loginTrackingFocus=null;
 function trackingStage(n){
   [].forEach.call($("trackingSteps").children,function(li,i){li.className=i<n?"complete":i===n?"active":"";li.querySelector(".tracking-dot").textContent=i<n?"✓":String(i+1)});
   $("trackingStatus").textContent=t(n===3?"trackingWelcome":"trackingWait");
 }
 function startLoginTracking(){
-  loginTrackingBusy=true;loginTrackingFocus=document.activeElement;
+  loginTrackingStartedAt=Date.now();loginTrackingBusy=true;loginTrackingFocus=document.activeElement;
   $("lgErr").className="lerr hide";$("login").setAttribute("aria-busy","true");
   ["lgGo","lgEmail","lgPassword","lgShow","forgotPassword"].forEach(function(id){$(id).disabled=true});
   $("loginTracking").classList.remove("hide");trackingStage(0);
@@ -796,6 +803,17 @@ function stopLoginTracking(){
   ["lgGo","lgEmail","lgPassword","lgShow","forgotPassword"].forEach(function(id){$(id).disabled=false});
   if(!$("login").classList.contains("hide")&&loginTrackingFocus)loginTrackingFocus.focus();
 }
+
+function showBlockedMaintenance(){
+  var screen=$("blockedMaintenance");
+  if(!screen){
+    screen=document.createElement("section");screen.id="blockedMaintenance";screen.className="maintenance-screen";screen.setAttribute("aria-labelledby","maintenanceTitle");
+    screen.innerHTML='<div class="maintenance-card"><div class="maintenance-art" role="img" aria-label="A seated technician repairing two broken electrical wires"><svg viewBox="0 0 260 185" fill="none" aria-hidden="true"><ellipse cx="130" cy="168" rx="104" ry="9" fill="var(--chip)"/><path d="M8 85h43q20 0 24-16l9-26" stroke="var(--dk)" stroke-width="10" stroke-linecap="round"/><path d="M252 85h-43q-20 0-24-16l-9-26" stroke="var(--dk)" stroke-width="10" stroke-linecap="round"/><path d="m84 43 4-12m88 12-4-12" stroke="#d49b36" stroke-width="5" stroke-linecap="round"/><path class="maintenance-spark" d="m111 38-7-10m45 10 7-10m-26 3V17" stroke="#d49b36" stroke-width="4" stroke-linecap="round"/><path d="M110 144h42m-36 0-5 20m36-20 5 20" stroke="var(--mut)" stroke-width="6" stroke-linecap="round"/></svg><span class="maintenance-worker" aria-hidden="true">🧑‍🔧</span></div><h1 id="maintenanceTitle">Site Under Maintenance</h1><p>Stay for update..</p><button type="button" class="btn" id="maintenanceBack">Back to sign in</button></div>';
+    document.body.appendChild(screen);$("maintenanceBack").onclick=function(){screen.className="maintenance-screen hide";$("login").className="login";$("lgPassword").value="";$("lgEmail").focus();};
+  }
+  $("pageLoading").classList.add("hide");$("app").className="hide";$("login").className="login hide";screen.className="maintenance-screen";screen.querySelector("button").focus();
+}
+
 function showLg(k,ok){errKey=k;var e=$("lgErr");e.textContent=t(k);e.className="lerr"+(ok?" ok":"")}
 function signIn(email){
   email=(email||"").trim().toLowerCase();
@@ -805,7 +823,7 @@ function signIn(email){
     var password=$("lgPassword").value;
     if(!password){showLg("badCredentials");$("lgPassword").focus();return}
     startLoginTracking();
-    api("login",{email:email,password:password}).then(function(d){return finishLoginTracking().then(function(){enter(d,email)})}).catch(function(e){failLogin(e,email)}).then(stopLoginTracking,stopLoginTracking)
+    api("login",{email:email,password:password}).then(function(d){return finishLoginTracking().then(function(){enter(d,email)})}).catch(function(e){if(e&&e.code==="denied"){return new Promise(function(resolve){setTimeout(resolve,Math.max(0,2200-(Date.now()-loginTrackingStartedAt)))}).then(function(){failLogin(e,email)});}failLogin(e,email)}).then(stopLoginTracking,stopLoginTracking)
     return}
   var u=findU(email);
   if(!u){
@@ -813,7 +831,7 @@ function signIn(email){
     else showLg("lgDeny");
     return}
   if(u.status==="pending"){showLg("lgPend",1);return}
-  if(u.status==="blocked"){showLg("lgDeny");return}
+  if(u.status==="blocked"){showBlockedMaintenance();return}
   me=email;role=u.role;curU=u;edName=u.name||nameOf(email);
   section="notice";view="notices";cat="all";
   $("lgErr").className="lerr hide";$("login").className="login hide";$("app").className="";ui();window.scrollTo(0,0);
@@ -1133,6 +1151,7 @@ function failLogin(e,email){$("pageLoading").classList.add("hide");authToken="";
   me="";try{localStorage.removeItem("email");localStorage.removeItem("authToken");sessionStorage.removeItem("email");sessionStorage.removeItem("authToken")}catch(x){}
   var k=e&&e.code==="pending"?"lgPend":e&&e.code==="denied"?"lgDeny":e&&e.code==="credentials"?"badCredentials":e&&e.code==="rate"?"loginRate":e&&e.code==="auth"?"lgExp":"lgFail";
   if(email)$("lgEmail").value=email;
+  if(e&&e.code==="denied"){$("lgPassword").value="";showBlockedMaintenance();return;}
   showLg(k,k==="lgPend");$("app").className="hide";$("login").className="login"}
 function boot(email){me=email;ui();$("loginTracking").classList.add("hide");$("login").className="login hide";$("app").className="";$("pageLoading").classList.remove("hide");api("load").then(function(d){enter(d,email)}).catch(function(e){$("pageLoading").classList.add("hide");if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,email);else{showLg("lgFail");$("app").className="hide";$("login").className="login"}})}
 function refresh(force){
