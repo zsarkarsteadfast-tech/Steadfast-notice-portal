@@ -7,8 +7,8 @@
  * 2) Run setup() once, then Deploy > New deployment > Web app
  *    (Execute as: Me, Who has access: Anyone). The site uses password login and server-validated sessions; FIRST_ADMIN below is auto-approved as admin the first time setup() runs.
  */
-var FIRST_ADMIN = 'zsarkar.steadfast@gmail.com';   // always seeded as admin by setup()
-var SHEET_ID  = '1X-QZIGes4h2S5LyW0zPmGNRUF7M5su64B9MXqWHdlCQ';
+var FIRST_ADMIN = PropertiesService.getScriptProperties().getProperty('PORTAL_FIRST_ADMIN') || ''; // private setup configuration
+var SHEET_ID = PropertiesService.getScriptProperties().getProperty('PORTAL_SHEET_ID') || '';
 // Any valid email may request access; an admin must approve it.
 var TZ        = 'Asia/Dhaka';
 var NOTICE_TABS = [{tab: 'SFC Notice', group: 'cs'}, {tab: 'QA Follow-up', group: 'qa'}];   // cs = CS Official Notice, qa = QA Follow-up
@@ -33,14 +33,14 @@ function out_(o) {
 function fail_(code, msg) { var e = new Error(msg || code); e.code = code; throw e; }
 
 function handle_(req) {
-  if (req.action === 'login') return lock_(function () { return login_(req); });
+  if (req.action === 'login') { var signedIn = lock_(function () { return login_(req); }); var initial = load_(signedIn.user); initial.token = signedIn.token; return initial; }
   if (req.action === 'forgotPassword') return forgotPassword_(req);
   var user = sessionUser_(req.token);
   if (req.action === 'logout') { removeSession_(req.token); return {ok: true}; }
   if (req.action === 'changePassword') return lock_(function () { return changePassword_(req, user); });
 
   switch (req.action) {
-    case 'load': return lock_(function () { return load_(user); });
+    case 'load': return load_(user);
     case 'loadSection': return sectionData_(req, user);
     case 'report': return lock_(function () { return report_(req, user); });
   }
@@ -340,22 +340,18 @@ function history_() {
 function load_(user) {
   var can = function (k) { return user.role !== 'viewer' || user.perms[k]; };
   var d = {user: user, notices: [], faqs: [], sheets: [], police: null, reports: [], ticker: ticker_(), users: null, history: []};
-  var sopData = sopData_(); d.sops = sopData.entries; d.sopCategories = sopData.categories;
-  d.ranking = ranking_();
+  d.bootstrap = true; // Secondary collections load only when their section opens.
   if (can('n')) d.notices = notices_();
-  if (can('f')) d.faqs = faqs_();
   if (can('s')) {
     d.sheets = links_().filter(function (l) {
       return user.role !== 'viewer' || user.perms.ids === 'all' || user.perms.ids.indexOf(l.id) > -1;
     });
-    if (d.sheets.some(function (l) { return l.type === 'police'; })) { d.police = police_(); d.policeMeta = policeMeta_(d.police); }
   }
   d.reports = reports_(user);
   if (user.role === 'admin') {
     var props = PropertiesService.getScriptProperties();
     d.users = users_();
     d.resetRequests = resetRequests_();
-    d.history = history_();
   }
   return d;
 }
@@ -475,7 +471,7 @@ function setPassword_(email, password) { var salt = Utilities.getUuid(), version
 function issueSession_(email) { var token = Utilities.getUuid() + Utilities.getUuid(); CacheService.getScriptCache().put('session:' + digest_(token), JSON.stringify({email: email, version: credentials_(email).version}), 21600); return token; }
 function sessionUser_(token) { var raw = CacheService.getScriptCache().get('session:' + digest_(String(token || ''))); if (!raw) fail_('auth', 'Please sign in again'); var s = JSON.parse(raw), user = findUser_(s.email); if (!user || user.status !== 'active' || s.version !== credentials_(s.email).version) fail_('auth', 'Please sign in again'); return user; }
 function checkRate_(email) { var c = CacheService.getScriptCache(), key = 'attempt:' + digest_(email), n = Number(c.get(key) || 0); if (n >= 10) fail_('rate', 'Too many attempts. Try again in 15 minutes'); c.put(key, String(n + 1), 900); }
-function login_(req) { var email = String(req.email || '').trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) fail_('credentials', 'Enter a valid email and password'); checkRate_(email); if (!matchesPassword_(email, req.password)) fail_('credentials', 'Incorrect email or password'); var user = findUser_(email); if (!user) { requestAccess_(email); fail_('pending', 'Access requested. Wait for admin approval'); } if (user.status === 'pending') fail_('pending', 'Waiting for approval'); if (user.status !== 'active') fail_('denied', 'Access denied'); CacheService.getScriptCache().remove('attempt:' + digest_(email)); var d = load_(user); d.token = issueSession_(email); return d; }
+function login_(req) { var email = String(req.email || '').trim().toLowerCase(); if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) fail_('credentials', 'Enter a valid email and password'); checkRate_(email); if (!matchesPassword_(email, req.password)) fail_('credentials', 'Incorrect email or password'); var user = findUser_(email); if (!user) { requestAccess_(email); fail_('pending', 'Access requested. Wait for admin approval'); } if (user.status === 'pending') fail_('pending', 'Waiting for approval'); if (user.status !== 'active') fail_('denied', 'Access denied'); CacheService.getScriptCache().remove('attempt:' + digest_(email)); return {user: user, token: issueSession_(email)}; }
 function resetRequests_() {
   var sh = ss_().getSheetByName('Password Reset Requests');
   if (!sh || sh.getLastRow() < 2) return [];
