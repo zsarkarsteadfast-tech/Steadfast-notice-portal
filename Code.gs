@@ -341,7 +341,7 @@ function load_(user) {
   var can = function (k) { return user.role !== 'viewer' || user.perms[k]; };
   var d = {user: user, notices: [], faqs: [], sheets: [], police: null, reports: [], ticker: ticker_(), users: null, history: []};
   var sopData = sopData_(); d.sops = sopData.entries; d.sopCategories = sopData.categories;
-  d.weeklyPerformers = weeklyPerformers_();
+  d.ranking = ranking_();
   if (can('n')) d.notices = notices_();
   if (can('f')) d.faqs = faqs_();
   if (can('s')) {
@@ -465,12 +465,12 @@ function setup() {
   Logger.log('Setup done. Admin email: ' + users.getRange(2, 1).getValue());
 }
 
-var INITIAL_PASSWORD_ = 'sfcnotice123';
+var INITIAL_PASSWORD_ = PropertiesService.getScriptProperties().getProperty('PORTAL_INITIAL_PASSWORD') || '';
 function authKey_(email) { return 'password:' + email; }
 function digest_(s) { return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, s, Utilities.Charset.UTF_8)); }
 function passwordHash_(password, salt) { var v = salt + ':' + password; for (var i = 0; i < 1000; i++) v = digest_(v); return v; }
 function credentials_(email) { var value = PropertiesService.getScriptProperties().getProperty(authKey_(email)); return value ? JSON.parse(value) : {version: 'initial'}; }
-function matchesPassword_(email, password) { var c = credentials_(email); return c.hash ? passwordHash_(String(password || ''), c.salt) === c.hash : String(password || '') === INITIAL_PASSWORD_; }
+function matchesPassword_(email, password) { var c = credentials_(email); return c.hash ? passwordHash_(String(password || ''), c.salt) === c.hash : !!INITIAL_PASSWORD_ && String(password || '') === INITIAL_PASSWORD_; }
 function setPassword_(email, password) { var salt = Utilities.getUuid(), version = Utilities.getUuid(); PropertiesService.getScriptProperties().setProperty(authKey_(email), JSON.stringify({salt: salt, hash: passwordHash_(password, salt), version: version})); return version; }
 function issueSession_(email) { var token = Utilities.getUuid() + Utilities.getUuid(); CacheService.getScriptCache().put('session:' + digest_(token), JSON.stringify({email: email, version: credentials_(email).version}), 21600); return token; }
 function sessionUser_(token) { var raw = CacheService.getScriptCache().get('session:' + digest_(String(token || ''))); if (!raw) fail_('auth', 'Please sign in again'); var s = JSON.parse(raw), user = findUser_(s.email); if (!user || user.status !== 'active' || s.version !== credentials_(s.email).version) fail_('auth', 'Please sign in again'); return user; }
@@ -502,6 +502,7 @@ function changePassword_(req, user) { checkRate_(user.email); if (!matchesPasswo
 function resetPassword_(req, user) {
   var email=String(req.email||'').trim().toLowerCase();
   if(!findUser_(email))fail_('bad','User not found');
+  if(!INITIAL_PASSWORD_)fail_('server','The admin must configure the initial password.');
   setPassword_(email,INITIAL_PASSWORD_);
   PropertiesService.getScriptProperties().deleteProperty('reset:'+email);
   CacheService.getScriptCache().remove('attempt:'+digest_(email));
@@ -684,28 +685,28 @@ function sopData_() {
   return {categories: categories, entries: entries};
 }
 
-/* QA officers publish one ranked winner per team in Weekly Performers. */
-function weeklyPerformers_() {
-  var sh = ss_().getSheetByName('Top Performers') || ss_().getSheetByName('Weekly Performers');
-  var shifts = ['Morning','Evening','Night'], rows = sh ? readTab_(sh).rows : [], today = today_();
-  return {shifts: shifts.map(function(shift){
-    var groups = {}, keys = [];
-    rows.forEach(function(r){
-      if(s_(r.shift).trim().toLowerCase() !== shift.toLowerCase()) return;
-      var start = r.week_start ? parseDate_(r.week_start,'','') : '', end = r.week_end ? parseDate_(r.week_end,'','') : '';
-      if((r.week_start && !start)||(r.week_end && !end)||(start && end && start>end)||(start && start>today)||(end && end<today)) return;
-      var rank=Number(r.rank), name=s_(r.performer_name).trim(), week=s_(r.week).trim();
-      if(!week || !name || [1,2,3].indexOf(rank)<0 || !/^(active|published)$/i.test(s_(r.status).trim())) return;
-      var key=week+'|'+start+'|'+end;
-      if(!groups[key]){groups[key]={shift:shift,week:week,start:start,end:end,winners:[],review:false,lastRow:r._row};keys.push(key);}
-      groups[key].lastRow=r._row;groups[key].winners.push({rank:rank,name:name,team:s_(r.team_leader).trim(),details:s_(r.appreciation).trim()});
+/* One row per agent, department and year. Blank months are excluded; zero counts. */
+function ranking_(){
+  var sh=ss_().getSheetByName('Ranking'), result={years:[],entries:[],issues:[]};if(!sh)return result;
+  var months=['january','february','march','april','may','june','july','august','september','october','november','december'],seen={};
+  readTab_(sh).rows.forEach(function(r){
+    var name=s_(r.agent_name).trim(),dept=s_(r.department).trim().toUpperCase(),year=Number(r.year),id=s_(r.agent_id).trim();
+    if(!name)return;
+    if(['IB','IR'].indexOf(dept)<0||!Number.isInteger(year)||year<2000||year>2100){result.issues.push({row:r._row,year:year||null,department:dept,reason:'Check year and department'});return;}
+    if(result.years.indexOf(year)<0)result.years.push(year);
+    var values=[],total=0,count=0,invalid=false;
+    months.forEach(function(m){var v=r[m];if(v===null||v===undefined||s_(v).trim()===''){values.push(null);return;}
+      var text=s_(v).trim(),number=typeof v==='number'?v:(/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(text)?Number(text):NaN);
+      if(typeof v==='boolean'||!isFinite(number)||number<0){values.push(null);invalid=true;return;}values.push(number);total+=number;count++;
     });
-    var candidates=keys.map(function(k){return groups[k];}).sort(function(a,b){return b.start.localeCompare(a.start)||b.lastRow-a.lastRow;});
-    if(!candidates.length)return {shift:shift,week:'',start:'',end:'',winners:[],review:false};
-    var selected=candidates[0],counts={};selected.winners.forEach(function(w){counts[w.rank]=(counts[w.rank]||0)+1;});
-    selected.winners=selected.winners.filter(function(w){if(counts[w.rank]!==1){selected.review=true;return false;}return true;}).sort(function(a,b){return a.rank-b.rank;});
-    delete selected.lastRow;return selected;
-  })};
+    if(!isFinite(total))invalid=true;
+    var key=year+'|'+dept+'|'+(id||name).toLowerCase();seen[key]=(seen[key]||0)+1;
+    result.entries.push({key:key,year:year,department:dept,id:id,name:name,months:values,total:total,count:count,average:count&&!invalid?total/count:null,invalid:invalid,row:r._row});
+  });
+  result.entries.forEach(function(e){if(seen[e.key]>1){e.invalid=true;e.average=null;result.issues.push({row:e.row,year:e.year,department:e.department,reason:'Duplicate agent row'});}else if(e.invalid)result.issues.push({row:e.row,year:e.year,department:e.department,reason:'Enter non-negative numeric marks'});});
+  result.years.sort(function(a,b){return b-a;});
+  result.entries.sort(function(a,b){return b.year-a.year||a.department.localeCompare(b.department)||(a.average===null&&b.average===null?0:a.average===null?1:b.average===null?-1:b.average-a.average)||a.name.localeCompare(b.name)||a.id.localeCompare(b.id);});
+  return result;
 }
 
 function deleteFaq_(req,user){
@@ -750,7 +751,7 @@ function sectionData_(req,user){
   if(section==='notice'&&can('n')){patch.notices=notices_();patch.reports=reports_(user);}
   else if(section==='faq'&&can('f'))patch.faqs=faqs_();
   else if(section==='sop'){var sop=sopData_();patch.sops=sop.entries;patch.sopCategories=sop.categories;}
-  else if(section==='performers')patch.weeklyPerformers=weeklyPerformers_();
+  else if(section==='ranking')patch.ranking=ranking_();
   else if(section==='sheets'&&can('s')){
     patch.sheets=links_().filter(function(l){return user.role!=='viewer'||user.perms.ids==='all'||user.perms.ids.indexOf(l.id)>-1;});
     if(req.policeOpen&&patch.sheets.some(function(l){return l.type==='police';})){patch.police=police_();patch.policeMeta=policeMeta_(patch.police);}
