@@ -1183,7 +1183,7 @@ function sectionLoadStatus(key,loading,error){
   if(error){var retry=document.createElement('button');retry.className='btn sm';retry.textContent='Retry';retry.onclick=function(){ensureSection()};el.appendChild(retry);}
 }
 function ensureSection(){
-  if(!LIVE||!me||!authToken)return;
+  if(!LIVE||!me||!authToken||!curU)return;
   var key=sectionLoadKey(),token=authToken,email=me;
   if(sectionReady[key]){sectionLoadStatus(key,false,false);return;}
   if(sectionLoads[key]){sectionLoadStatus(key,true,false);return;}
