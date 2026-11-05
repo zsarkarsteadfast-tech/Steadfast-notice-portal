@@ -344,6 +344,12 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 .latest-announcement-close-wrap{position:relative;display:inline-flex;flex:none}
 .latest-announcement-ack{position:absolute;right:0;top:calc(100% + 10px);width:min(280px,calc(100vw - 80px));padding:11px 14px;border:1px solid var(--bd);border-radius:12px;background:var(--dlg);color:var(--ink);box-shadow:var(--sh);font-size:12px;line-height:1.6;text-align:left;opacity:0;visibility:hidden;pointer-events:none;z-index:3}
 .latest-announcement-close:hover+.latest-announcement-ack{opacity:1;visibility:visible}
+
+/* Opaque themed surfaces keep popup and acknowledgement text legible. */
+.latest-announcement{background:linear-gradient(145deg,var(--b1),var(--b3));border-color:var(--bd)}
+.latest-announcement-head{background:linear-gradient(110deg,var(--b2),var(--b1))}
+.latest-announcement-content{background:linear-gradient(145deg,var(--b1),var(--b3))}
+.latest-announcement-ack{background:linear-gradient(145deg,var(--b1),var(--b3));border-color:var(--bd);box-shadow:0 8px 24px rgba(0,0,0,.22);isolation:isolate}
 </style>
 </head>
 <body>
