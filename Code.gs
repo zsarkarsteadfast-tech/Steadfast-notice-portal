@@ -825,7 +825,8 @@ function stampNotices_(rows){
   rows.forEach(function(n){
     var key='notice-stamp:'+digest_(String(n.tab)+'|'+n.id),old;
     try{old=JSON.parse(all[key]||'null');}catch(e){}
-    var revision=digest_(JSON.stringify([n.date,n.title,n.body,n.topics,n.cat,n.urgent,n.expired]));
+    var revisionFields=[n.date,n.title,n.body,n.cat,n.urgent,n.expired];if(n.topics&&n.topics.length)revisionFields.push(n.topics);
+    var revision=digest_(JSON.stringify(revisionFields));
     var at=old&&old.revision===revision?old.at:old||ready?now:(n.date?n.date+'T00:00:00Z':now);
     n.updatedAt=at;
     if(!old||old.revision!==revision)changes[key]=JSON.stringify({revision:revision,at:at});
