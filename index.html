@@ -337,6 +337,8 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 .latest-announcement-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--mut);margin-bottom:12px}
 .latest-announcement-content h3{font-size:19px;line-height:1.5;margin:0 0 12px;overflow-wrap:anywhere}
 .latest-announcement-body{font-size:14px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+
+.announcement-form{max-width:800px}.announcement-form label{display:grid;gap:7px;margin-top:18px;font-size:13px;font-weight:600}.announcement-form select,.announcement-form input{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--bd);border-radius:12px;background:var(--dlg);color:var(--ink);font:inherit}.announcement-form select option{background:var(--bg);color:var(--ink)}.announcement-times{display:grid;grid-template-columns:1fr 1fr;gap:16px}.announcement-form p{font-size:12px;line-height:1.7;color:var(--mut)}.announcement-form .announcement-error{color:var(--red)}.translation-status{font-size:11px;color:var(--mut);margin:10px 0 0}@media(max-width:600px){.announcement-times{grid-template-columns:1fr;gap:0}}
 </style>
 </head>
 <body>
@@ -448,7 +450,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
  </section>
 <section id="pAdmin" class="hide">
   <div class="head"><svg class="t"><use href="#tr"/></svg><div><h1 data-i="adTitle"></h1><p data-i="adSub"></p></div><button class="btn line" id="adminNotices" data-i="manageNotices"></button><button class="btn" id="adNew" data-i="adNew"></button></div>
-  <div class="seg admin-tabs" id="adTabs" style="margin-bottom:16px"><button data-v="req"></button><button data-v="usr"></button><button data-v="notices"></button><button data-v="history"></button></div>
+  <div class="seg admin-tabs" id="adTabs" style="margin-bottom:16px"><button data-v="req"></button><button data-v="usr"></button><button data-v="notices"></button><button data-v="history"></button><button data-v="announcement"></button></div>
   <div id="adminUserTools" class="hide"><div class="seg wide" id="adminUserGroups"><button type="button" data-user-group="staff">Admins &amp; Editors</button><button type="button" data-user-group="users">Users</button></div><form id="adminUserSearchForm" class="admin-user-search"><input id="adminUserQ" type="search" aria-label="Search users by email or name" placeholder="Search email or name"><button class="btn" type="submit" data-i="userSearch">Search</button></form></div>
   <div id="adList"></div>
  </section>
@@ -573,7 +575,7 @@ function secList(){var l=["notice","faq","sop","ranking","sheets"].filter(can);i
 function findU(e){return users.filter(function(u){return u.email===e})[0]}
 function toast(m){if(LIVE&&pending>0&&m===t("saved"))return;var x=$("toast");x.textContent=m;x.className="toast show";setTimeout(function(){x.className="toast"},1600)}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-function L(v){return typeof v==="string"?v:(v[lang]||v.en)}
+function L(v){if(v===null||v===undefined)return "";if(typeof v!=="string")return v[lang]||v.en||v.bn||"";return lang==="bn"&&noticeTranslationText&&noticeTranslationText[v]?noticeTranslationText[v]:v}
 function allTxt(v){return typeof v==="string"?v:Object.keys(v).map(function(k){return v[k]}).join(" ")}
 function fmt(d){return new Date(d+"T00:00:00").toLocaleDateString(lang==="bn"?"bn-BD":"en-GB",{day:"numeric",month:"short",year:"numeric"})}
 var MON={en:["January","February","March","April","May","June","July","August","September","October","November","December"],bn:["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"]};
@@ -637,6 +639,8 @@ function ui(){
   if(!$("lgErr").classList.contains("hide"))$("lgErr").textContent=t(errKey);
   [["roleViewer","roleEditor","roleAdmin"],["stActive","stBlocked"]].forEach(function(ks,i){var s=$(i?"uSt":"uRole");ks.forEach(function(k,j){s.options[j].textContent=t(k)})});
   render();
+  if($("latestAnnouncement")&&$("latestAnnouncement").open)renderLatestAnnouncement();
+  scheduleNoticeTranslation();
 }
 function inGrp(n){return (n.src||"cs")===grp}
 function chips(){
@@ -655,7 +659,7 @@ function listHtml(){
     var a=ib("copy",n.id,IC.copy,t("copy"));
     if(!isEd()&&!n.expired)a+=ib("report",n.id,IC.flag,mine?t("reported"):t("rpt"),mine);
     if(isEd())a+='<span class="sp"></span><button class="btn sm" data-a="exp" data-id="'+n.id+'">'+(n.expired?t("restore"):t("mark"))+'</button>'+((!LIVE||isAdmin())?'<button class="btn sm" data-a="edit" data-id="'+n.id+'">'+t("edit")+'</button>':'')+(LIVE?'':'<button class="btn sm danger" data-a="del" data-id="'+n.id+'">'+t("del")+'</button>');
-    return '<article class="card'+(n.expired?' exp':'')+(red?' rep':'')+'"><div class="meta">'+tags+'<span>'+fmt(n.date)+'</span>'+right+'</div><h3>'+esc(L(n.title))+'</h3><p class="notice-body'+(expandedNotices[n.id]?' expanded':'')+'" id="body-'+n.id+'">'+esc(L(n.body))+'</p>'+(String(L(n.body)).length>260?'<button type="button" class="read-more" data-a="read" data-id="'+n.id+'">'+t(expandedNotices[n.id]?"readLess":"readFull")+'</button>':'')+updHtml(n)+'<div class="acts">'+a+'</div></article>';
+    return '<article data-notice-id="'+esc(n.id)+'" class="card'+(n.expired?' exp':'')+(red?' rep':'')+'"><div class="meta">'+tags+'<span>'+fmt(n.date)+'</span>'+right+'</div><h3>'+esc(L(n.title))+'</h3><p class="notice-body'+(expandedNotices[n.id]?' expanded':'')+'" id="body-'+n.id+'">'+esc(L(n.body))+'</p>'+translationLabel(n)+(String(L(n.body)).length>260?'<button type="button" class="read-more" data-a="read" data-id="'+n.id+'">'+t(expandedNotices[n.id]?"readLess":"readFull")+'</button>':'')+updHtml(n)+'<div class="acts">'+a+'</div></article>';
   }).join("");
 }
 function repHtml(){
@@ -685,11 +689,11 @@ function renderCurrent(){
 }
 function renderChanged(keys){
   if(keys.indexOf('ticker')>=0)tick();
-  var deps={notice:['notices','reports'],faq:['faqs'],sop:['sops','sopCategories'],ranking:['ranking'],sheets:['sheets','police','policeMeta'],admin:['users','resetRequests','notices','reports','history']};
+  var deps={notice:['notices','reports'],faq:['faqs'],sop:['sops','sopCategories'],ranking:['ranking'],sheets:['sheets','police','policeMeta'],admin:['users','resetRequests','notices','reports','history','announcementConfig']};
   if((deps[section]||[]).some(function(k){return keys.indexOf(k)>=0;}))renderCurrent();
 }
 function changedPatch(patch){
-  var current={notices:notices,reports:reports,faqs:faqs,sops:sops,sopCategories:sopCategories,ranking:ranking,sheets:sheets,police:police,policeMeta:policeMeta,users:users,resetRequests:resetRequests,history:editHistory,ticker:ticker};
+  var current={announcementConfig:announcementConfig,notices:notices,reports:reports,faqs:faqs,sops:sops,sopCategories:sopCategories,ranking:ranking,sheets:sheets,police:police,policeMeta:policeMeta,users:users,resetRequests:resetRequests,history:editHistory,ticker:ticker};
   var changed={};Object.keys(current).forEach(function(k){if(Object.prototype.hasOwnProperty.call(patch||{},k)&&JSON.stringify(current[k])!==JSON.stringify(patch[k]))changed[k]=patch[k];});return changed;
 }
 function renderNotice(){
@@ -707,6 +711,7 @@ function renderNotice(){
   tb[0].textContent=t("tabN");tb[1].textContent=t("tabR")+" ("+pn+")";
   tb[0].className=rv?"":"on";tb[1].className=(rv?"on":"")+(pn&&!rv?" al":"");
   $("list").innerHTML=rv?repHtml():listHtml();
+  scheduleNoticeTranslation();
 }
 function faqChips(){
   var cs=[];faqs.forEach(function(f){if(f.cat&&cs.indexOf(f.cat)<0)cs.push(f.cat)});
@@ -1062,11 +1067,12 @@ function renderAdmin(){
   document.querySelectorAll("#adminUserGroups button").forEach(function(b){var staff=b.dataset.userGroup==="staff";b.textContent=t(staff?"staffGroup":"usersGroup")+" ("+(staff?staffCount:viewerCount)+")";b.classList.toggle("on",b.dataset.userGroup===adminUserGroup)});
   var pend=users.filter(function(u){return u.status==="pending"}),act=users.filter(function(u){return u.status!=="pending"}),resetReqs=resetRequests||[];
   var tb=$("adTabs").children;
-  var labels=[t("adReq")+" ("+(pend.length+resetReqs.length)+")",t("adUsr")+" ("+act.length+")",t("adManageNotices"),t("adHistory")];
-  ["req","usr","notices","history"].forEach(function(v,i){tb[i].textContent=labels[i];tb[i].className=(adView===v?"on":"")+(v==="req"&&pend.length&&adView!=="req"?" al":"");tb[i].classList.toggle("has-requests",v==="req"&&(pend.length+resetReqs.length)>0);tb[i].title=v==="req"&&(pend.length+resetReqs.length)>0?t("adReq")+" — pending requests":t("adReq")});
-  $("adNew").classList.toggle("hide",adView==="history");
+  var labels=[t("adReq")+" ("+(pend.length+resetReqs.length)+")",t("adUsr")+" ("+act.length+")",t("adManageNotices"),t("adHistory"),lang==="bn"?"পপআপ নিয়ন্ত্রণ":"Announcement popup"];
+  ["req","usr","notices","history","announcement"].forEach(function(v,i){tb[i].textContent=labels[i];tb[i].className=(adView===v?"on":"")+(v==="req"&&pend.length&&adView!=="req"?" al":"");tb[i].classList.toggle("has-requests",v==="req"&&(pend.length+resetReqs.length)>0);tb[i].title=v==="req"&&(pend.length+resetReqs.length)>0?t("adReq")+" — pending requests":t("adReq")});
+  $("adNew").classList.toggle("hide",adView==="history"||adView==="announcement");
   $("adNew").textContent=adView==="notices"?t("new"):t("adNew");
-  $("adminNotices").classList.toggle("hide",adView==="notices"||adView==="history");
+  $("adminNotices").classList.toggle("hide",adView==="notices"||adView==="history"||adView==="announcement");
+  if(adView==="announcement"){renderAnnouncementSettings();return;}
   if(adView==="notices"){
     if(!notices.length){$("adList").innerHTML='<div class="empty">'+t("none")+'</div>';return}
     $("adList").innerHTML=notices.slice().sort(function(a,b){return String(b.date||"").localeCompare(String(a.date||""))}).map(function(n){
@@ -1170,7 +1176,7 @@ function saveProgress(on){
 }
 function api(action,data){
   var body=Object.assign({action:action,email:me,token:authToken},data||{});
-  var write=!/^(load|loadSection|login|logout|forgotPassword)$/.test(action);
+  var write=!/^(load|loadSection|login|logout|forgotPassword|translateNotices)$/.test(action);
   var restoreButton=function(){};if(write){activeWrites++;pending++;loadSequence++;restoreButton=buttonSaving();}
   return fetch(CFG.API_URL,{method:"POST",cache:"no-store",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)})
     .then(function(r){if(!r.ok)throw new Error('Server unavailable. Please try again.');return r.json()})
@@ -1183,7 +1189,8 @@ function sync(a,data){if(!LIVE)return Promise.resolve();
 }
 function applyData(d){
   if(!d||(!d.user&&!d.patch))return;
-  if(d.patch)d=Object.assign({ranking:ranking,sops:sops,sopCategories:sopCategories,notices:notices,reports:reports,faqs:faqs,sheets:sheets,ticker:ticker,police:police,policeMeta:policeMeta,history:editHistory,resetRequests:resetRequests},d.patch);
+  if(d.patch)d=Object.assign({announcementConfig:announcementConfig,ranking:ranking,sops:sops,sopCategories:sopCategories,notices:notices,reports:reports,faqs:faqs,sheets:sheets,ticker:ticker,police:police,policeMeta:policeMeta,history:editHistory,resetRequests:resetRequests},d.patch);
+  if(d.announcementConfig)announcementConfig=d.announcementConfig;
   ranking=d.ranking||{years:[],entries:[],issues:[]};if(rankingSelectedKey&&$("rankingDialog").open)renderRankingDetails();
   sops=Array.isArray(d.sops)?d.sops:[];sopCategories=Array.isArray(d.sopCategories)?d.sopCategories:[];
   notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;policeMeta=d.policeMeta||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];resetRequests=Array.isArray(d.resetRequests)?d.resetRequests:[];
@@ -1197,21 +1204,93 @@ function applyData(d){
 function ensureSection(){}
 
 
-var latestAnnouncementShown=false;
+
+var announcementConfig={mode:'latest',noticeId:'',startsAt:'',endsAt:''},announcementFormDirty=false;
+var latestAnnouncementShown=false,latestAnnouncementId='';
+var noticeTranslationText=Object.create(null),translationBusy=false,translationRetryAt=Object.create(null),translationTimer;
+function selectedAnnouncement(now){
+  var c=announcementConfig||{},time=now||Date.now();
+  if(c.mode==='off'||(c.startsAt&&Date.parse(c.startsAt)>time)||(c.endsAt&&Date.parse(c.endsAt)<=time))return null;
+  var rows=notices.filter(function(n){return !n.expired&&(L(n.title||'')||L(n.body||''));});
+  if(c.mode==='manual')return rows.find(function(n){return String(n.id)===String(c.noticeId);})||null;
+  return rows.map(function(n,i){return {n:n,i:i};}).sort(function(a,b){return String(b.n.updatedAt||b.n.date||'').localeCompare(String(a.n.updatedAt||a.n.date||''))||b.i-a.i;})[0]?.n||null;
+}
+function renderLatestAnnouncement(){
+  var n=notices.find(function(n){return String(n.id)===latestAnnouncementId;});
+  if(!n||!$('latestAnnouncementContent'))return;
+  $('latestAnnouncementHeading').textContent=lang==='bn'?'সর্বশেষ ঘোষণা':'Latest Announcement';
+  $('latestAnnouncement').querySelector('button').setAttribute('aria-label',lang==='bn'?'ঘোষণা বন্ধ করুন':'Close latest announcement');
+  $('latestAnnouncementContent').innerHTML='<div class="latest-announcement-meta"><span>'+esc(n.src==='qa'?(lang==='bn'?'QA নির্দেশনা':'QA Follow-up'):(lang==='bn'?'অফিসিয়াল নোটিশ':'Official Notice'))+'</span>'+(n.date?'<span>· '+esc(fmt(n.date))+'</span>':'')+'</div><h3>'+esc(L(n.title||''))+'</h3><p class="latest-announcement-body">'+esc(L(n.body||''))+'</p>'+translationLabel(n);
+  scheduleNoticeTranslation();
+}
 function showLatestAnnouncement(){
   if(latestAnnouncementShown||!curU||!can('notice'))return;
-  var eligible=notices.map(function(n,i){return {notice:n,index:i};}).filter(function(item){var n=item.notice;return !n.expired&&(L(n.title||'')||L(n.body||''));});
-  eligible.sort(function(a,b){var ad=String(a.notice.date||''),bd=String(b.notice.date||'');return bd.localeCompare(ad)||b.index-a.index;});
-  if(!eligible.length)return;
-  var n=eligible[0].notice,dialog=$('latestAnnouncement');
+  var n=selectedAnnouncement();if(!n)return;
+  var dialog=$('latestAnnouncement');
   if(!dialog){
     dialog=document.createElement('dialog');dialog.id='latestAnnouncement';dialog.className='latest-announcement';dialog.setAttribute('aria-labelledby','latestAnnouncementHeading');
-    dialog.innerHTML='<div class="latest-announcement-head"><h2 id="latestAnnouncementHeading">Latest Announcement</h2><button type="button" class="latest-announcement-close" aria-label="Close latest announcement" autofocus>×</button></div><div class="latest-announcement-content" id="latestAnnouncementContent"></div>';
-    document.body.appendChild(dialog);
-    dialog.querySelector('button').onclick=function(){dialog.close();};
+    dialog.innerHTML='<div class="latest-announcement-head"><h2 id="latestAnnouncementHeading"></h2><button type="button" class="latest-announcement-close" aria-label="Close latest announcement" autofocus>×</button></div><div class="latest-announcement-content" id="latestAnnouncementContent"></div>';
+    document.body.appendChild(dialog);dialog.querySelector('button').onclick=function(){dialog.close();};
   }
-  $('latestAnnouncementContent').innerHTML='<div class="latest-announcement-meta"><span>'+esc(n.src==='qa'?'QA Follow-up':'Official Notice')+'</span>'+(n.date?'<span>· '+esc(fmt(n.date))+'</span>':'')+'</div><h3>'+esc(L(n.title||''))+'</h3><p class="latest-announcement-body">'+esc(L(n.body||''))+'</p>';
-  latestAnnouncementShown=true;dialog.showModal();
+  latestAnnouncementId=String(n.id);latestAnnouncementShown=true;renderLatestAnnouncement();dialog.showModal();
+}
+function sourceNoticeText(v){return typeof v==='string'?v:String(v&&v.en||'');}
+function needsNoticeTranslation(n){
+  return ['title','body'].some(function(k){var v=n[k];if(v&&typeof v==='object'&&v.bn)return false;var text=sourceNoticeText(v),latin=(text.match(/[A-Za-z]/g)||[]).length,bn=(text.match(/[\u0980-\u09ff]/g)||[]).length;return latin>bn&&!noticeTranslationText[text];});
+}
+function translationLabel(n){
+  if(lang!=='bn'||!needsNoticeTranslation(n))return '';
+  var failed=translationRetryAt[String(n.id)]>Date.now();
+  return '<p class="translation-status" role="status">'+(failed?'বাংলা অনুবাদ পাওয়া যায়নি। কিছুক্ষণ পর আবার চেষ্টা হবে।':'বাংলা অনুবাদ হচ্ছে…')+'</p>';
+}
+function scheduleNoticeTranslation(){
+  clearTimeout(translationTimer);if(!LIVE||lang!=='bn'||!curU||!can('notice'))return;
+  translationTimer=setTimeout(translateVisibleNotices,100);
+}
+function translateVisibleNotices(){
+  if(translationBusy||!LIVE||lang!=='bn'||!curU||!can('notice'))return;
+  var ids=[],popup=$('latestAnnouncement');
+  if(popup&&popup.open)ids.push(latestAnnouncementId);
+  document.querySelectorAll('#list [data-notice-id]').forEach(function(el){var r=el.getBoundingClientRect();if(r.height&&r.bottom>=0&&r.top<window.innerHeight*1.5)ids.push(el.dataset.noticeId);});
+  ids=ids.filter(function(id,i){var n=notices.find(function(n){return String(n.id)===String(id);});return ids.indexOf(id)===i&&n&&needsNoticeTranslation(n)&&!(translationRetryAt[id]>Date.now());}).slice(0,3);
+  if(!ids.length)return;
+  var token=authToken,email=me;translationBusy=true;
+  api('translateNotices',{ids:ids}).then(function(d){
+    if(token!==authToken||email!==me)return;
+    (d.translations||[]).forEach(function(tr){var n=notices.find(function(n){return String(n.id)===String(tr.id);});if(!n||sourceNoticeText(n.title)!==tr.sourceTitle||sourceNoticeText(n.body)!==tr.sourceBody)return;noticeTranslationText[tr.sourceTitle]=tr.titleBn;noticeTranslationText[tr.sourceBody]=tr.bodyBn;delete translationRetryAt[String(tr.id)];});
+    (d.failed||[]).forEach(function(id){translationRetryAt[String(id)]=Date.now()+60000;});
+    ids.forEach(function(id){if(!(d.translations||[]).some(function(tr){return String(tr.id)===String(id);}))translationRetryAt[id]=Date.now()+60000;});
+    if(lang==='bn'){if(section==='notice')renderNotice();if(popup&&popup.open)renderLatestAnnouncement();}
+  }).catch(function(e){
+    if(token!==authToken||email!==me)return;
+    if(e.code==='auth'||e.code==='denied'||e.code==='pending'){failLogin(e,email);return;}
+    ids.forEach(function(id){translationRetryAt[id]=Date.now()+60000;});
+    if(lang==='bn'){if(section==='notice')renderNotice();if(popup&&popup.open)renderLatestAnnouncement();}
+  }).finally(function(){translationBusy=false;if(token===authToken&&email===me)scheduleNoticeTranslation();});
+}
+window.addEventListener('scroll',scheduleNoticeTranslation,{passive:true});
+function renderAnnouncementSettings(){
+  if(announcementFormDirty&&$('announcementForm'))return;
+  var bn=lang==='bn',c=announcementConfig;
+  function label(en,bangla){return bn?bangla:en;}
+  function localTime(iso){if(!iso)return '';var d=new Date(iso);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);}
+  var options=notices.filter(function(n){return !n.expired;}).slice().sort(function(a,b){return String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||''));}).map(function(n){return '<option value="'+esc(n.id)+'"'+(String(c.noticeId)===String(n.id)?' selected':'')+'>'+esc(n.date+' · '+L(n.title||'').slice(0,120))+'</option>';}).join('');
+  $('adList').innerHTML='<form id="announcementForm" class="card announcement-form"><h3>'+label('Announcement popup controls','ঘোষণার পপআপ নিয়ন্ত্রণ')+'</h3><label>'+label('Display mode','প্রদর্শনের ধরন')+'<select id="announcementMode"><option value="latest">'+label('Automatic — latest published or updated notice','স্বয়ংক্রিয় — সর্বশেষ প্রকাশিত বা আপডেট হওয়া নোটিশ')+'</option><option value="manual">'+label('Choose a notice','নির্দিষ্ট নোটিশ নির্বাচন')+'</option><option value="off">'+label('Turn popup off','পপআপ বন্ধ')+'</option></select></label><label id="announcementNoticeLabel">'+label('Notice to show','যে নোটিশটি দেখাবেন')+'<select id="announcementNotice"><option value="">'+label('Select a notice','নোটিশ নির্বাচন করুন')+'</option>'+options+'</select></label><div class="announcement-times"><label>'+label('Start time (blank = now)','শুরুর সময় (ফাঁকা = এখন)')+'<input id="announcementStart" type="datetime-local" value="'+esc(localTime(c.startsAt))+'"></label><label>'+label('End time (blank = no expiry)','শেষ সময় (ফাঁকা = মেয়াদ নেই)')+'<input id="announcementEnd" type="datetime-local" value="'+esc(localTime(c.endsAt))+'"></label></div><p>'+label('Automatic mode keeps the latest notice until a newer notice is published or updated. Times use your device timezone. Changes apply on the next sign-in or refresh.','স্বয়ংক্রিয়ভাবে সর্বশেষ নোটিশটি পরের প্রকাশিত বা আপডেট হওয়া নোটিশ আসা পর্যন্ত থাকবে। সময় আপনার ডিভাইসের টাইমজোন অনুযায়ী। পরের লগইন বা রিফ্রেশে পরিবর্তন কার্যকর হবে।')+'</p><p id="announcementError" role="alert" class="announcement-error"></p><div class="acts"><button class="btn" type="submit">'+label('Save popup settings','পপআপ সেটিংস সংরক্ষণ')+'</button><button class="btn line" id="announcementPreview" type="button">'+label('Preview','প্রিভিউ')+'</button></div></form>';
+  $('announcementMode').value=c.mode||'latest';
+  function mode(){var manual=$('announcementMode').value==='manual';$('announcementNoticeLabel').classList.toggle('hide',!manual);$('announcementNotice').required=manual;}
+  mode();$('announcementMode').onchange=function(){announcementFormDirty=true;mode();};
+  $('announcementForm').oninput=function(){announcementFormDirty=true;};
+  $('announcementForm').onsubmit=function(e){
+    e.preventDefault();function utc(id){var v=$(id).value;return v?new Date(v).toISOString():'';}
+    var next={mode:$('announcementMode').value,noticeId:$('announcementNotice').value,startsAt:utc('announcementStart'),endsAt:utc('announcementEnd')};
+    if(next.endsAt&&Date.parse(next.endsAt)<=(next.startsAt?Date.parse(next.startsAt):Date.now())){$('announcementError').textContent=label('End time must be after the start time.','শেষ সময় অবশ্যই শুরুর সময়ের পরে হতে হবে।');return;}
+    api('saveAnnouncement',{config:next}).then(function(){announcementFormDirty=false;renderAnnouncementSettings();}).catch(function(e){$('announcementError').textContent=e.message||label('Could not save.','সংরক্ষণ করা যায়নি।');});
+  };
+  $('announcementPreview').onclick=function(){
+    var saved=announcementConfig;announcementConfig={mode:$('announcementMode').value,noticeId:$('announcementNotice').value,startsAt:'',endsAt:''};var n=selectedAnnouncement();announcementConfig=saved;
+    if(!n){toast(label('No eligible notice selected.','উপযুক্ত নোটিশ নির্বাচন করা হয়নি।'));return;}
+    var wasShown=latestAnnouncementShown;latestAnnouncementShown=false;var temp=announcementConfig;announcementConfig={mode:'manual',noticeId:String(n.id),startsAt:'',endsAt:''};showLatestAnnouncement();announcementConfig=temp;latestAnnouncementShown=wasShown;
+  };
 }
 
 function enter(d,email){
