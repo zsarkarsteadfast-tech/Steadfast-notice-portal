@@ -174,6 +174,7 @@ function noticesOf_(nt) {
     out.push({
       id: id, tab: nt.tab, src: nt.group, date: date,
       cat: s_(r.type).replace(/\s+/g, ' ').trim() || 'General',
+      topics: parseNoticeTopics_(r.topics),
       title: title, body: externalChange ? sp.body : (d.cols.body !== undefined && s_(r.body) ? s_(r.body) : sp.body), expires: r.expires ? parseDate_(r.expires, "", "") : "", revision: digest_(JSON.stringify(r)), urgent: urgent ? 1 : 0, expired: exp ? 1 : 0,
       ann: nz_(r.announced_by), appr: nz_(r.approved_by),
       upd: {by: nz_(r.sheet_update_by), at: ''}
@@ -562,6 +563,9 @@ function saveNotice_(req, user) {
   if (!nt || !target) fail_('bad', 'Unknown notice group');
   if (creating) nt = target;
   var title = s_(req.title).trim(), body = s_(req.body).trim(), category = s_(req.cat).trim();
+  var topics=parseNoticeTopics_(req.topics);
+  if(Array.isArray(req.topics)&&req.topics.length>10)fail_('bad','A notice can contain up to 10 additional topics');
+  if(topics.some(function(t){return !t.title||t.title.length>200||t.body.length>5000;})||JSON.stringify(topics).length>45000)fail_('bad','Each topic needs a title (up to 200 characters) and a body of up to 5000 characters');
   if (!title || !category || title.length > 1000 || body.length > 40000 || category.length > 150) fail_('bad', 'Invalid notice content');
   var validDate = function (v) {
     if (!v) return true;
@@ -614,15 +618,16 @@ function saveNotice_(req, user) {
       hit.notice_id = id;
     }
   }
+  if(!creating&&!Object.prototype.hasOwnProperty.call(req,'topics'))topics=parseNoticeTopics_(hit.topics);
   var dest = tab_(target.tab), destData = target.tab === nt.tab ? data : readTab_(dest);
   var fields = {
-    notice_id: id, title: title, body: body, notice: title + (body ? '\n\n' + body : ''),
+    notice_id: id, title: title, body: body, topics: JSON.stringify(topics), notice: title + (body ? '\n\n' + body : ''),
     type: category, urgent: req.urgent ? 'Yes' : 'No', expired: req.expired ? 'Yes' : '',
     status: req.expired ? 'Expired' : 'Active', date: date, year: date ? date.slice(0, 4) : '',
     month: date ? MONTHS_[Number(date.slice(5, 7)) - 1] : '', expires: expires,
     announced_by: s_(req.ann).trim(), approved_by: s_(req.appr).trim(), sheet_update_by: user.name || user.email
   };
-  var headerNames = {notice_id:'Notice ID', title:'Title', body:'Body', notice:'Notice', type:'Type', urgent:'Urgent', expired:'Expired', status:'Status', date:'Date', year:'Year', month:'Month', expires:'Expires', announced_by:'Announced By', approved_by:'Approved By', sheet_update_by:'Sheet Update By'};
+  var headerNames = {topics:'Topics',notice_id:'Notice ID', title:'Title', body:'Body', notice:'Notice', type:'Type', urgent:'Urgent', expired:'Expired', status:'Status', date:'Date', year:'Year', month:'Month', expires:'Expires', announced_by:'Announced By', approved_by:'Approved By', sheet_update_by:'Sheet Update By'};
   Object.keys(fields).forEach(function (key) {
     if (destData.cols[key] === undefined) {
       var col = dest.getLastColumn();
@@ -803,13 +808,15 @@ function announcementConfig_(){
 }
 function saveAnnouncement_(req,user){
   if(user.role!=='admin')fail_('forbidden','Admins only');
-  var c=req.config||{},mode=String(c.mode||''),id=String(c.noticeId||'');
+  var c=req.config||{},mode=String(c.mode||''),ids=(Array.isArray(c.noticeIds)?c.noticeIds:[c.noticeId]).filter(Boolean).map(String);
+  if(ids.length>2)fail_('bad','Choose up to two notices');
+  if(ids.length!==ids.filter(function(id,i){return ids.indexOf(id)===i;}).length)fail_('bad','Choose two different notices');
   if(['latest','manual','off'].indexOf(mode)<0)fail_('bad','Invalid announcement mode');
-  if(mode==='manual'&&!notices_().some(function(n){return String(n.id)===id&&!n.expired;}))fail_('bad','Choose an active notice');
+  if(mode==='manual'){var active=notices_().filter(function(n){return !n.expired;}).map(function(n){return String(n.id);});if(!ids.length||ids.some(function(id){return active.indexOf(id)<0;}))fail_('bad','Choose active notices');}
   function time(v){if(!v)return '';var d=new Date(String(v));if(isNaN(d.getTime()))fail_('bad','Invalid display time');return d.toISOString();}
   var start=time(c.startsAt),end=time(c.endsAt);
   if(end&&new Date(end).getTime()<=(start?new Date(start).getTime():Date.now()))fail_('bad','End time must be after the start time');
-  var out={mode:mode,noticeId:mode==='manual'?id:'',startsAt:start,endsAt:end};
+  var out={mode:mode,noticeId:mode==='manual'?ids[0]:'',noticeIds:mode==='manual'?ids:[],startsAt:start,endsAt:end};
   PropertiesService.getScriptProperties().setProperty('PORTAL_ANNOUNCEMENT',JSON.stringify(out));
   return {ok:true,patch:{announcementConfig:out}};
 }
@@ -818,7 +825,7 @@ function stampNotices_(rows){
   rows.forEach(function(n){
     var key='notice-stamp:'+digest_(String(n.tab)+'|'+n.id),old;
     try{old=JSON.parse(all[key]||'null');}catch(e){}
-    var revision=digest_(JSON.stringify([n.date,n.title,n.body,n.cat,n.urgent,n.expired]));
+    var revision=digest_(JSON.stringify([n.date,n.title,n.body,n.topics,n.cat,n.urgent,n.expired]));
     var at=old&&old.revision===revision?old.at:old||ready?now:(n.date?n.date+'T00:00:00Z':now);
     n.updatedAt=at;
     if(!old||old.revision!==revision)changes[key]=JSON.stringify({revision:revision,at:at});
@@ -841,10 +848,16 @@ function translateNotices_(req,user){
   rows.filter(function(n){return ids.indexOf(String(n.id))>=0;}).forEach(function(n){
     try{
       var title=typeof n.title==='string'?n.title:String(n.title.en||''),body=typeof n.body==='string'?n.body:String(n.body.en||'');
-      var key='bn:'+digest_(title+'\n'+body);
-      var translated=portalCached_(key,function(){return {titleBn:translateNoticeText_(title),bodyBn:translateNoticeText_(body)};},21600000);
-      out.push({id:n.id,sourceTitle:title,sourceBody:body,titleBn:translated.titleBn,bodyBn:translated.bodyBn});
+      var topics=n.topics||[],key='bn:'+digest_(title+'\n'+body+'\n'+JSON.stringify(topics));
+      var translated=portalCached_(key,function(){return {titleBn:translateNoticeText_(title),bodyBn:translateNoticeText_(body),topics:topics.map(function(t){return {sourceTitle:t.title,sourceBody:t.body,titleBn:translateNoticeText_(t.title),bodyBn:translateNoticeText_(t.body)};})};},21600000);
+      out.push({id:n.id,sourceTitle:title,sourceBody:body,titleBn:translated.titleBn,bodyBn:translated.bodyBn,topics:translated.topics||[]});
     }catch(e){failed.push(n.id);}
   });
   return {ok:true,translations:out,failed:failed};
+}
+
+function parseNoticeTopics_(value){
+  var rows=value;if(typeof value==='string'){try{rows=JSON.parse(value||'[]');}catch(e){return [];}}
+  if(!Array.isArray(rows))return [];
+  return rows.map(function(t){return {title:s_(t&&t.title).trim(),body:s_(t&&t.body).trim()};}).filter(function(t){return t.title||t.body;});
 }
