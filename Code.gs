@@ -19,12 +19,15 @@ var POLICE_TAB = 'Police Station';
 function doGet() { return out_({ok: true, name: 'Steadfast Update Hub API'}); }
 
 function doPost(e) {
+  var req,changed=false;
   try {
-    var req = JSON.parse(e.postData.contents);
+    req = JSON.parse(e.postData.contents);
+    changed=!/^(login|logout|load|loadSection)$/.test(req.action||'');
+    if(changed)invalidatePortalCache_();
     return out_(handle_(req));
   } catch (err) {
     return out_({error: String(err.message || err), code: err.code || 'error'});
-  }
+  } finally { if(changed)invalidatePortalCache_(); }
 }
 
 function out_(o) {
@@ -294,7 +297,8 @@ function userOf_(r) {
     req: s_(r.requested_at)
   };
 }
-function users_() { return readTab_(tab_('Users')).rows.map(userOf_).filter(function (u) { return u.email; }); }
+var requestUsers_;
+function users_() { if(!requestUsers_)requestUsers_=readTab_(tab_('Users')).rows.map(userOf_).filter(function(u){return u.email;}); return requestUsers_; }
 function findUser_(email) {
   var all = users_();
   for (var i = 0; i < all.length; i++) if (all[i].email === email) {
@@ -337,22 +341,50 @@ function history_() {
   });
 }
 
+/* Small, private server cache shared by authenticated reads. Permissions are
+ * applied after retrieval; account status and credentials are checked every request.
+ * Short expiry also covers edits/imports that do not fire the sheet edit trigger. */
+function portalCacheKey_(name) { return 'portal-v24:' + name; }
+function invalidatePortalCache_() {
+  CacheService.getScriptCache().removeAll([portalCacheKey_('shared'),portalCacheKey_('history')]);
+}
+function portalCached_(name,build) {
+  var cache=CacheService.getScriptCache(),key=portalCacheKey_(name),meta,parts,values;
+  try {
+    meta=JSON.parse(cache.get(key)||'null');
+    if(meta&&meta.count>0&&meta.count<=100&&Date.now()-meta.at<8000){
+      parts=[];for(var i=0;i<meta.count;i++)parts.push(key+':'+meta.id+':'+i);
+      values=cache.getAll(parts);
+      if(parts.every(function(k){return typeof values[k]==='string';}))return JSON.parse(parts.map(function(k){return values[k];}).join(''));
+    }
+  } catch(ignored) {}
+  var result=build();
+  try {
+    var raw=JSON.stringify(result),id=Utilities.getUuid(),chunks={},count=Math.ceil(raw.length/12000);
+    if(count>0&&count<=100){
+      for(var j=0;j<count;j++)chunks[key+':'+id+':'+j]=raw.slice(j*12000,(j+1)*12000);
+      cache.putAll(chunks,30);
+      cache.put(key,JSON.stringify({id:id,count:count,at:Date.now()}),30);
+    }
+  } catch(ignored) {}
+  return result;
+}
+function sharedPortalData_() {
+  return portalCached_('shared',function(){
+    var sop=sopData_(),links=links_(),police=links.some(function(l){return l.type==='police';})?police_():null;
+    return {notices:notices_(),faqs:faqs_(),sops:sop.entries,sopCategories:sop.categories,
+      ranking:ranking_(),sheets:links,police:police,policeMeta:police?policeMeta_(police):null,ticker:ticker_()};
+  });
+}
 function load_(user) {
-  var can = function (k) { return user.role !== 'viewer' || user.perms[k]; };
-  var d = {user: user, notices: [], faqs: [], sheets: [], police: null, reports: [], ticker: ticker_(), users: null, history: []};
-  d.bootstrap = true; // Secondary collections load only when their section opens.
-  if (can('n')) d.notices = notices_();
-  if (can('s')) {
-    d.sheets = links_().filter(function (l) {
-      return user.role !== 'viewer' || user.perms.ids === 'all' || user.perms.ids.indexOf(l.id) > -1;
-    });
-  }
-  d.reports = reports_(user);
-  if (user.role === 'admin') {
-    var props = PropertiesService.getScriptProperties();
-    d.users = users_();
-    d.resetRequests = resetRequests_();
-  }
+  var can=function(k){return user.role!=='viewer'||user.perms[k];},shared=sharedPortalData_();
+  var links=can('s')?shared.sheets.filter(function(l){return user.role!=='viewer'||user.perms.ids==='all'||user.perms.ids.indexOf(l.id)>-1;}):[];
+  var policeAllowed=links.some(function(l){return l.type==='police';});
+  var d={user:user,notices:can('n')?shared.notices:[],faqs:can('f')?shared.faqs:[],
+    sops:shared.sops,sopCategories:shared.sopCategories,ranking:shared.ranking,
+    sheets:links,police:policeAllowed?shared.police:null,policeMeta:policeAllowed?shared.policeMeta:null,
+    ticker:shared.ticker,reports:reports_(user),users:null,resetRequests:[],history:[]};
+  if(user.role==='admin'){d.users=users_();d.resetRequests=resetRequests_();d.history=portalCached_('history',history_);}
   return d;
 }
 
@@ -417,6 +449,7 @@ function saveUser_(req, me) {
   var vals = [email, role, keep, st, yn(p.n), yn(p.f), yn(p.s), ids, ''];
   if (row) { vals[8] = s_(row.requested_at); d.sh.getRange(row._row, 1, 1, vals.length).setNumberFormat('@').setValues([vals]); }
   else d.sh.appendRow(vals);
+  requestUsers_=null;
   return {ok:true,changes:{user:userOf_({email:email,role:role,name:keep,status:st,notice:yn(p.n),faq:yn(p.f),sheets:yn(p.s),sheet_ids:ids,requested_at:vals[8]})}};
 }
 function deleteUser_(req, me) {
@@ -424,6 +457,7 @@ function deleteUser_(req, me) {
   if (email === me.email) fail_('self', 'You cannot remove yourself');
   var d = readTab_(tab_('Users'));
   for (var i = d.rows.length - 1; i >= 0; i--) if (s_(d.rows[i].email).trim().toLowerCase() === email) d.sh.deleteRow(d.rows[i]._row);
+  requestUsers_=null;
   return {ok:true,changes:{deletedUser:email}};
 }
 
@@ -517,7 +551,7 @@ function resetPassword_(req, user) {
 }
 
 function removeSession_(token) { var key = 'session:' + digest_(String(token || '')); PropertiesService.getScriptProperties().deleteProperty(key); CacheService.getScriptCache().remove(key); }
-function issueSession_(email) { var token = Utilities.getUuid() + Utilities.getUuid(), props = PropertiesService.getScriptProperties(), now = Date.now(); var all = props.getProperties(); Object.keys(all).forEach(function (key) { if (key.indexOf('session:') === 0) { try { if (JSON.parse(all[key]).expires < now) props.deleteProperty(key); } catch (e) { props.deleteProperty(key); } } }); props.setProperty('session:' + digest_(token), JSON.stringify({email:email,version:credentials_(email).version,expires:now+7*86400000})); return token; }
+function issueSession_(email) { var token = Utilities.getUuid() + Utilities.getUuid(), props = PropertiesService.getScriptProperties(), now = Date.now(); var cleanupCache=CacheService.getScriptCache(); if(!cleanupCache.get('session-cleanup-hour')){ cleanupCache.put('session-cleanup-hour','1',3600); var all=props.getProperties(); Object.keys(all).forEach(function(key){if(key.indexOf('session:')===0){try{if(JSON.parse(all[key]).expires<now)props.deleteProperty(key);}catch(e){props.deleteProperty(key);}}}); } props.setProperty('session:' + digest_(token), JSON.stringify({email:email,version:credentials_(email).version,expires:now+7*86400000})); return token; }
 function sessionUser_(token) { var key = 'session:' + digest_(String(token || '')), props = PropertiesService.getScriptProperties(); var raw = props.getProperty(key) || CacheService.getScriptCache().get(key); if (!raw) fail_('auth','Please sign in again'); var session=JSON.parse(raw),user=findUser_(session.email),now=Date.now(); if (!user || user.status !== 'active' || session.version !== credentials_(session.email).version || (session.expires && session.expires < now)) { removeSession_(token); fail_('auth','Please sign in again'); } if (!session.expires || session.expires-now < 6*86400000) { session.expires=now+7*86400000;props.setProperty(key,JSON.stringify(session)); } return user; }
 function saveNotice_(req, user) {
   var creating = !(Number(req.id) > 0);
@@ -653,8 +687,9 @@ function refreshPoliceLookup() {
   return lock_(function () { return policeMeta_(police_(), true); });
 }
 function policeLookupEdited(e) {
-  if (!e || !e.range || e.range.getSheet().getName() !== POLICE_TAB) return;
-  refreshPoliceLookup();
+  if (!e || !e.range) return;
+  invalidatePortalCache_();
+  if(e.range.getSheet().getName()===POLICE_TAB)refreshPoliceLookup();
 }
 function setupPoliceLookupRefresh() {
   var triggers = ScriptApp.getProjectTriggers();
