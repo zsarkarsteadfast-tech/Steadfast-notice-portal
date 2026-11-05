@@ -833,7 +833,7 @@ function translateNoticeText_(text){
   if(!latin||bangla>latin)return text;
   var pieces=[],rest=text;
   while(rest.length){var end=Math.min(3000,rest.length);if(end<rest.length){var space=rest.lastIndexOf(' ',end);if(space>1500)end=space;}pieces.push(LanguageApp.translate(rest.slice(0,end),'','bn',{contentType:'text'}));rest=rest.slice(end);}
-  return pieces.join('');
+  return pieces.join('\n');
 }
 function translateNotices_(req,user){
   if(user.role==='viewer'&&!user.perms.n)fail_('forbidden','Notice access required');
