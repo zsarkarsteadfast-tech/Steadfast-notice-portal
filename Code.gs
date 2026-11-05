@@ -289,6 +289,39 @@ function ids_(v) {
   if (t === 'all' || t === '*') return 'all';
   return t.split(/[,\s;]+/).filter(Boolean).map(Number).filter(function (n) { return isFinite(n); });
 }
+
+/* Content tabs use one permission map; future tabs are opt-in unless explicitly allowed. */
+function portalTabs_(){return [
+  {id:'notice',en:'Notice',bn:'নোটিশ',legacy:'n'},
+  {id:'faq',en:'FAQ',bn:'প্রশ্নোত্তর',legacy:'f'},
+  {id:'sop',en:'SOP',bn:'SOP'},
+  {id:'ranking',en:'Ranking',bn:'র‍্যাংকিং'},
+  {id:'sheets',en:'Sheets',bn:'শিট',legacy:'s'}
+];}
+function cleanTabMap_(value){
+  var out={};if(!value||typeof value!=='object'||Array.isArray(value))return out;
+  Object.keys(value).forEach(function(k){if(/^[a-z][a-z0-9_-]{0,49}$/.test(k)&&k!=='admin')out[k]=value[k]===true||value[k]===1||value[k]==='1';});
+  return out;
+}
+function userTabPermissions_(r){
+  var legacy={n:yes_(r.notice)?1:0,f:yes_(r.faq)?1:0,s:yes_(r.sheets)?1:0,ids:ids_(r.sheet_ids)},stored=null;
+  try{stored=JSON.parse(s_(r.tab_permissions)||'null');}catch(e){}
+  var sections=stored&&typeof stored==='object'&&!Array.isArray(stored)?cleanTabMap_(stored):{notice:!!legacy.n,faq:!!legacy.f,sop:true,ranking:true,sheets:!!legacy.s};
+  legacy.sections=sections;legacy.futureTabs=yes_(r.future_tabs);
+  legacy.n=sections.notice?1:0;legacy.f=sections.faq?1:0;legacy.s=sections.sheets?1:0;
+  return legacy;
+}
+function canTab_(user,id){
+  if(id==='admin')return user.role==='admin';
+  if(user.role!=='viewer')return true;
+  var p=user.perms||{},sections=p.sections;
+  if(sections&&Object.prototype.hasOwnProperty.call(sections,id))return !!sections[id];
+  var legacy={notice:'n',faq:'f',sheets:'s'};
+  if(!sections&&legacy[id])return !!p[legacy[id]];
+  if(!sections&&(id==='sop'||id==='ranking'))return true;
+  return !!p.futureTabs;
+}
+
 function userOf_(r) {
   var role = s_(r.role).trim().toLowerCase();
   if (role !== 'admin' && role !== 'editor') role = 'viewer';
@@ -296,7 +329,7 @@ function userOf_(r) {
   if (st !== 'pending' && st !== 'blocked') st = 'active';
   return {
     email: s_(r.email).trim().toLowerCase(), name: s_(r.name).trim(), role: role, status: st,
-    perms: {n: yes_(r.notice) ? 1 : 0, f: yes_(r.faq) ? 1 : 0, s: yes_(r.sheets) ? 1 : 0, ids: ids_(r.sheet_ids)},
+    perms: userTabPermissions_(r),
     req: s_(r.requested_at)
   };
 }
@@ -380,13 +413,13 @@ function sharedPortalData_() {
   });
 }
 function load_(user) {
-  var can=function(k){return user.role!=='viewer'||user.perms[k];},shared=sharedPortalData_();
+  var can=function(k){return canTab_(user,{n:'notice',f:'faq',s:'sheets'}[k]||k);},shared=sharedPortalData_();
   var links=can('s')?shared.sheets.filter(function(l){return user.role!=='viewer'||user.perms.ids==='all'||user.perms.ids.indexOf(l.id)>-1;}):[];
   var policeAllowed=links.some(function(l){return l.type==='police';});
   var d={user:user,notices:can('n')?shared.notices:[],faqs:can('f')?shared.faqs:[],
-    sops:shared.sops,sopCategories:shared.sopCategories,ranking:shared.ranking,
+    sops:can('sop')?shared.sops:[],sopCategories:can('sop')?shared.sopCategories:[],ranking:can('ranking')?shared.ranking:{years:[],entries:[],issues:[]},
     sheets:links,police:policeAllowed?shared.police:null,policeMeta:policeAllowed?shared.policeMeta:null,
-    announcementConfig:announcementConfig_(),ticker:shared.ticker,reports:reports_(user),users:null,resetRequests:[],history:[]};
+    permissionsVersion:2,tabCatalog:portalTabs_(),announcementConfig:can('n')||user.role==='admin'?announcementConfig_():{mode:'off'},ticker:shared.ticker,reports:reports_(user),users:null,resetRequests:[],history:[]};
   if(user.role==='admin'){d.users=users_();d.resetRequests=resetRequests_();d.history=portalCached_('history',history_);}
   return d;
 }
@@ -398,6 +431,7 @@ function delReports_(nid) {
   for (var i = d.rows.length - 1; i >= 0; i--) if (Number(d.rows[i].notice_id) === nid) d.sh.deleteRow(d.rows[i]._row);
 }
 function report_(req, user) {
+  if(!canTab_(user,'notice'))fail_('forbidden','Notice access required');
   var nid = Number(req.id);
   var exists = notices_().some(function (n) { return n.id === nid && !n.expired; });
   if (!exists) fail_('bad', 'Notice not found');
@@ -445,15 +479,23 @@ function saveUser_(req, me) {
   var st = ['active', 'blocked'].indexOf(req.status) > -1 ? req.status : 'active';
   if (email === me.email && (role !== 'admin' || st !== 'active')) fail_('self', 'You cannot block or demote yourself');
   var p = req.perms || {}, ids = p.ids === 'all' ? 'all' : (p.ids || []).map(Number).filter(isFinite).join(',');
+  var sections=Object.prototype.hasOwnProperty.call(p,'sections')?cleanTabMap_(p.sections):null;
   var yn = function (b) { return b ? 'yes' : 'no'; };
   var d = readTab_(tab_('Users')), row = null;
   d.rows.forEach(function (r) { if (s_(r.email).trim().toLowerCase() === email) row = r; });
   var keep = row ? s_(row.name) : '';
+  if(!sections){sections=row?userTabPermissions_(row).sections:{sop:true,ranking:true};sections.notice=!!p.n;sections.faq=!!p.f;sections.sheets=!!p.s;}
+  p.n=!!sections.notice;p.f=!!sections.faq;p.s=!!sections.sheets;
+  var future=Object.prototype.hasOwnProperty.call(p,'futureTabs')?!!p.futureTabs:row?yes_(row.future_tabs):false;
+  ['tab_permissions','future_tabs'].forEach(function(key){if(d.cols[key]===undefined){var col=d.sh.getLastColumn();d.sh.getRange(1,col+1).setValue(key==='tab_permissions'?'Tab Permissions':'Future Tabs');d.cols[key]=col;}});
   var vals = [email, role, keep, st, yn(p.n), yn(p.f), yn(p.s), ids, ''];
   if (row) { vals[8] = s_(row.requested_at); d.sh.getRange(row._row, 1, 1, vals.length).setNumberFormat('@').setValues([vals]); }
   else d.sh.appendRow(vals);
+  var targetRow=row?row._row:d.sh.getLastRow();
+  d.sh.getRange(targetRow,d.cols.tab_permissions+1).setNumberFormat('@').setValue(JSON.stringify(sections));
+  d.sh.getRange(targetRow,d.cols.future_tabs+1).setValue(yn(future));
   requestUsers_=null;
-  return {ok:true,changes:{user:userOf_({email:email,role:role,name:keep,status:st,notice:yn(p.n),faq:yn(p.f),sheets:yn(p.s),sheet_ids:ids,requested_at:vals[8]})}};
+  return {ok:true,changes:{user:userOf_({email:email,role:role,name:keep,status:st,notice:yn(p.n),faq:yn(p.f),sheets:yn(p.s),sheet_ids:ids,requested_at:vals[8],tab_permissions:JSON.stringify(sections),future_tabs:yn(future)})}};
 }
 function deleteUser_(req, me) {
   var email = s_(req.email).trim().toLowerCase();
@@ -785,11 +827,11 @@ function mutationPatch_(user,scopes){
 
 // Background freshness reads only the section currently visible to this user.
 function sectionData_(req,user){
-  var section=s_(req.section),patch={},can=function(k){return user.role!=='viewer'||user.perms[k];};
+  var section=s_(req.section),patch={},can=function(k){return canTab_(user,{n:'notice',f:'faq',s:'sheets'}[k]||k);};
   if(section==='notice'&&can('n')){patch.notices=notices_();patch.reports=reports_(user);}
   else if(section==='faq'&&can('f'))patch.faqs=faqs_();
-  else if(section==='sop'){var sop=sopData_();patch.sops=sop.entries;patch.sopCategories=sop.categories;}
-  else if(section==='ranking')patch.ranking=ranking_();
+  else if(section==='sop'&&can('sop')){var sop=sopData_();patch.sops=sop.entries;patch.sopCategories=sop.categories;}
+  else if(section==='ranking'&&can('ranking'))patch.ranking=ranking_();
   else if(section==='sheets'&&can('s')){
     patch.sheets=links_().filter(function(l){return user.role!=='viewer'||user.perms.ids==='all'||user.perms.ids.indexOf(l.id)>-1;});
     if(req.policeOpen&&patch.sheets.some(function(l){return l.type==='police';})){patch.police=police_();patch.policeMeta=policeMeta_(patch.police);}
