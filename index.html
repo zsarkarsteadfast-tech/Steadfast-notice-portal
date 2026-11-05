@@ -8,14 +8,16 @@
 <link rel="preconnect" href="https://script.googleusercontent.com">
 <link id="portalFavicon" rel="icon" type="image/png">
 <link id="portalTouchIcon" rel="apple-touch-icon">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;900&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#0c1a12;--tx:#0c1a12;--mut:#587062;--g:#0fb35a;--g2:#0a8a45;--pri:#0fb35a;--dk:#0a7a45;--soft:rgba(15,179,90,.13);--chip:rgba(15,179,90,.13);--glass:rgba(255,255,255,.55);--card:rgba(255,255,255,.55);--dlg:rgba(255,255,255,.92);--fld:rgba(255,255,255,.6);--edge:rgba(255,255,255,.85);--bd:rgba(10,100,55,.14);--sh:0 10px 40px rgba(8,70,35,.13);--hi:rgba(255,255,255,.95);--b1:#eaffdc;--b2:#c9f3d8;--b3:#f4fff0;--bg:#f4fff0;--red:#d64545;--redsoft:rgba(214,69,69,.13);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#eaf6ee;--tx:#eaf6ee;--mut:#93aa9b;--glass:rgba(24,40,31,.55);--card:rgba(24,40,31,.55);--dlg:rgba(16,28,22,.94);--fld:rgba(255,255,255,.07);--edge:rgba(255,255,255,.14);--bd:rgba(255,255,255,.12);--sh:0 10px 40px rgba(0,0,0,.4);--hi:rgba(255,255,255,.18);--b1:#0a1a12;--b2:#0b2418;--b3:#08130d;--bg:#08130d;--chip:rgba(15,179,90,.22);--soft:rgba(15,179,90,.22);--dk:#6ee7a3;--redsoft:rgba(214,69,69,.24)}}
 :root[data-theme="dark"]{--ink:#eaf6ee;--tx:#eaf6ee;--mut:#93aa9b;--glass:rgba(24,40,31,.55);--card:rgba(24,40,31,.55);--dlg:rgba(16,28,22,.94);--fld:rgba(255,255,255,.07);--edge:rgba(255,255,255,.14);--bd:rgba(255,255,255,.12);--sh:0 10px 40px rgba(0,0,0,.4);--hi:rgba(255,255,255,.18);--b1:#0a1a12;--b2:#0b2418;--b3:#08130d;--bg:#08130d;--chip:rgba(15,179,90,.22);--soft:rgba(15,179,90,.22);--dk:#6ee7a3;--redsoft:rgba(214,69,69,.24)}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
-body{margin:0;min-height:100%;color:var(--ink);font:16px/1.6 Inter,"Noto Sans Bengali","Kalpurush","Nirmala UI",-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;background:radial-gradient(60vw 50vh at 12% 8%,var(--b2),transparent 70%),radial-gradient(50vw 50vh at 92% 30%,rgba(15,179,90,.18),transparent 70%),linear-gradient(160deg,var(--b1),var(--b3));background-attachment:fixed;overflow-x:hidden}
+body{margin:0;min-height:100%;color:var(--ink);font:16px/1.6 Roboto,"Noto Sans Bengali","Kalpurush","Nirmala UI",-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;background:radial-gradient(60vw 50vh at 12% 8%,var(--b2),transparent 70%),radial-gradient(50vw 50vh at 92% 30%,rgba(15,179,90,.18),transparent 70%),linear-gradient(160deg,var(--b1),var(--b3));background-attachment:fixed;overflow-x:hidden}
 html[lang="bn"] body{line-height:1.75}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid var(--g);outline-offset:2px}
@@ -264,7 +266,7 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 .sects button{border-radius:999px!important;min-width:0}
 
 /* Floating logo home shortcut */
-.scroll-home{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(12px);z-index:80;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border:1px solid var(--edge);border-radius:999px;background:var(--dlg);color:var(--ink);box-shadow:var(--sh),inset 0 1.5px 0 var(--hi);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);font:600 13px/1 Inter,sans-serif;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}
+.scroll-home{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(12px);z-index:80;display:flex;align-items:center;justify-content:center;gap:7px;padding:9px 16px;border:1px solid var(--edge);border-radius:999px;background:var(--dlg);color:var(--ink);box-shadow:var(--sh),inset 0 1.5px 0 var(--hi);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);font:600 13px/1 Roboto,"Noto Sans Bengali",sans-serif;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease}
 .scroll-home.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
 .scroll-home .lk{height:23px;width:auto}.scroll-home .lw{height:12px;width:auto}
 .admin-tabs{display:flex;gap:5px;flex-wrap:wrap}
@@ -350,6 +352,11 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 .latest-announcement-head{background:linear-gradient(110deg,var(--b2),var(--b1))}
 .latest-announcement-content{background:linear-gradient(145deg,var(--b1),var(--b3))}
 .latest-announcement-ack{background:linear-gradient(145deg,var(--b1),var(--b3));border-color:var(--bd);box-shadow:0 8px 24px rgba(0,0,0,.22);isolation:isolate}
+
+/* Consistent, readable typography across portal content and controls. */
+:root{--portal-font:"Roboto","Noto Sans Bengali","Nirmala UI",-apple-system,"Segoe UI",Arial,sans-serif}
+body,button,input,textarea,select,option,optgroup,dialog,table,summary,.scroll-home,.portal-name{font-family:var(--portal-font)}
+body{font-weight:400}
 </style>
 </head>
 <body>
