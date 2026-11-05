@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Steadfast QA Portal</title>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
 <link id="portalFavicon" rel="icon" type="image/png">
 <link id="portalTouchIcon" rel="apple-touch-icon">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -670,7 +672,7 @@ function renderChanged(keys){
 }
 function changedPatch(patch){
   var current={notices:notices,reports:reports,faqs:faqs,sops:sops,sopCategories:sopCategories,ranking:ranking,sheets:sheets,police:police,policeMeta:policeMeta,users:users,resetRequests:resetRequests,history:editHistory,ticker:ticker};
-  var changed={};Object.keys(patch||{}).forEach(function(k){if(JSON.stringify(current[k])!==JSON.stringify(patch[k]))changed[k]=patch[k];});return changed;
+  var changed={};Object.keys(current).forEach(function(k){if(Object.prototype.hasOwnProperty.call(patch||{},k)&&JSON.stringify(current[k])!==JSON.stringify(patch[k]))changed[k]=patch[k];});return changed;
 }
 function renderNotice(){
   var rv=view==="reports"&&isEd();
@@ -827,7 +829,7 @@ function startLoginTracking(){
   $("loginTracking").classList.remove("hide");trackingStage(0);
   loginTrackingTimers=[setTimeout(function(){trackingStage(1)},850),setTimeout(function(){trackingStage(2)},1900)];
 }
-function finishLoginTracking(){loginTrackingTimers.forEach(clearTimeout);loginTrackingTimers=[];trackingStage(3);return new Promise(function(resolve){setTimeout(resolve,80)})}
+function finishLoginTracking(){loginTrackingTimers.forEach(clearTimeout);loginTrackingTimers=[];trackingStage(3);return Promise.resolve()}
 function stopLoginTracking(){
   loginTrackingTimers.forEach(clearTimeout);loginTrackingTimers=[];loginTrackingBusy=false;
   $("loginTracking").classList.add("hide");$("login").removeAttribute("aria-busy");
@@ -1167,44 +1169,16 @@ function applyData(d){
   ranking=d.ranking||{years:[],entries:[],issues:[]};if(rankingSelectedKey&&$("rankingDialog").open)renderRankingDetails();
   sops=Array.isArray(d.sops)?d.sops:[];sopCategories=Array.isArray(d.sopCategories)?d.sopCategories:[];
   notices=d.notices||[];reports=d.reports||[];faqs=d.faqs||[];sheets=d.sheets||[];ticker=d.ticker||[];police=d.police||null;policeMeta=d.policeMeta||null;editHistory=Array.isArray(d.history)?d.history.filter(function(h){return h&&h.action&&h.email&&h.at&&h.title;}):[];resetRequests=Array.isArray(d.resetRequests)?d.resetRequests:[];
-  if(d.users)users=d.users;
+  if(Object.prototype.hasOwnProperty.call(d,'users'))users=Array.isArray(d.users)?d.users:[];
   var reqTab=document.querySelector("#adTabs [data-v=\"req\"]");if(reqTab){var pendingAccess=users.filter(function(u){return u.status==="pending"}).length;reqTab.classList.toggle("has-requests",pendingAccess+resetRequests.length>0);}
   notices.forEach(function(n){if(n.cat&&CK.indexOf(n.cat)<0)CK.push(n.cat)});
   sheets.forEach(function(s){if(s.cat&&SC.indexOf(s.cat)<0)SC.push(s.cat)});
   tkKey=""}
 
-var sectionReady=Object.create(null),sectionLoads=Object.create(null),sectionLoadError='';
-function sectionLoadKey(){return section==='admin'?'admin:'+adView:section==='sheets'&&policeOpen?'sheets:police':section;}
-function sectionLoadStatus(key,loading,error){
-  var el=$('sectionLoadStatus');if(!el){el=document.createElement('div');el.id='sectionLoadStatus';el.className='card hide';el.style.cssText='padding:12px 16px;margin:12px 0;border-radius:14px';el.setAttribute('role','status');el.setAttribute('aria-live','polite');$('sects').insertAdjacentElement('afterend',el);}
-  if(key!==sectionLoadKey())return;
-  el.classList.toggle('hide',!loading&&!error);
-  el.textContent=loading?'Loading this section…':error?'Could not load this section. ':'';
-  if(error){var retry=document.createElement('button');retry.className='btn sm';retry.textContent='Retry';retry.onclick=function(){ensureSection()};el.appendChild(retry);}
-}
-function ensureSection(){
-  if(!LIVE||!me||!authToken||!curU)return;
-  var key=sectionLoadKey(),token=authToken,email=me;
-  if(sectionReady[key]){sectionLoadStatus(key,false,false);return;}
-  if(sectionLoads[key]){sectionLoadStatus(key,true,false);return;}
-  sectionLoads[key]=true;sectionLoadStatus(key,true,false);
-  api('loadSection',{section:section,adminView:adView,policeOpen:policeOpen}).then(function(d){
-    if(token!==authToken||email!==me)return;
-    sectionReady[key]=true;applyData({patch:d.patch||{}});
-    if(key===sectionLoadKey())renderCurrent();
-  }).catch(function(e){
-    if(token!==authToken||email!==me)return;
-    if(e.code==='auth'||e.code==='denied'||e.code==='pending')failLogin(e,email);
-    else if(key===sectionLoadKey())sectionLoadStatus(key,false,true);
-  }).finally(function(){
-    delete sectionLoads[key];
-    if(token===authToken&&sectionReady[key])sectionLoadStatus(key,false,false);
-  });
-}
+// Every section is delivered before the portal opens; navigation never waits on a request.
+function ensureSection(){}
 
 function enter(d,email){
-  sectionReady=Object.create(null);sectionLoads=Object.create(null);
-  (d.bootstrap?['notice','sheets','admin:req','admin:usr','admin:notices']:['notice','faq','sop','ranking','sheets','sheets:police','admin:req','admin:usr','admin:notices','admin:history']).forEach(function(k){sectionReady[k]=true;});
   $("pageLoading").classList.add("hide");
   if(d.token)authToken=d.token;$("lgPassword").value="";applyData(d);var u=d.user;me=email;role=u.role;curU=u;edName=u.name||nameOf(me);
   try{if($("lgRemember").checked){localStorage.setItem("rememberMe","1");localStorage.setItem("email",me);localStorage.setItem("authToken",authToken);sessionStorage.removeItem("email");sessionStorage.removeItem("authToken")}else{localStorage.removeItem("rememberMe");localStorage.removeItem("email");localStorage.removeItem("authToken");sessionStorage.setItem("email",me);sessionStorage.setItem("authToken",authToken)}}catch(e){}
@@ -1218,18 +1192,21 @@ function failLogin(e,email){$("pageLoading").classList.add("hide");authToken="";
   showLg(k,k==="lgPend");$("app").className="hide";$("login").className="login"}
 function boot(email){me=email;ui();$("loginTracking").classList.add("hide");$("login").className="login hide";$("app").className="";$("pageLoading").classList.remove("hide");api("load").then(function(d){enter(d,email)}).catch(function(e){$("pageLoading").classList.add("hide");if(e.code==="auth"||e.code==="denied"||e.code==="pending")failLogin(e,email);else{showLg("lgFail");$("app").className="hide";$("login").className="login"}})}
 function refresh(force){
-  if(!LIVE||!me||pending>0||refreshInFlight||sectionLoads[sectionLoadKey()]||document.hidden||document.querySelector("dialog[open]"))return;
-  refreshInFlight=true;var currentSection=section,currentView=adView,sequence=loadSequence;
-  return api('loadSection',{section:currentSection,adminView:currentView,policeOpen:policeOpen}).then(function(d){
-    if(sequence!==loadSequence||pending>0||currentSection!==section||currentView!==adView)return;
-    var patch=changedPatch(d.patch);if(!Object.keys(patch).length)return;
-    applyData({patch:patch});renderChanged(Object.keys(patch));
-  }).catch(function(e){if(e.code==='auth'||e.code==='denied'||e.code==='pending')failLogin(e,me);}).finally(function(){refreshInFlight=false;});
+  if(!LIVE||!me||!curU||pending>0||refreshInFlight||document.hidden||document.querySelector("dialog[open]"))return;
+  refreshInFlight=true;var sequence=loadSequence,token=authToken,email=me;
+  return api('load').then(function(d){
+    if(token!==authToken||email!==me||sequence!==loadSequence||pending>0)return;
+    var patch=changedPatch(d),userChanged=JSON.stringify(curU)!==JSON.stringify(d.user);
+    if(d.user){curU=d.user;role=d.user.role;edName=d.user.name||nameOf(me);}
+    if(Object.keys(patch).length)applyData({patch:patch});
+    if(userChanged)ui();else if(Object.keys(patch).length)renderChanged(Object.keys(patch));
+  }).catch(function(e){if(token===authToken&&email===me&&(e.code==='auth'||e.code==='denied'||e.code==='pending'))failLogin(e,email);}).finally(function(){refreshInFlight=false;});
 }
+
 if(LIVE){
   var savedEmail=null;try{$("lgRemember").checked=localStorage.getItem("rememberMe")==="1";savedEmail=localStorage.getItem("email")||sessionStorage.getItem("email");authToken=localStorage.getItem("authToken")||sessionStorage.getItem("authToken")||"";if(savedEmail&&!$("lgEmail").value)$("lgEmail").value=savedEmail}catch(e){}
   if(savedEmail&&authToken)boot(savedEmail);
-  setInterval(function(){if(!document.hidden)refresh(false)},15000);
+  setInterval(function(){if(!document.hidden)refresh(false)},8000);
   document.addEventListener("visibilitychange",function(){if(!document.hidden)refresh(false)});
 }
 $("lgShow").onchange=function(){$("lgPassword").type=this.checked?"text":"password"};
