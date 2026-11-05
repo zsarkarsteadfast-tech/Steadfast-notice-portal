@@ -339,6 +339,11 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 .latest-announcement-body{font-size:14px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
 
 .announcement-form{max-width:800px}.announcement-form label{display:grid;gap:7px;margin-top:18px;font-size:13px;font-weight:600}.announcement-form select,.announcement-form input{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--bd);border-radius:12px;background:var(--dlg);color:var(--ink);font:inherit}.announcement-form select option{background:var(--bg);color:var(--ink)}.announcement-times{display:grid;grid-template-columns:1fr 1fr;gap:16px}.announcement-form p{font-size:12px;line-height:1.7;color:var(--mut)}.announcement-form .announcement-error{color:var(--red)}.translation-status{font-size:11px;color:var(--mut);margin:10px 0 0}@media(max-width:600px){.announcement-times{grid-template-columns:1fr;gap:0}}
+
+.latest-announcement-head{position:relative;z-index:2}
+.latest-announcement-close-wrap{position:relative;display:inline-flex;flex:none}
+.latest-announcement-ack{position:absolute;right:0;top:calc(100% + 10px);width:min(280px,calc(100vw - 80px));padding:11px 14px;border:1px solid var(--bd);border-radius:12px;background:var(--dlg);color:var(--ink);box-shadow:var(--sh);font-size:12px;line-height:1.6;text-align:left;opacity:0;visibility:hidden;pointer-events:none;z-index:3}
+.latest-announcement-close:hover+.latest-announcement-ack{opacity:1;visibility:visible}
 </style>
 </head>
 <body>
@@ -1219,6 +1224,7 @@ function renderLatestAnnouncement(){
   var n=notices.find(function(n){return String(n.id)===latestAnnouncementId;});
   if(!n||!$('latestAnnouncementContent'))return;
   $('latestAnnouncementHeading').textContent=lang==='bn'?'সর্বশেষ ঘোষণা':'Latest Announcement';
+  $('latestAnnouncementAcknowledgement').textContent=lang==='bn'?'হ্যাঁ, নোটিশটি পড়েছি ও বুঝেছি এবং এখন থেকে সেবা দেওয়ার সময় এটি মেনে চলব।':'Yes, I have read and acknowledged this notice and will apply it when providing service.';
   $('latestAnnouncement').querySelector('button').setAttribute('aria-label',lang==='bn'?'ঘোষণা বন্ধ করুন':'Close latest announcement');
   $('latestAnnouncementContent').innerHTML='<div class="latest-announcement-meta"><span>'+esc(n.src==='qa'?(lang==='bn'?'QA নির্দেশনা':'QA Follow-up'):(lang==='bn'?'অফিসিয়াল নোটিশ':'Official Notice'))+'</span>'+(n.date?'<span>· '+esc(fmt(n.date))+'</span>':'')+'</div><h3>'+esc(L(n.title||''))+'</h3><p class="latest-announcement-body">'+esc(L(n.body||''))+'</p>'+translationLabel(n);
   scheduleNoticeTranslation();
@@ -1229,7 +1235,7 @@ function showLatestAnnouncement(){
   var dialog=$('latestAnnouncement');
   if(!dialog){
     dialog=document.createElement('dialog');dialog.id='latestAnnouncement';dialog.className='latest-announcement';dialog.setAttribute('aria-labelledby','latestAnnouncementHeading');
-    dialog.innerHTML='<div class="latest-announcement-head"><h2 id="latestAnnouncementHeading"></h2><button type="button" class="latest-announcement-close" aria-label="Close latest announcement" autofocus>×</button></div><div class="latest-announcement-content" id="latestAnnouncementContent"></div>';
+    dialog.innerHTML='<div class="latest-announcement-head"><h2 id="latestAnnouncementHeading"></h2><span class="latest-announcement-close-wrap"><button type="button" class="latest-announcement-close" aria-label="Close latest announcement" aria-describedby="latestAnnouncementAcknowledgement" autofocus>×</button><span id="latestAnnouncementAcknowledgement" class="latest-announcement-ack" role="tooltip"></span></span></div><div class="latest-announcement-content" id="latestAnnouncementContent"></div>';
     document.body.appendChild(dialog);dialog.querySelector('button').onclick=function(){dialog.close();};
   }
   latestAnnouncementId=String(n.id);latestAnnouncementShown=true;renderLatestAnnouncement();dialog.showModal();
