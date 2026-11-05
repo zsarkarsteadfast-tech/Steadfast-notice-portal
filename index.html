@@ -320,17 +320,23 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 @media(max-width:620px){.ranking-head{flex-wrap:wrap}.ranking-year{display:flex;align-items:center}.ranking-board{border-radius:20px;padding:22px 14px}.ranking-board-top{align-items:flex-start;flex-direction:column}.ranking-congrats{letter-spacing:-1px}.ranking-podium{gap:7px;margin-top:60px}.rank-podium-card{border-radius:15px 15px 0 0}.rank-podium-content{min-height:255px;padding:20px 6px 13px}.rank-place-1 .rank-podium-content{min-height:310px}.rank-place-3 .rank-podium-content{min-height:230px}.rank-podium-content h3{font-size:14px}.rank-award{font-size:8px;letter-spacing:.5px}.rank-agent-id{font-size:9px}.rank-score{font-size:24px}.rank-score-label{font-size:9px}.rank-podium-content>small{font-size:8px}.rank-plinth{font-size:36px;padding:17px}.rank-place-1 .rank-plinth{font-size:48px}.rank-top-ten{grid-template-columns:1fr}.rank-detail-stats{gap:6px}.rank-detail-stats>div{padding:12px 9px}.rank-detail-stats strong{font-size:21px}.ranking-dialog{padding:20px 15px}.rank-month-chart{gap:4px}.rank-chart-column small{font-size:8px}}
 
 
-/* Desktop workspace: aligned edges, full available width and calm vertical rhythm. */
+
 @media(min-width:900px){
-  :root{--desktop-gutter:clamp(22px,1.7vw,36px)}
-  .wrap{width:100%;max-width:none;padding-left:var(--desktop-gutter);padding-right:var(--desktop-gutter)}
-  nav{padding:18px var(--desktop-gutter) 0}
-  nav>.nav{width:100%;max-width:none;padding:10px 16px;min-height:58px}
-  #tkWrap .ticker{margin-top:18px;margin-bottom:0}
+  #tkWrap .ticker{margin-top:18px}
   #app>main.wrap{margin-top:16px}
-  .sects{top:12px;margin-bottom:24px;padding:7px}
-  .sects button{padding-top:12px;padding-bottom:12px}
+  .sects{margin-bottom:24px}
 }
+/* Latest notice, shown once after sign-in on each page load. */
+.latest-announcement{width:min(500px,calc(100vw - 32px));max-height:78dvh;padding:0;border:1px solid var(--edge);border-radius:24px;background:var(--dlg);color:var(--ink);box-shadow:var(--sh),inset 0 1px 0 var(--hi);overflow:hidden}
+.latest-announcement::backdrop{background:rgba(7,30,17,.24);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.latest-announcement-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 22px;border-bottom:1px solid var(--bd);background:var(--chip)}
+.latest-announcement-head h2{margin:0;font-size:17px;line-height:1.4;color:var(--dk)}
+.latest-announcement-close{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:var(--fld);color:var(--ink);font-size:23px;line-height:1}
+.latest-announcement-close:hover{background:var(--soft)}
+.latest-announcement-content{padding:20px 22px 24px;max-height:calc(78dvh - 75px);overflow:auto;overscroll-behavior:contain}
+.latest-announcement-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--mut);margin-bottom:12px}
+.latest-announcement-content h3{font-size:19px;line-height:1.5;margin:0 0 12px;overflow-wrap:anywhere}
+.latest-announcement-body{font-size:14px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
 </style>
 </head>
 <body>
@@ -1190,12 +1196,30 @@ function applyData(d){
 // Every section is delivered before the portal opens; navigation never waits on a request.
 function ensureSection(){}
 
+
+var latestAnnouncementShown=false;
+function showLatestAnnouncement(){
+  if(latestAnnouncementShown||!curU||!can('notice'))return;
+  var eligible=notices.map(function(n,i){return {notice:n,index:i};}).filter(function(item){var n=item.notice;return !n.expired&&(L(n.title||'')||L(n.body||''));});
+  eligible.sort(function(a,b){var ad=String(a.notice.date||''),bd=String(b.notice.date||'');return bd.localeCompare(ad)||b.index-a.index;});
+  if(!eligible.length)return;
+  var n=eligible[0].notice,dialog=$('latestAnnouncement');
+  if(!dialog){
+    dialog=document.createElement('dialog');dialog.id='latestAnnouncement';dialog.className='latest-announcement';dialog.setAttribute('aria-labelledby','latestAnnouncementHeading');
+    dialog.innerHTML='<div class="latest-announcement-head"><h2 id="latestAnnouncementHeading">Latest Announcement</h2><button type="button" class="latest-announcement-close" aria-label="Close latest announcement" autofocus>×</button></div><div class="latest-announcement-content" id="latestAnnouncementContent"></div>';
+    document.body.appendChild(dialog);
+    dialog.querySelector('button').onclick=function(){dialog.close();};
+  }
+  $('latestAnnouncementContent').innerHTML='<div class="latest-announcement-meta"><span>'+esc(n.src==='qa'?'QA Follow-up':'Official Notice')+'</span>'+(n.date?'<span>· '+esc(fmt(n.date))+'</span>':'')+'</div><h3>'+esc(L(n.title||''))+'</h3><p class="latest-announcement-body">'+esc(L(n.body||''))+'</p>';
+  latestAnnouncementShown=true;dialog.showModal();
+}
+
 function enter(d,email){
   $("pageLoading").classList.add("hide");
   if(d.token)authToken=d.token;$("lgPassword").value="";applyData(d);var u=d.user;me=email;role=u.role;curU=u;edName=u.name||nameOf(me);
   try{if($("lgRemember").checked){localStorage.setItem("rememberMe","1");localStorage.setItem("email",me);localStorage.setItem("authToken",authToken);sessionStorage.removeItem("email");sessionStorage.removeItem("authToken")}else{localStorage.removeItem("rememberMe");localStorage.removeItem("email");localStorage.removeItem("authToken");sessionStorage.setItem("email",me);sessionStorage.setItem("authToken",authToken)}}catch(e){}
   section="notice";view="notices";grp="cs";cat="all";faqCat="all";policeOpen=false;
-  $("lgErr").className="lerr hide";$("login").className="login hide";$("app").className="";ui();window.scrollTo(0,0)}
+  $("lgErr").className="lerr hide";$("login").className="login hide";$("app").className="";ui();window.scrollTo(0,0);showLatestAnnouncement()}
 function failLogin(e,email){$("pageLoading").classList.add("hide");authToken="";
   me="";try{localStorage.removeItem("email");localStorage.removeItem("authToken");sessionStorage.removeItem("email");sessionStorage.removeItem("authToken")}catch(x){}
   var k=e&&e.code==="pending"?"lgPend":e&&e.code==="denied"?"lgDeny":e&&e.code==="credentials"?"badCredentials":e&&e.code==="rate"?"loginRate":e&&e.code==="auth"?"lgExp":"lgFail";
