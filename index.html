@@ -357,6 +357,8 @@ nav{position:relative;top:auto;z-index:50;background:transparent;-webkit-backdro
 :root{--portal-font:"Roboto","Noto Sans Bengali","Nirmala UI",-apple-system,"Segoe UI",Arial,sans-serif}
 body,button,input,textarea,select,option,optgroup,dialog,table,summary,.scroll-home,.portal-name{font-family:var(--portal-font)}
 body{font-weight:400}
+
+.notice-topic{margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)}.notice-topic h4,.notice-topic summary{font-size:15px;font-weight:700;margin:0 0 8px;cursor:pointer}.notice-topic p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;margin:8px 0 0}.notice-topic-editor{margin:22px 0;padding:16px;background:var(--chip);border-radius:16px}.notice-topic-editor-head,.notice-topic-row-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.notice-topic-row{margin-top:16px;padding-top:16px;border-top:1px solid var(--bd)}.notice-topic-row-head label{margin:0}.announcement-notice+.announcement-notice{margin-top:24px;padding-top:24px;border-top:2px solid var(--bd)}.latest-announcement{width:min(700px,calc(100vw - 32px))}.announcement-form{max-width:none;padding:28px}.announcement-form h3{font-size:22px;margin:0 0 22px}.announcement-form label{margin-top:22px;gap:10px;font-size:14px}.announcement-form select,.announcement-form input{min-height:48px}.announcement-picks{display:grid;grid-template-columns:1fr 1fr;gap:22px}.announcement-times{gap:22px;margin-top:6px}.announcement-form>p{margin-top:22px;max-width:85ch;line-height:1.8}.announcement-form .acts{gap:12px;flex-wrap:wrap;margin-top:24px}.admin-tabs{gap:8px;padding:8px}.admin-tabs button{padding:11px 15px;min-width:140px}@media(max-width:700px){.announcement-form{padding:18px}.announcement-picks,.announcement-times{grid-template-columns:1fr;gap:0}}
 </style>
 </head>
 <body>
@@ -481,7 +483,7 @@ body{font-weight:400}
   <label data-i="lt"></label><input id="fT">
   <div class="row"><div><label data-i="lc"></label><select id="fC"></select></div><div><label data-i="lu"></label><select id="fU"><option value="0"></option><option value="1"></option></select></div></div>
   <input id="fCn" class="hide">
-  <label data-i="lb"></label><textarea id="fB" rows="8"></textarea>
+  <label data-i="lb"></label><textarea id="fB" rows="8"></textarea><div class="notice-topic-editor"><div class="notice-topic-editor-head"><strong id="topicEditorLabel">Additional topics</strong><button type="button" class="btn line sm" id="addNoticeTopic">+ Add topic</button></div><div id="noticeTopicRows"></div></div>
   <div id="noticeExtra" class="hide"><div class="row"><div><label data-i="noticeGroup"></label><select id="fGroup"><option value="cs" data-i="gCs"></option><option value="qa" data-i="gQa"></option></select></div><div><label data-i="noticeDate"></label><input id="fDate" type="date"></div></div><div class="row"><div><label data-i="ann"></label><input id="fAnn"></div><div><label data-i="appr"></label><input id="fAppr"></div></div><label data-i="noticeExpires"></label><input id="fExpires" type="date"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="fExpired" style="width:auto"><span data-i="exp"></span></label></div><p id="noticeSaveError" role="alert" style="color:var(--red)"></p>
   <div class="acts"><button class="btn line" id="cancel" data-i="cancel"></button><button class="btn" id="save" data-i="save"></button></div>
 </div></dialog>
@@ -639,7 +641,7 @@ function ib(a,id,icon,ttl,on){return '<button class="ibtn'+(on?' on':'')+'" data
 function repsOf(id){return reports.filter(function(r){return r.nid===id})}
 function pend(){return notices.filter(function(n){return repsOf(n.id).length})}
 function match(n,q){if(!q)return true;var d=n.date,dd=d.slice(8,10)+"."+d.slice(5,7)+"."+d.slice(0,4);
-  var h=(allTxt(n.title)+" "+allTxt(n.body)+" "+n.cat+" "+(t("cat")[n.cat]||"")+" "+(n.upd?n.upd.by:"")+" "+d+" "+dd+" "+fmt(d)).toLowerCase();
+  var h=(allTxt(n.title)+" "+allTxt(n.body)+" "+(n.topics||[]).map(function(t){return allTxt(t.title)+" "+allTxt(t.body);}).join(" ")+" "+n.cat+" "+(t("cat")[n.cat]||"")+" "+(n.upd?n.upd.by:"")+" "+d+" "+dd+" "+fmt(d)).toLowerCase();
   return q.split(/\s+/).every(function(w){return h.indexOf(w)>-1})}
 function inRange(n){var f=$("dFrom").value,e=$("dTo").value;return(!f||n.date>=f)&&(!e||n.date<=e)}
 function nameOf(e){return e.split("@")[0].split(/[._-]+/).map(function(w){return w.charAt(0).toUpperCase()+w.slice(1)}).join(" ")}
@@ -677,7 +679,7 @@ function listHtml(){
     var a=ib("copy",n.id,IC.copy,t("copy"));
     if(!isEd()&&!n.expired)a+=ib("report",n.id,IC.flag,mine?t("reported"):t("rpt"),mine);
     if(isEd())a+='<span class="sp"></span><button class="btn sm" data-a="exp" data-id="'+n.id+'">'+(n.expired?t("restore"):t("mark"))+'</button>'+((!LIVE||isAdmin())?'<button class="btn sm" data-a="edit" data-id="'+n.id+'">'+t("edit")+'</button>':'')+(LIVE?'':'<button class="btn sm danger" data-a="del" data-id="'+n.id+'">'+t("del")+'</button>');
-    return '<article data-notice-id="'+esc(n.id)+'" class="card'+(n.expired?' exp':'')+(red?' rep':'')+'"><div class="meta">'+tags+'<span>'+fmt(n.date)+'</span>'+right+'</div><h3>'+esc(L(n.title))+'</h3><p class="notice-body'+(expandedNotices[n.id]?' expanded':'')+'" id="body-'+n.id+'">'+esc(L(n.body))+'</p>'+translationLabel(n)+(String(L(n.body)).length>260?'<button type="button" class="read-more" data-a="read" data-id="'+n.id+'">'+t(expandedNotices[n.id]?"readLess":"readFull")+'</button>':'')+updHtml(n)+'<div class="acts">'+a+'</div></article>';
+    return '<article data-notice-id="'+esc(n.id)+'" class="card'+(n.expired?' exp':'')+(red?' rep':'')+'"><div class="meta">'+tags+'<span>'+fmt(n.date)+'</span>'+right+'</div><h3>'+esc(L(n.title))+'</h3><p class="notice-body'+(expandedNotices[n.id]?' expanded':'')+'" id="body-'+n.id+'">'+esc(L(n.body))+'</p>'+noticeTopicsHtml(n,false)+translationLabel(n)+(String(L(n.body)).length>260?'<button type="button" class="read-more" data-a="read" data-id="'+n.id+'">'+t(expandedNotices[n.id]?"readLess":"readFull")+'</button>':'')+updHtml(n)+'<div class="acts">'+a+'</div></article>';
   }).join("");
 }
 function repHtml(){
@@ -935,10 +937,29 @@ try{var savedTheme=localStorage.getItem("noticeTheme");if(savedTheme==="light"||
 $("sects").onclick=function(e){var b=e.target.closest("[data-s]");if(b){section=b.dataset.s;render()}};
 
 /* notices */
+
+function noticeTopicsHtml(n,popup){
+  return (n.topics||[]).map(function(topic,i){
+    if(popup)return '<section class="notice-topic"><h4>'+esc(L(topic.title))+'</h4><p>'+esc(L(topic.body))+'</p></section>';
+    var key='notice-topic:'+n.id+':'+i;
+    return '<details class="notice-topic" data-open-key="'+esc(key)+'"'+(openRecord(key,false)?' open':'')+'><summary>'+esc(L(topic.title))+'</summary><p>'+esc(L(topic.body))+'</p></details>';
+  }).join('');
+}
+function readNoticeTopicEditor(){return [].map.call($('noticeTopicRows').children,function(row){return {title:row.querySelector('input').value.trim(),body:row.querySelector('textarea').value.trim()};}).filter(function(t){return t.title||t.body;});}
+function appendNoticeTopic(topic){
+  if($('noticeTopicRows').children.length>=10){toast(lang==='bn'?'সর্বোচ্চ ১০টি অতিরিক্ত টপিক যোগ করা যাবে।':'Add up to 10 additional topics.');return;}
+  var row=document.createElement('div');row.className='notice-topic-row';
+  row.innerHTML='<div class="notice-topic-row-head"><label>'+(lang==='bn'?'টপিকের শিরোনাম':'Topic title')+'</label><button class="btn sm line" type="button">'+(lang==='bn'?'সরান':'Remove')+'</button></div><input maxlength="200"><label>'+(lang==='bn'?'বিস্তারিত':'Details')+'</label><textarea rows="4" maxlength="5000"></textarea>';
+  row.querySelector('input').value=sourceNoticeText(topic&&topic.title||'');row.querySelector('textarea').value=sourceNoticeText(topic&&topic.body||'');row.querySelector('button').onclick=function(){row.remove();};$('noticeTopicRows').appendChild(row);
+}
+function renderNoticeTopicEditor(topics){$('noticeTopicRows').innerHTML='';$('topicEditorLabel').textContent=lang==='bn'?'অতিরিক্ত টপিক':'Additional topics';$('addNoticeTopic').textContent=lang==='bn'?'+ টপিক যোগ করুন':'+ Add topic';topics.forEach(appendNoticeTopic);}
+$('addNoticeTopic').onclick=function(){appendNoticeTopic({title:'',body:''});};
+
 function openEd(n){
   if(LIVE&&!isAdmin())return;$("noticeSaveError").textContent="";$("noticeExtra").className=LIVE?"":"hide";$("fGroup").value=n?n.src:grp;$("fDate").value=n?n.date:"";$("fAnn").value=n?n.ann||"":"";$("fAppr").value=n?n.appr||"":"";$("fExpires").value=n?n.expires||"":"";$("fExpired").checked=!!(n&&n.expired);
   editId=n?n.id:null;fillCats();$("fCn").className="hide";$("fCn").value="";$("edTitle").textContent=n?t("et"):t("nt");
-  $("fT").value=n?L(n.title):"";$("fB").value=n?L(n.body):"";$("fC").value=n?n.cat:"Payment";$("fU").value=n&&n.urgent?"1":"0";
+  $("fT").value=n?sourceNoticeText(n.title):"";$("fB").value=n?sourceNoticeText(n.body):"";
+  renderNoticeTopicEditor(n&&n.topics||[]);$("fC").value=n?n.cat:"Payment";$("fU").value=n&&n.urgent?"1":"0";
   $("dlg").showModal();
 }
 function historyTimeLabel(value){
@@ -976,10 +997,11 @@ $("shC").onchange=function(){$("shCn").className=this.value==="__new"?"":"hide";
 $("cancel").onclick=function(){$("dlg").close()};
 $("save").onclick=function(){
   var a=$("fT").value.trim(),b=$("fB").value.trim();if(!a||(!LIVE&&!b)){toast(t("need"));return}
+  var topicRows=readNoticeTopicEditor();if(topicRows.some(function(t){return !t.title;})){toast(lang==='bn'?'প্রতিটি টপিকের শিরোনাম দিন।':'Each topic needs a title.');return;}
   var c=pickCat(CK,$("fC").value,"fCn");if(!c){toast(t("need"));return}
   if(LIVE){
     if(!isAdmin())return;var existing=editId?notices.filter(function(n){return n.id===editId})[0]:null;if(editId&&!existing)return;
-    var payload={id:existing?existing.id:0,revision:existing?existing.revision:"",originalTitle:existing?existing.title:"",originalBody:existing?existing.body:"",originalDate:existing?existing.date:"",tab:existing?existing.tab:($("fGroup").value==="qa"?"QA Follow-up":"SFC Notice"),title:a,body:b,cat:c,urgent:+$("fU").value,src:$("fGroup").value,date:$("fDate").value,ann:$("fAnn").value.trim(),appr:$("fAppr").value.trim(),expires:$("fExpires").value,expired:$("fExpired").checked};
+    var payload={id:existing?existing.id:0,revision:existing?existing.revision:"",originalTitle:existing?existing.title:"",originalBody:existing?existing.body:"",originalDate:existing?existing.date:"",tab:existing?existing.tab:($("fGroup").value==="qa"?"QA Follow-up":"SFC Notice"),title:a,body:b,topics:readNoticeTopicEditor(),cat:c,urgent:+$("fU").value,src:$("fGroup").value,date:$("fDate").value,ann:$("fAnn").value.trim(),appr:$("fAppr").value.trim(),expires:$("fExpires").value,expired:$("fExpired").checked};
     var saveBtn=$("save"),cancelBtn=$("cancel"),oldSaveText=saveBtn.textContent;
     saveBtn.disabled=true;cancelBtn.disabled=true;saveBtn.classList.add("is-saving");saveBtn.innerHTML='<span class="save-spinner" aria-hidden="true"></span> Saving…';$("noticeSaveError").textContent="";
     api(editId?"saveNotice":"createNotice",payload).then(function(d){
@@ -1002,7 +1024,7 @@ $("list").onclick=function(e){
   var n=notices.filter(function(x){return x.id===id})[0];if(!n)return;
   if(a==="read"){var p=$("body-"+id);if(!p)return;var expanded=p.classList.toggle("expanded");expandedNotices[id]=expanded;b.setAttribute("aria-expanded",String(expanded));b.textContent=t(expanded?"readLess":"readFull");return;}
   function clr(){reports=reports.filter(function(r){return r.nid!==id})}
-  if(a==="copy"){copyTxt(L(n.title)+"\n\n"+L(n.body));return}
+  if(a==="copy"){copyTxt(L(n.title)+"\n\n"+L(n.body)+(n.topics||[]).map(function(t){return "\n\n"+L(t.title)+"\n"+L(t.body);}).join(""));return}
   if(a==="report"){if(repsOf(id).some(function(r){return r.by===me})){toast(t("already"));return}rid=id;$("rNote").value="";$("rdlg").showModal();return}
   if(!isEd())return;
   if(a==="edit"){if(!LIVE||isAdmin())openEd(n);return}
@@ -1224,38 +1246,40 @@ function ensureSection(){}
 
 
 var announcementConfig={mode:'latest',noticeId:'',startsAt:'',endsAt:''},announcementFormDirty=false;
-var latestAnnouncementShown=false,latestAnnouncementId='';
+var latestAnnouncementShown=false,latestAnnouncementId='',latestAnnouncementIds=[];
 var noticeTranslationText=Object.create(null),translationBusy=false,translationRetryAt=Object.create(null),translationTimer;
-function selectedAnnouncement(now){
+function selectedAnnouncements(now){
   var c=announcementConfig||{},time=now||Date.now();
-  if(c.mode==='off'||(c.startsAt&&Date.parse(c.startsAt)>time)||(c.endsAt&&Date.parse(c.endsAt)<=time))return null;
-  var rows=notices.filter(function(n){return !n.expired&&(L(n.title||'')||L(n.body||''));});
-  if(c.mode==='manual')return rows.find(function(n){return String(n.id)===String(c.noticeId);})||null;
-  return rows.map(function(n,i){return {n:n,i:i};}).sort(function(a,b){return String(b.n.updatedAt||b.n.date||'').localeCompare(String(a.n.updatedAt||a.n.date||''))||b.i-a.i;})[0]?.n||null;
+  if(c.mode==='off'||(c.startsAt&&Date.parse(c.startsAt)>time)||(c.endsAt&&Date.parse(c.endsAt)<=time))return [];
+  var rows=notices.filter(function(n){return !n.expired&&(L(n.title||'')||L(n.body||'')||(n.topics||[]).length);});
+  if(c.mode==='manual'){var ids=Array.isArray(c.noticeIds)?c.noticeIds:[c.noticeId];return ids.filter(function(id,i){return id&&ids.indexOf(id)===i;}).map(function(id){return rows.find(function(n){return String(n.id)===String(id);});}).filter(Boolean).slice(0,2);}
+  return rows.map(function(n,i){return {n:n,i:i};}).sort(function(a,b){return String(b.n.updatedAt||b.n.date||'').localeCompare(String(a.n.updatedAt||a.n.date||''))||b.i-a.i;}).slice(0,2).map(function(item){return item.n;});
 }
+function selectedAnnouncement(now){return selectedAnnouncements(now)[0]||null;}
 function renderLatestAnnouncement(){
-  var n=notices.find(function(n){return String(n.id)===latestAnnouncementId;});
-  if(!n||!$('latestAnnouncementContent'))return;
+  var rows=latestAnnouncementIds.map(function(id){return notices.find(function(n){return String(n.id)===id;});}).filter(Boolean);
+  if(!rows.length||!$('latestAnnouncementContent'))return;
   $('latestAnnouncementHeading').textContent=lang==='bn'?'সর্বশেষ ঘোষণা':'Latest Announcement';
   $('latestAnnouncementAcknowledgement').textContent=lang==='bn'?'হ্যাঁ, নোটিশটি পড়েছি ও বুঝেছি এবং এখন থেকে সেবা দেওয়ার সময় এটি মেনে চলব।':'Yes, I have read and acknowledged this notice and will apply it when providing service.';
   $('latestAnnouncement').querySelector('button').setAttribute('aria-label',lang==='bn'?'ঘোষণা বন্ধ করুন':'Close latest announcement');
-  $('latestAnnouncementContent').innerHTML='<div class="latest-announcement-meta"><span>'+esc(n.src==='qa'?(lang==='bn'?'QA নির্দেশনা':'QA Follow-up'):(lang==='bn'?'অফিসিয়াল নোটিশ':'Official Notice'))+'</span>'+(n.date?'<span>· '+esc(fmt(n.date))+'</span>':'')+'</div><h3>'+esc(L(n.title||''))+'</h3><p class="latest-announcement-body">'+esc(L(n.body||''))+'</p>'+translationLabel(n);
+  $('latestAnnouncementContent').innerHTML=rows.map(function(n){return '<article class="announcement-notice"><div class="latest-announcement-meta"><span>'+esc(n.src==='qa'?(lang==='bn'?'QA নির্দেশনা':'QA Follow-up'):(lang==='bn'?'অফিসিয়াল নোটিশ':'Official Notice'))+'</span>'+(n.date?'<span>· '+esc(fmt(n.date))+'</span>':'')+'</div><h3>'+esc(L(n.title||''))+'</h3><p class="latest-announcement-body">'+esc(L(n.body||''))+'</p>'+noticeTopicsHtml(n,true)+translationLabel(n)+'</article>';}).join('');
+
   scheduleNoticeTranslation();
 }
 function showLatestAnnouncement(){
   if(latestAnnouncementShown||!curU||!can('notice'))return;
-  var n=selectedAnnouncement();if(!n)return;
+  var selected=selectedAnnouncements();if(!selected.length)return;
   var dialog=$('latestAnnouncement');
   if(!dialog){
     dialog=document.createElement('dialog');dialog.id='latestAnnouncement';dialog.className='latest-announcement';dialog.setAttribute('aria-labelledby','latestAnnouncementHeading');
     dialog.innerHTML='<div class="latest-announcement-head"><h2 id="latestAnnouncementHeading"></h2><span class="latest-announcement-close-wrap"><button type="button" class="latest-announcement-close" aria-label="Close latest announcement" aria-describedby="latestAnnouncementAcknowledgement" autofocus>×</button><span id="latestAnnouncementAcknowledgement" class="latest-announcement-ack" role="tooltip"></span></span></div><div class="latest-announcement-content" id="latestAnnouncementContent"></div>';
     document.body.appendChild(dialog);dialog.querySelector('button').onclick=function(){dialog.close();};
   }
-  latestAnnouncementId=String(n.id);latestAnnouncementShown=true;renderLatestAnnouncement();dialog.showModal();
+  latestAnnouncementIds=selected.map(function(n){return String(n.id);});latestAnnouncementId=latestAnnouncementIds[0];latestAnnouncementShown=true;renderLatestAnnouncement();dialog.showModal();
 }
-function sourceNoticeText(v){return typeof v==='string'?v:String(v&&v.en||'');}
+function sourceNoticeText(v){return typeof v==='string'?v:String(v&&(v.en||v.bn)||'');}
 function needsNoticeTranslation(n){
-  return ['title','body'].some(function(k){var v=n[k];if(v&&typeof v==='object'&&v.bn)return false;var text=sourceNoticeText(v),latin=(text.match(/[A-Za-z]/g)||[]).length,bn=(text.match(/[\u0980-\u09ff]/g)||[]).length;return latin>bn&&!noticeTranslationText[text];});
+  return ['title','body'].map(function(k){return n[k];}).concat((n.topics||[]).reduce(function(all,t){return all.concat([t.title,t.body]);},[])).some(function(v){if(v&&typeof v==='object'&&v.bn)return false;var text=sourceNoticeText(v),latin=(text.match(/[A-Za-z]/g)||[]).length,bn=(text.match(/[\u0980-\u09ff]/g)||[]).length;return latin>bn&&!noticeTranslationText[text];});
 }
 function translationLabel(n){
   if(lang!=='bn'||!needsNoticeTranslation(n))return '';
@@ -1269,14 +1293,14 @@ function scheduleNoticeTranslation(){
 function translateVisibleNotices(){
   if(translationBusy||!LIVE||lang!=='bn'||!curU||!can('notice'))return;
   var ids=[],popup=$('latestAnnouncement');
-  if(popup&&popup.open)ids.push(latestAnnouncementId);
+  if(popup&&popup.open)ids=ids.concat(latestAnnouncementIds);
   document.querySelectorAll('#list [data-notice-id]').forEach(function(el){var r=el.getBoundingClientRect();if(r.height&&r.bottom>=0&&r.top<window.innerHeight*1.5)ids.push(el.dataset.noticeId);});
   ids=ids.filter(function(id,i){var n=notices.find(function(n){return String(n.id)===String(id);});return ids.indexOf(id)===i&&n&&needsNoticeTranslation(n)&&!(translationRetryAt[id]>Date.now());}).slice(0,3);
   if(!ids.length)return;
   var token=authToken,email=me;translationBusy=true;
   api('translateNotices',{ids:ids}).then(function(d){
     if(token!==authToken||email!==me)return;
-    (d.translations||[]).forEach(function(tr){var n=notices.find(function(n){return String(n.id)===String(tr.id);});if(!n||sourceNoticeText(n.title)!==tr.sourceTitle||sourceNoticeText(n.body)!==tr.sourceBody)return;noticeTranslationText[tr.sourceTitle]=tr.titleBn;noticeTranslationText[tr.sourceBody]=tr.bodyBn;delete translationRetryAt[String(tr.id)];});
+    (d.translations||[]).forEach(function(tr){var n=notices.find(function(n){return String(n.id)===String(tr.id);});if(!n||sourceNoticeText(n.title)!==tr.sourceTitle||sourceNoticeText(n.body)!==tr.sourceBody)return;noticeTranslationText[tr.sourceTitle]=tr.titleBn;noticeTranslationText[tr.sourceBody]=tr.bodyBn;(tr.topics||[]).forEach(function(t){if((n.topics||[]).some(function(current){return current.title===t.sourceTitle&&current.body===t.sourceBody;})){noticeTranslationText[t.sourceTitle]=t.titleBn;noticeTranslationText[t.sourceBody]=t.bodyBn;}});delete translationRetryAt[String(tr.id)];});
     (d.failed||[]).forEach(function(id){translationRetryAt[String(id)]=Date.now()+60000;});
     ids.forEach(function(id){if(!(d.translations||[]).some(function(tr){return String(tr.id)===String(id);}))translationRetryAt[id]=Date.now()+60000;});
     if(lang==='bn'){if(section==='notice')renderNotice();if(popup&&popup.open)renderLatestAnnouncement();}
@@ -1290,25 +1314,25 @@ function translateVisibleNotices(){
 window.addEventListener('scroll',scheduleNoticeTranslation,{passive:true});
 function renderAnnouncementSettings(){
   if(announcementFormDirty&&$('announcementForm'))return;
-  var bn=lang==='bn',c=announcementConfig;
+  var bn=lang==='bn',c=announcementConfig,picked=c.noticeIds||[c.noticeId];
   function label(en,bangla){return bn?bangla:en;}
   function localTime(iso){if(!iso)return '';var d=new Date(iso);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);}
-  var options=notices.filter(function(n){return !n.expired;}).slice().sort(function(a,b){return String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||''));}).map(function(n){return '<option value="'+esc(n.id)+'"'+(String(c.noticeId)===String(n.id)?' selected':'')+'>'+esc(n.date+' · '+L(n.title||'').slice(0,120))+'</option>';}).join('');
-  $('adList').innerHTML='<form id="announcementForm" class="card announcement-form"><h3>'+label('Announcement popup controls','ঘোষণার পপআপ নিয়ন্ত্রণ')+'</h3><label>'+label('Display mode','প্রদর্শনের ধরন')+'<select id="announcementMode"><option value="latest">'+label('Automatic — latest published or updated notice','স্বয়ংক্রিয় — সর্বশেষ প্রকাশিত বা আপডেট হওয়া নোটিশ')+'</option><option value="manual">'+label('Choose a notice','নির্দিষ্ট নোটিশ নির্বাচন')+'</option><option value="off">'+label('Turn popup off','পপআপ বন্ধ')+'</option></select></label><label id="announcementNoticeLabel">'+label('Notice to show','যে নোটিশটি দেখাবেন')+'<select id="announcementNotice"><option value="">'+label('Select a notice','নোটিশ নির্বাচন করুন')+'</option>'+options+'</select></label><div class="announcement-times"><label>'+label('Start time (blank = now)','শুরুর সময় (ফাঁকা = এখন)')+'<input id="announcementStart" type="datetime-local" value="'+esc(localTime(c.startsAt))+'"></label><label>'+label('End time (blank = no expiry)','শেষ সময় (ফাঁকা = মেয়াদ নেই)')+'<input id="announcementEnd" type="datetime-local" value="'+esc(localTime(c.endsAt))+'"></label></div><p>'+label('Automatic mode keeps the latest notice until a newer notice is published or updated. Times use your device timezone. Changes apply on the next sign-in or refresh.','স্বয়ংক্রিয়ভাবে সর্বশেষ নোটিশটি পরের প্রকাশিত বা আপডেট হওয়া নোটিশ আসা পর্যন্ত থাকবে। সময় আপনার ডিভাইসের টাইমজোন অনুযায়ী। পরের লগইন বা রিফ্রেশে পরিবর্তন কার্যকর হবে।')+'</p><p id="announcementError" role="alert" class="announcement-error"></p><div class="acts"><button class="btn" type="submit">'+label('Save popup settings','পপআপ সেটিংস সংরক্ষণ')+'</button><button class="btn line" id="announcementPreview" type="button">'+label('Preview','প্রিভিউ')+'</button></div></form>';
-  $('announcementMode').value=c.mode||'latest';
+  var options=notices.filter(function(n){return !n.expired;}).slice().sort(function(a,b){return String(b.updatedAt||b.date||'').localeCompare(String(a.updatedAt||a.date||''));}).map(function(n){return '<option value="'+esc(n.id)+'"'+(String(picked[0])===String(n.id)?' selected':'')+'>'+esc(n.date+' · '+L(n.title||'').slice(0,120))+'</option>';}).join('');
+  $('adList').innerHTML='<form id="announcementForm" class="card announcement-form"><h3>'+label('Announcement popup controls','ঘোষণার পপআপ নিয়ন্ত্রণ')+'</h3><label>'+label('Display mode','প্রদর্শনের ধরন')+'<select id="announcementMode"><option value="latest">'+label('Automatic — latest 2 notices','স্বয়ংক্রিয় — সর্বশেষ ২টি নোটিশ')+'</option><option value="manual">'+label('Choose up to 2 notices','সর্বোচ্চ ২টি নোটিশ নির্বাচন')+'</option><option value="off">'+label('Turn popup off','পপআপ বন্ধ')+'</option></select></label><div id="announcementNoticeLabel" class="announcement-picks"><label>'+label('Notice to show','যে নোটিশটি দেখাবেন')+'<select id="announcementNotice"><option value="">'+label('Select a notice','নোটিশ নির্বাচন করুন')+'</option>'+options+'</select></label><label>'+label('Second notice (optional)','দ্বিতীয় নোটিশ (ঐচ্ছিক)')+'<select id="announcementNotice2"><option value="">'+label('None','কোনোটিই নয়')+'</option>'+options.replace(/ selected(?=>)/g,'')+'</select></label></div><div class="announcement-times"><label>'+label('Start time (blank = now)','শুরুর সময় (ফাঁকা = এখন)')+'<input id="announcementStart" type="datetime-local" value="'+esc(localTime(c.startsAt))+'"></label><label>'+label('End time (blank = no expiry)','শেষ সময় (ফাঁকা = মেয়াদ নেই)')+'<input id="announcementEnd" type="datetime-local" value="'+esc(localTime(c.endsAt))+'"></label></div><p>'+label('Automatic mode shows the latest 2 notices and updates the selection as notices are published or edited. Times use your device timezone. Changes apply on the next sign-in or refresh.','স্বয়ংক্রিয়ভাবে সর্বশেষ ২টি নোটিশ দেখাবে; নতুন নোটিশ বা আপডেট এলে তালিকা বদলাবে। সময় আপনার ডিভাইসের টাইমজোন অনুযায়ী। পরের লগইন বা রিফ্রেশে পরিবর্তন কার্যকর হবে।')+'</p><p id="announcementError" role="alert" class="announcement-error"></p><div class="acts"><button class="btn" type="submit">'+label('Save popup settings','পপআপ সেটিংস সংরক্ষণ')+'</button><button class="btn line" id="announcementPreview" type="button">'+label('Preview','প্রিভিউ')+'</button></div></form>';
+  $('announcementMode').value=c.mode||'latest';$('announcementNotice2').value=picked[1]||'';
   function mode(){var manual=$('announcementMode').value==='manual';$('announcementNoticeLabel').classList.toggle('hide',!manual);$('announcementNotice').required=manual;}
   mode();$('announcementMode').onchange=function(){announcementFormDirty=true;mode();};
   $('announcementForm').oninput=function(){announcementFormDirty=true;};
   $('announcementForm').onsubmit=function(e){
     e.preventDefault();function utc(id){var v=$(id).value;return v?new Date(v).toISOString():'';}
-    var next={mode:$('announcementMode').value,noticeId:$('announcementNotice').value,startsAt:utc('announcementStart'),endsAt:utc('announcementEnd')};
+    var next={mode:$('announcementMode').value,noticeId:$('announcementNotice').value,noticeIds:[$('announcementNotice').value,$('announcementNotice2').value].filter(Boolean),startsAt:utc('announcementStart'),endsAt:utc('announcementEnd')};
     if(next.endsAt&&Date.parse(next.endsAt)<=(next.startsAt?Date.parse(next.startsAt):Date.now())){$('announcementError').textContent=label('End time must be after the start time.','শেষ সময় অবশ্যই শুরুর সময়ের পরে হতে হবে।');return;}
     api('saveAnnouncement',{config:next}).then(function(){announcementFormDirty=false;renderAnnouncementSettings();}).catch(function(e){$('announcementError').textContent=e.message||label('Could not save.','সংরক্ষণ করা যায়নি।');});
   };
   $('announcementPreview').onclick=function(){
-    var saved=announcementConfig;announcementConfig={mode:$('announcementMode').value,noticeId:$('announcementNotice').value,startsAt:'',endsAt:''};var n=selectedAnnouncement();announcementConfig=saved;
-    if(!n){toast(label('No eligible notice selected.','উপযুক্ত নোটিশ নির্বাচন করা হয়নি।'));return;}
-    var wasShown=latestAnnouncementShown;latestAnnouncementShown=false;var temp=announcementConfig;announcementConfig={mode:'manual',noticeId:String(n.id),startsAt:'',endsAt:''};showLatestAnnouncement();announcementConfig=temp;latestAnnouncementShown=wasShown;
+    var saved=announcementConfig;announcementConfig={mode:$('announcementMode').value,noticeId:$('announcementNotice').value,noticeIds:[$('announcementNotice').value,$('announcementNotice2').value].filter(Boolean),startsAt:'',endsAt:''};var selected=selectedAnnouncements();announcementConfig=saved;
+    if(!selected.length){toast(label('No eligible notice selected.','উপযুক্ত নোটিশ নির্বাচন করা হয়নি।'));return;}
+    var wasShown=latestAnnouncementShown;latestAnnouncementShown=false;var temp=announcementConfig;announcementConfig={mode:'manual',noticeIds:selected.map(function(n){return String(n.id);}),startsAt:'',endsAt:''};showLatestAnnouncement();announcementConfig=temp;latestAnnouncementShown=wasShown;
   };
 }
 
